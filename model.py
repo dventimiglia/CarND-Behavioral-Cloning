@@ -67,3 +67,12 @@ history = model.fit(X_train, Y_train,
 
 model.evaluate(X_test, Y_test)
 
+
+# Save
+
+model.save("model.h5")
+with open("model.json", "w") as f:
+    f.write(model.to_json())
+
+
+
