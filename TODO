@@ -1,0 +1,33 @@
+# -*- mode: org; -*-
+
+* TODO Use a Python generator in =model.py=.
+* TODO Refactor code in =model.py=.
+* TODO Add comments to =model.py=.
+* TODO Add appropriate mixture of layers.
+  * convolutions
+  * pooling
+  * dropout
+  * transfer learning
+  * ReLus
+  * flattening
+  * fully-connected
+* TODO Normalize the data.
+* TODO Generate train/validation/test splits.
+* TODO Use dropout layers to reduce overfitting.
+* TODO Use the Adam optimizer.
+* TODO Generate training data for vehicle recovery.
+* TODO Adapt rubric.org into the README.md file.
+  - Complete a thorough write-up discussing the approach, strategy,
+    etc.
+  - Discuss how the model was trained.
+  - Discuss the characteristics of the data.
+  - Describe how the data were generated.
+  - Provide example images.
+* TODO Generate a visualization of the architecture.
+  Probably use TensorBoard.
+* TODO Programmatically display sample images.
+* TODO Attempt to use transfer learning
+  - AlexNet
+  - VGG
+  - GoogLeNet
+  - ResNet
