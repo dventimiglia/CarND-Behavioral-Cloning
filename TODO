@@ -1,6 +1,6 @@
 # -*- mode: org; -*-
 
-* TODO Use a Python generator in =model.py=.
+* DONE Use a Python generator in =model.py=.
 * TODO Refactor code in =model.py=.
 * TODO Add comments to =model.py=.
 * TODO Add appropriate mixture of layers.
