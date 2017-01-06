@@ -1,3 +1,5 @@
+#  LocalWords:  ImageDataGenerator
+
 * <2017-01-05 Thu>
 *** Splitting data into validation sets
     - No need for train_test_split, I think.  I think I can just use
@@ -7,5 +9,31 @@
 *** Shuffling the data during training.
     - No need for external tools.  I think I can just use the
       =shuffle= argument in =model.fit=.
-    
-
+* <2017-01-06 Fri>
+*** Loading images with a generator
+    - Usage of =ImageDataGenerator= is so tempting, because it's
+      already set up to load images from a directory, scale them,
+      normalize them, etc.
+    - The problem is that it seems to be set up for classifying images
+      labeled according to the directory that they're in.  It's a bit
+      of a mystery how to use it for regression.
+    - There's an intriguing mention of using =model.predict_generator=
+      when using =ImageDataGenerator= without labeled classes, but for
+      the life of me I can't figure out how to make it work.
+    - I asked on the Keras Slack channel about this.  Hopefully,
+      somebody will get back to me.
+    - In the meantime I managed to write a Python generator that works
+      with =model.fit_generator=.
+*** Upcoming tasks
+***** TODO Refactor the generator code.
+******* TODO Parameterize batch size
+******* TODO Return multiple inputs and multiple outputs.
+******* TODO Make more concise
+***** TODO Scale the model output to [-1, 1]
+      Right now, I think it's nowhere near to that interval.  That
+      can't possibly be good for training.
+***** TODO Possibly kill the softmax activation function at the end.
+***** TODO Parameterize the input shape dynamically based on input images.
+***** TODO Probably scale down the input images.
+***** TODO Possibly find a way to include the other two camera angles.
+***** TODO Possibly use cv2 edge-detection.  I mean, why not?
