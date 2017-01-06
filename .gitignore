@@ -1,3 +1,5 @@
 *.zip
 simulator-linux
 recordings
+*.p
+data
