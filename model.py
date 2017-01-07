@@ -15,29 +15,30 @@ import pickle
 
 # Model
 
-input_shape = [160, 320, 3]
-input_shape = [80, 160, 3]
+image_shape = [160, 320, 3]
+input_shape = [x//2 for x in image_shape[:2]] + image_shape[2:]
 
 model = Sequential()
-model.add(Lambda(lambda x: x/127.5 - 1., input_shape=input_shape, output_shape=input_shape, trainable=False))
-model.add(Conv2D(32, 3, 3))
-model.add(MaxPooling2D((2,2)))
-model.add((Dropout(0.5)))
-model.add(Activation('relu'))
-model.add(Flatten())
-model.add(Dense(128, activation='relu'))
-model.add(Dense(1, activation='softmax'))
+model.add(Lambda(lambda x: x/127.5 - 1., input_shape=input_shape, output_shape=input_shape, trainable=False, name="Preprocess"))
+model.add(Conv2D(32, 3, 3, name="Conv2d"))
+model.add(MaxPooling2D((2,2), name="MaxPool"))
+model.add((Dropout(0.5, name="Dropout")))
+model.add(Activation("relu", name="Activation"))
+model.add(Flatten(name="Flatten"))
+model.add(Dense(128, activation="relu", name="Fully-Connected"))
+model.add(Dense(1, activation="sigmoid", name="Readout"))
+model.add(Lambda(lambda x: 2.*x-1., trainable=False, name="Postprocess"))
 model.summary()
 
 # Visualize
 
-plot(model, to_file='model.png', show_shapes=True)
+plot(model, to_file="model.png", show_shapes=True)
 
 # Train
 
-model.compile(loss='mse',
-              optimizer='adam',
-              metrics=['accuracy'])
+model.compile(loss="mse",
+              optimizer="adam",
+              metrics=["accuracy"])
 
 def generate_arrays_from_file(index_file, image_base):
     while 1:
