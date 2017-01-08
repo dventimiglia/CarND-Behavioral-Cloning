@@ -70,10 +70,14 @@ plot(model, to_file="model.png", show_shapes=True)
 
 model.compile(loss="mse", optimizer="adam", metrics=["accuracy"])
 datagen = input_generator("data/driving_log_overtrain.csv", "data/", input_shape)
-history = model.fit_generator(datagen, samples_per_epoch=3, nb_epoch=20, verbose=2)
+history = model.fit_generator(datagen, samples_per_epoch=3, nb_epoch=5, verbose=2)
 
-for i in range(3):
-    a = datagen.__next__()
-    x = a[0]
-    y = a[1]
-    print(model.predict(x), y)
+datagen = input_generator("data/driving_log_random_sample.csv", "data/", input_shape)
+history = model.fit_generator(datagen, samples_per_epoch=10, nb_epoch=5, verbose=2)
+
+datagen = input_generator("data/driving_log_all.csv", "data/", input_shape)
+history = model.fit_generator(datagen, samples_per_epoch=100, nb_epoch=5, verbose=2)
+
+datagen = input_generator("data/driving_log_train.csv", "data/", input_shape)
+history = model.fit_generator(datagen, samples_per_epoch=100, nb_epoch=5, verbose=2)
+
