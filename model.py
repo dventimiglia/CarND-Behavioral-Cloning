@@ -69,7 +69,7 @@ plot(model, to_file="model.png", show_shapes=True)
 # Train
 
 model.compile(loss="mse", optimizer="adam", metrics=["accuracy"])
-datagen = input_generator("data/driving_log_three.csv", "data/", input_shape)
+datagen = input_generator("data/driving_log_overtrain.csv", "data/", input_shape)
 history = model.fit_generator(datagen, samples_per_epoch=3, nb_epoch=20, verbose=2)
 
 for i in range(3):
