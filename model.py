@@ -95,6 +95,12 @@ print(sys.argv)
 datagen = input_generator(sys.argv[1], sys.argv[2], input_shape)
 history = model.fit_generator(datagen, samples_per_epoch=int(sys.argv[3]), nb_epoch=int(sys.argv[4]), verbose=2)
 
+# Save
+
+model.save("model.h5")
+with open("model.json", "w") as f:
+    f.write(model.to_json())
+
 # Cleanup
 
 gc.collect()
