@@ -37,3 +37,6 @@
 ***** TODO Probably scale down the input images.
 ***** TODO Possibly find a way to include the other two camera angles.
 ***** TODO Possibly use cv2 edge-detection.  I mean, why not?
+* <2017-01-09 Mon>
+*** Batch numbers
+    Try these:  samples_per_epoch=20480, bach_size=512, nb_epoch=6

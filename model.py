@@ -3,6 +3,8 @@
 # Imports
 
 from PIL import Image
+from itertools import islice, chain
+from itertools import groupby
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Activation, Dense, Input, Dropout, Lambda, ELU
 from keras.layers.convolutional import Convolution2D
 from keras.models import Sequential
@@ -21,19 +23,33 @@ import sys
 
 # Utilities
 
+def batch_generator(iterable, batch_size):
+    while 1:
+        batch = [None]*batch_size
+        images, angles = zip(*[i[1] for i in zip(range(batch_size), datagen)])
+        yield np.asarray(images), np.asarray(angles)
+
 def input_generator(index_file, image_base, target_shape):
     while 1:
-        f = open(index_file)
-        for line in f:
+        f = index_file
+        # for line in f:
+        while 1:
+            line = f.readline()
+            if line == '':
+                pdb.set_trace()
+                f.seek(0)
+                line = f.readline()
+                break
             center, left, right, angle, throttle, brake, speed = line.split(",")
             img = center
             img = image_base + img.strip()
             img = np.asarray(Image.open(img))
             img = cv2.resize(img, (target_shape[1], target_shape[0]), interpolation = cv2.INTER_AREA)
-            img = np.reshape(img, (1,)+img.shape)
-            angle = np.array([[float(angle)]])
+            # img = np.reshape(img, (1,)+img.shape)
+            # angle = np.array([[float(angle)]])
             yield (img, angle)
-        f.close()
+        pdb.set_trace()
+        f.seek(0)
 
 # Model
 
@@ -90,8 +106,13 @@ model.compile(loss="mse", optimizer="adam", metrics=["accuracy"])
 
 print(sys.argv)
 
-datagen = input_generator(sys.argv[1], sys.argv[2], input_shape)
-history = model.fit_generator(datagen, samples_per_epoch=int(sys.argv[3]), nb_epoch=int(sys.argv[4]), verbose=2)
+index_file = "data/driving_log_train.csv"
+base_path = "data/" 
+
+with open(index_file) as f:
+    datagen = input_generator(f, base_path, input_shape)
+    batchgen = batch_generator(datagen, 32)
+    history = model.fit_generator(batchgen, samples_per_epoch=1000, nb_epoch=2, verbose=2)
 
 # Save
 
