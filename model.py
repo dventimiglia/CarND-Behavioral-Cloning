@@ -40,7 +40,7 @@ def input_generator(index_file, image_base, target_shape):
 image_shape = [160, 320, 3]
 input_shape = [x//2 for x in image_shape[:2]] + image_shape[2:]
 
-def LeNet(input_shape):
+def lenet(input_shape):
     model = Sequential()
     model.add(Lambda(lambda x: x/127.5 - 1., input_shape=input_shape, output_shape=input_shape, trainable=False, name="Preprocess"))
     model.add(Conv2D(6, 3, 3, name="Conv2D1", activation="relu", input_shape=input_shape))
@@ -60,26 +60,24 @@ def LeNet(input_shape):
     model.add(Lambda(lambda x: 2.*x-1., trainable=False, name="Postprocess"))
     return model
 
-def Nvidia(input_shape):
+def nvidia(input_shape):
     model = Sequential()
     model.add(Lambda(lambda x: x/127.5 - 1., input_shape=input_shape, output_shape=input_shape, trainable=False, name="Preprocess"))
     model.add(Conv2D(24, 5, 5, subsample=(2,2), name="Conv2D1", activation='relu', input_shape=input_shape))
     model.add(Conv2D(36, 5, 5, subsample=(2,2), name="Conv2D2", activation='relu'))
     model.add(Conv2D(48, 5, 5, subsample=(2,2), name="Conv2D3", activation='relu'))
-    model.add(Conv2D(64, 3, 3, name="Conv2D4", activation='relu'))
+    model.add(Conv2D(64, 5, 5, name="Conv2D4", activation='relu'))
     model.add(Conv2D(64, 3, 3, name="Conv2D5", activation='relu'))
-    model.add(Conv2D(64, 3, 3, name="Conv2D6", activation='relu'))
     model.add(Flatten(name="Flatten"))
-    model.add(Dense(128, activation='relu', name="FC1"))
-    model.add(Dense(64, activation='relu', name="FC2"))
-    model.add(Dense(32, activation='relu', name="FC3"))
-    model.add(Dense(16, activation="relu", name="FC4"))
-    model.add(Dense(8, activation="relu", name="FC5"))
+    model.add(Dense(1164, activation='relu', name="FC1"))
+    model.add(Dense(100, activation='relu', name="FC2"))
+    model.add(Dense(50, activation='relu', name="FC3"))
+    model.add(Dense(10, activation="relu", name="FC4"))
     model.add(Dense(1, activation="sigmoid", name="Readout"))
     model.add(Lambda(lambda x: 2.*x-1., trainable=False, name="Postprocess"))
     return model
                      
-model = LeNet(input_shape)
+model = nvidia(input_shape)
 model.summary()
 
 # Visualize
