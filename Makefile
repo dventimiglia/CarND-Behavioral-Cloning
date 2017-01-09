@@ -1,15 +1,41 @@
 SHELL=/bin/bash
 export SHELL
-.PHONY: all clean
+.PHONY: all clean environment train validate cleanmodel
 .ONESHELL:
+SAMPLES=10
+EPOCHS=5
 
-all: \
-	data/driving_log_overtrain.csv \
-	data/driving_log_random_sample.csv \
-	data/driving_log_all.csv \
-	data/driving_log_train.csv \
-	data/driving_log_validation.csv \
-	end-to-end-dl-using-px.pdf
+# Phony targets
+
+
+all: train
+
+environment: 
+	conda env create -f environment.yml
+
+train: data/driving_log_train.csv
+	python model.py "data/driving_log_train.csv" "data/" $(SAMPLES) $(EPOCHS)
+
+validate: model.h5 model.json
+	python drive.py
+
+clean: cleanmodel
+	rm -rf data
+	rm -f data.zip
+	rm -f drive.py
+	rm -f end-to-end-dl-using-px.pdf
+
+cleanmodel:
+	rm -f model.json
+	rm -f model.h5
+
+# File targets
+
+model.h5:
+	train
+
+model.json:
+	train
 
 data/driving_log.csv: data.zip
 	unzip -u $< > /dev/null 2>&1
@@ -32,10 +58,6 @@ data/driving_log_train.csv: data/driving_log_all.csv
 
 data/driving_log_validation.csv: data/driving_log_all.csv
 	cat $< | tail -n+7000 > $@
-
-clean:
-	rm -rf data
-	rm data.zip
 
 end-to-end-dl-using-px.pdf:
 	wget https://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf
