@@ -9,8 +9,7 @@ all: \
 	data/driving_log_all.csv \
 	data/driving_log_train.csv \
 	data/driving_log_validation.csv \
-	end-to-end-dl-using-px.pdf \
-	drive.py
+	end-to-end-dl-using-px.pdf
 
 data/driving_log.csv: data.zip
 	unzip -u $< > /dev/null 2>&1
