@@ -1,6 +1,6 @@
 SHELL=/bin/bash
 export SHELL
-.PHONY: all clean environment train validate cleanmodel
+.PHONY: all clean environment train validate cleanmodel docs
 .ONESHELL:
 SAMPLES=10
 EPOCHS=5
@@ -12,6 +12,8 @@ all: train
 
 environment: 
 	conda env create -f environment.yml
+
+docs: end-to-end-dl-using-px.pdf
 
 train: data/driving_log_train.csv
 	python model.py "data/driving_log_train.csv" "data/" $(SAMPLES) $(EPOCHS)
