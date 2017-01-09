@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Imports
 
 from PIL import Image
@@ -7,6 +9,7 @@ from keras.models import Sequential
 from keras.utils import np_utils
 from keras.utils.visualize_util import plot
 import cv2
+import gc
 import keras.preprocessing.image as img
 import math
 import matplotlib.image as mpimg
@@ -14,6 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pdb
 import pickle
+import sys
 
 # Utilities
 
@@ -86,15 +90,11 @@ plot(model, to_file="model.png", show_shapes=True)
 
 model.compile(loss="mse", optimizer="adam", metrics=["accuracy"])
 
-datagen = input_generator("data/driving_log_overtrain.csv", "data/", input_shape)
-history = model.fit_generator(datagen, samples_per_epoch=3, nb_epoch=20, verbose=2)
+print(sys.argv)
 
-# datagen = input_generator("data/driving_log_random_sample.csv", "data/", input_shape)
-# history = model.fit_generator(datagen, samples_per_epoch=10, nb_epoch=5, verbose=2)
+datagen = input_generator(sys.argv[1], sys.argv[2], input_shape)
+history = model.fit_generator(datagen, samples_per_epoch=int(sys.argv[3]), nb_epoch=int(sys.argv[4]), verbose=2)
 
-# datagen = input_generator("data/driving_log_train.csv", "data/", input_shape)
-# history = model.fit_generator(datagen, samples_per_epoch=1000, nb_epoch=8, verbose=2)
+# Cleanup
 
-# for i in range(10):
-#     img = datagen.__next__()
-#     print(model.predict(img[0]), img[1])
+gc.collect()
