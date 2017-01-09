@@ -1,31 +1,44 @@
 SHELL=/bin/bash
 export SHELL
-.PHONY: all clean environment train validate cleanmodel docs
+.PHONY: usage environment bootstrap docs data harness model validate clean cleandocs cleandata cleanharness cleanmodel 
 .ONESHELL:
 SAMPLES=10
 EPOCHS=5
 
 # Phony targets
 
-
-all: train
+usage:
 
 environment: 
 	conda env create -f environment.yml
 
-docs: end-to-end-dl-using-px.pdf
+bootstrap: docs data harness
 
-train: data/driving_log_train.csv
+docs: end-to-end-dl-using-px.pdf Makefile.png
+
+data: data/driving_log_all.csv data/driving_log_overtrain.csv data/driving_log_random_sample.csv data/driving_log_train.csv data/driving_log_validation.csv
+
+harness: drive.py
+
+model: data/driving_log_train.csv 
 	python model.py "data/driving_log_train.csv" "data/" $(SAMPLES) $(EPOCHS)
 
 validate: model.h5 model.json
 	python drive.py
 
-clean: cleanmodel
+clean: cleandocs cleandata cleanharness cleanmodel
+	rm -f drive.py
+
+cleandocs:
+	rm -f end-to-end-dl-using-px.pdf
+	rm Makefile.png
+
+cleandata:
 	rm -rf data
 	rm -f data.zip
-	rm -f drive.py
-	rm -f end-to-end-dl-using-px.pdf
+
+cleanharness:
+	rm drive.py
 
 cleanmodel:
 	rm -f model.json
@@ -34,10 +47,10 @@ cleanmodel:
 # File targets
 
 model.h5:
-	train
+	model
 
 model.json:
-	train
+	model
 
 data/driving_log.csv: data.zip
 	unzip -u $< > /dev/null 2>&1
@@ -66,3 +79,6 @@ end-to-end-dl-using-px.pdf:
 
 drive.py:
 	wget -O - https://d17h27t6h515a5.cloudfront.net/topher/2017/January/586c4a66_drive/drive.py | dos2unix > $@
+
+Makefile.png:
+	cat Makefile | python makefile2dot.py | dot -Tpng > $@
