@@ -9,7 +9,8 @@ all: \
 	data/driving_log_all.csv \
 	data/driving_log_train.csv \
 	data/driving_log_validation.csv \
-	end-to-end-dl-using-px.pdf
+	end-to-end-dl-using-px.pdf \
+	drive.py
 
 data/driving_log.csv: data.zip
 	unzip -u $< > /dev/null 2>&1
@@ -39,3 +40,6 @@ clean:
 
 end-to-end-dl-using-px.pdf:
 	wget https://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf
+
+drive.py:
+	wget -O - https://d17h27t6h515a5.cloudfront.net/topher/2017/January/586c4a66_drive/drive.py | dos2unix > $@
