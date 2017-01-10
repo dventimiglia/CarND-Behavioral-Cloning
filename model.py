@@ -33,7 +33,9 @@ def lines(path):
 
 records = lambda x : (line.split(",") for line in x)
 
-samples = lambda x, base, shape : ([cv2.resize(np.asarray(Image.open(base+f.strip())), shape, interpolation=cv2.INTER_AREA) for f in record[0:3]]+[float(v) for v in record[3:]] for record in x)
+filteredrecords = lambda x, indices=[0, 3]: ([r[i] for i in indices] for r in x)
+
+samples = lambda x, base, shape : ([cv2.resize(np.asarray(Image.open(base+f.strip())), shape, interpolation=cv2.INTER_AREA) for f in record[:1]]+[float(v) for v in record[1:]] for record in x)
 
 pairs = lambda x, l, r : ([s[l], s[r]] for s in x)
 
@@ -98,12 +100,10 @@ model.compile(loss="mse", optimizer="adam", metrics=["accuracy"])
 
 print(sys.argv)
 
-# index_file = "data/driving_log_train.csv"
-# index_file = "data/driving_log_random_sample.csv"
 index_file = "data/driving_log_train.csv"
 base_path = "data/" 
 
-generator = batches(transpositions(groups(pairs(samples(records(lines(index_file)), base_path, (input_shape[1], input_shape[0])), 0, 3), 100)))
+generator = batches(transpositions(groups(pairs(samples(filteredrecords(records(lines(index_file))), base_path, (input_shape[1], input_shape[0])), 0, 1), 100)))
 history = model.fit_generator(generator, samples_per_epoch=7000, nb_epoch=6, verbose=2)
 
 # Save
