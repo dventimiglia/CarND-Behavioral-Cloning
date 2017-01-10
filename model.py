@@ -32,12 +32,19 @@ def cyclefeed(path):
         f.close()
 
 feed = lambda x : [l for l in open(x)]
+
 split = lambda x : (line.split(",") for line in x)
+
 select = lambda x, indices=[0, 3]: ([r[i] for i in indices] for r in x)
+
 fetch = lambda x, base, shape : ([cv2.resize(np.asarray(Image.open(base+f.strip())), shape, interpolation=cv2.INTER_AREA) for f in record[:1]]+[float(v) for v in record[1:]] for record in x)
+
 pair = lambda x, l, r : ([s[l], s[r]] for s in x)
+
 group = lambda x, n, fillvalue=None : zip_longest(*([iter(x)]*n), fillvalue=fillvalue)
+
 transpose = lambda x : (list(map(list, zip(*g))) for g in x)
+
 batch = lambda x : ([np.asarray(t[0]), np.asarray(t[1])] for t in x)
 
 # Model
@@ -71,11 +78,13 @@ model.compile(loss="mse", optimizer="adam", metrics=["accuracy"])
 print(sys.argv)
 
 input_shape = [64, 64, 3]
-index_file = "data/driving_log_train.csv"
+training_index = "data/driving_log_train.csv"
+validation_index = "data/driving_log_validation.csv"
 base_path = "data/" 
 
-generator = batch(transpose(group(pair(cycle(fetch(select(split(feed(index_file))), base_path, (input_shape[1], input_shape[0]))), 0, 1), 128)))
-history = model.fit_generator(generator, samples_per_epoch=7000, nb_epoch=6, verbose=2)
+training = batch(transpose(group(pair(cycle(fetch(select(split(feed(training_index))), base_path, (input_shape[1], input_shape[0]))), 0, 1), 512)))
+validation = batch(transpose(group(pair(cycle(fetch(select(split(feed(validation_index))), base_path, (input_shape[1], input_shape[0]))), 0, 1), 512)))
+history = model.fit_generator(training, samples_per_epoch=7000, nb_epoch=6, verbose=2, validation_data=validation, nb_val_samples=512)
 
 # Save
 
