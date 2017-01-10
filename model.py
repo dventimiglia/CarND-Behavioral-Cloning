@@ -3,8 +3,9 @@
 # Imports
 
 from PIL import Image
-from itertools import islice, chain
 from itertools import groupby
+from itertools import islice, chain
+from itertools import zip_longest
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Activation, Dense, Input, Dropout, Lambda, ELU
 from keras.layers.convolutional import Convolution2D
 from keras.models import Sequential
@@ -23,34 +24,37 @@ import sys
 
 # Utilities
 
-def batch_generator(iterable, batch_size):
-    while 1:
-        batch = [None]*batch_size
-        images, angles = zip(*[i[1] for i in zip(range(batch_size), datagen)])
-        yield np.asarray(images), np.asarray(angles)
+def groups(iterable, n, fillvalue=None):
+    "Collect data into fixed-length chunks or blocks"
+    # groups('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)
 
-def input_generator(index_file, image_base, target_shape):
-    while 1:
-        f = index_file
-        # for line in f:
-        while 1:
+def lines(f, func=lambda x:x):
+    while True:
+        line = f.readline()
+        if line=='':
+            f.seek(0)
             line = f.readline()
-            if line == '':
-                pdb.set_trace()
-                f.seek(0)
-                line = f.readline()
-                break
-            center, left, right, angle, throttle, brake, speed = line.split(",")
-            img = center
-            img = image_base + img.strip()
-            img = np.asarray(Image.open(img))
-            img = cv2.resize(img, (target_shape[1], target_shape[0]), interpolation = cv2.INTER_AREA)
-            # img = np.reshape(img, (1,)+img.shape)
-            # angle = np.array([[float(angle)]])
-            yield (img, angle)
-        pdb.set_trace()
-        f.seek(0)
+        line = line.rstrip("\r\n")
+        yield func(line)
 
+def pairs(generator, image_base, target_shape):
+    def processor(line):
+        center, left, right, angle, throttle, brake, speed = line.split(",")
+        img = center
+        img = image_base + img.strip()
+        img = np.asarray(Image.open(img))
+        img = cv2.resize(img, (target_shape[1], target_shape[0]), interpolation = cv2.INTER_AREA)
+        return (img, angle)
+    return lines(generator, processor)
+
+def batches(generator, batch_size):
+    for batch in groups(generator, batch_size):
+        left, right = zip(*batch)
+        yield np.asarray(left), np.asarray(right)
+
+    
 # Model
 
 image_shape = [160, 320, 3]
@@ -110,8 +114,8 @@ index_file = "data/driving_log_train.csv"
 base_path = "data/" 
 
 with open(index_file) as f:
-    datagen = input_generator(f, base_path, input_shape)
-    batchgen = batch_generator(datagen, 32)
+    datagen = pairs(f, base_path, input_shape)
+    batchgen = batches(datagen, 32)
     history = model.fit_generator(batchgen, samples_per_epoch=1000, nb_epoch=2, verbose=2)
 
 # Save
