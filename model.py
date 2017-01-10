@@ -103,8 +103,8 @@ print(sys.argv)
 index_file = "data/driving_log_train.csv"
 base_path = "data/" 
 
-generator = batches(transpositions(groups(pairs(samples(records(lines(index_file)), base_path, (input_shape[1], input_shape[0])), 0, 3), 32)))
-history = model.fit_generator(generator, samples_per_epoch=1000, nb_epoch=10, verbose=2)
+generator = batches(transpositions(groups(pairs(samples(records(lines(index_file)), base_path, (input_shape[1], input_shape[0])), 0, 3), 100)))
+history = model.fit_generator(generator, samples_per_epoch=7000, nb_epoch=6, verbose=2)
 
 # Save
 
