@@ -33,11 +33,15 @@ def lines(path):
 
 records = lambda x : (line.split(",") for line in x)
 
-samples = lambda x, base : ([np.asarray(Image.open(base+f.strip())) for f in record[0:3]]+[float(v) for v in record[3:]] for record in x)
+samples = lambda x, base, shape : ([cv2.resize(np.asarray(Image.open(base+f.strip())), shape, interpolation=cv2.INTER_AREA) for f in record[0:3]]+[float(v) for v in record[3:]] for record in x)
+
+pairs = lambda x, l, r : ([s[l], s[r]] for s in x)
 
 groups = lambda x, n, fillvalue=None : zip_longest(*([iter(x)]*n), fillvalue=fillvalue)
 
-batches = lambda x : (list(map(list, zip(*g))) for g in x)
+transpositions = lambda x : (list(map(list, zip(*g))) for g in x)
+
+batches = lambda x : ([np.asarray(t[0]), np.asarray(t[1])] for t in x)
 
 # Model
 
@@ -97,10 +101,8 @@ print(sys.argv)
 index_file = "data/driving_log_train.csv"
 base_path = "data/" 
 
-with open(index_file) as f:
-    datagen = pairs(f, base_path, input_shape)
-    batchgen = batches(datagen, 32)
-    history = model.fit_generator(batchgen, samples_per_epoch=1000, nb_epoch=2, verbose=2)
+generator = batches(transpositions(groups(pairs(samples(records(lines(index_file)), base_path, (input_shape[1], input_shape[0])), 0, 3), 3)))
+history = model.fit_generator(generator, samples_per_epoch=10, nb_epoch=2, verbose=2)
 
 # Save
 
