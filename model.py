@@ -24,37 +24,21 @@ import sys
 
 # Utilities
 
-def groups(iterable, n, fillvalue=None):
-    "Collect data into fixed-length chunks or blocks"
-    # groups('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
-    args = [iter(iterable)] * n
-    return zip_longest(*args, fillvalue=fillvalue)
+def lines(path):
+    while 1:
+        f = open(path)
+        for line in f:
+            yield line
+        f.close()
 
-def lines(f, func=lambda x:x):
-    while True:
-        line = f.readline()
-        if line=='':
-            f.seek(0)
-            line = f.readline()
-        line = line.rstrip("\r\n")
-        yield func(line)
+records = lambda x : (line.split(",") for line in x)
 
-def pairs(generator, image_base, target_shape):
-    def processor(line):
-        center, left, right, angle, throttle, brake, speed = line.split(",")
-        img = center
-        img = image_base + img.strip()
-        img = np.asarray(Image.open(img))
-        img = cv2.resize(img, (target_shape[1], target_shape[0]), interpolation = cv2.INTER_AREA)
-        return (img, angle)
-    return lines(generator, processor)
+samples = lambda x, base : ([np.asarray(Image.open(base+f.strip())) for f in record[0:3]]+[float(v) for v in record[3:]] for record in x)
 
-def batches(generator, batch_size):
-    for batch in groups(generator, batch_size):
-        left, right = zip(*batch)
-        yield np.asarray(left), np.asarray(right)
+groups = lambda x, n, fillvalue=None : zip_longest(*([iter(x)]*n), fillvalue=fillvalue)
 
-    
+batches = lambda x : (list(map(list, zip(*g))) for g in x)
+
 # Model
 
 image_shape = [160, 320, 3]
