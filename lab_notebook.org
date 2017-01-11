@@ -40,3 +40,28 @@
 * <2017-01-09 Mon>
 *** Batch numbers
     Try these:  samples_per_epoch=20480, bach_size=512, nb_epoch=6
+* <2017-01-10 Tue>
+  - Refactored data generator into a set of generic, composeable,
+    lambda one-liner generator functions and generator expressions.
+  - Using itertools.cycle to cycle through the data.  Note that this
+    caches the data and so trades speed for memory.
+  - May want to shuffle the data on each epoch.  If I do, the
+    itertools.cycle may not be an appropriate solution.
+  - In that case, I should load the index file into memory and shuffle
+    /that/, and then read in the batches.
+  - The modified NVidia model seems to work OK.
+  - Should experiment with different image loaders.
+  - Should experiment with different image sizes.
+  - Should try using validation data again.
+  - It's a shame the driving simulator doesn't send the other camera
+    images.
+  - I wonder if I can somehow save the image size into the model.json
+    file so that it can be read by drive.py, avoiding hard-coding it
+    there.
+  - Really should experiment with the sample_weight parameter in the
+    fit_generator function.
+  - Alternatively, perhaps I can resample the training data into a
+    different distribution.  Right now, it's heavily represented by
+    samples with small steering angles, since most of the time the car
+    is driving straight.
+
