@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 
-# Imports
-
 from PIL import Image
 from itertools import groupby
 from itertools import islice, chain
-from itertools import zip_longest, cycle
+from itertools import zip_longest, cycle, permutations, combinations, combinations_with_replacement
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Activation, Dense, Input, Dropout, Lambda, ELU
 from keras.layers.convolutional import Convolution2D
 from keras.models import Sequential
@@ -37,7 +35,7 @@ split = lambda x : (line.split(",") for line in x)
 
 select = lambda x, indices=[0, 3]: ([r[i] for i in indices] for r in x)
 
-fetch = lambda x, base, shape : ([cv2.resize(np.asarray(Image.open(base+f.strip())), shape, interpolation=cv2.INTER_AREA) for f in record[:1]]+[float(v) for v in record[1:]] for record in x)
+fetch = lambda x, base, shape : ([cv2.resize(np.asarray(img.load_img(base+f.strip())), shape, interpolation=cv2.INTER_AREA) for f in record[:1]]+[float(v) for v in record[1:]] for record in x)
 
 pair = lambda x, l, r : ([s[l], s[r]] for s in x)
 
@@ -61,34 +59,30 @@ def nvidia(input_shape):
     model.add(Dense(100, activation='relu', name="FC2"))
     model.add(Dense(50, activation='relu', name="FC3"))
     model.add(Dense(10, activation='relu', name="FC4"))
-    model.add(Dense(1, activation='relu', name="Readout"))
+    model.add(Dense(1, activation='sigmoid', name="Readout"))
+    model.add(Lambda(lambda x: 2.*x-1., trainable=False, name="Postprocess"))
+    model.compile(loss="mse", optimizer="adam")
     return model
+
+# Training
                      
-model = nvidia(input_shape)
-model.summary()
-
-# Visualize
-
-plot(model, to_file="model.png", show_shapes=True)
-
-# Train
-
-model.compile(loss="mse", optimizer="adam", metrics=["accuracy"])
-
-print(sys.argv)
-
+image_shape = [160, 320, 3]
+input_shape = [x//2 for x in image_shape[:2]] + image_shape[2:]
 input_shape = [64, 64, 3]
 training_index = "data/driving_log_train.csv"
-validation_index = "data/driving_log_validation.csv"
 base_path = "data/" 
 
-training = batch(transpose(group(pair(cycle(fetch(select(split(feed(training_index))), base_path, (input_shape[1], input_shape[0]))), 0, 1), 512)))
-validation = batch(transpose(group(pair(cycle(fetch(select(split(feed(validation_index))), base_path, (input_shape[1], input_shape[0]))), 0, 1), 512)))
-history = model.fit_generator(training, samples_per_epoch=7000, nb_epoch=6, verbose=2, validation_data=validation, nb_val_samples=512)
+model = nvidia(input_shape)
+model.summary()
+plot(model, to_file="model.png", show_shapes=True)
+
+training = batch(transpose(group(pair(cycle(fetch(select(split(feed(training_index))), base_path, (input_shape[1], input_shape[0]))), 0, 1), 100)))
+# validation = batch(transpose(group(pair(cycle(fetch(select(split(feed(validation_index))), base_path, (input_shape[1], input_shape[0]))), 0, 1), 512)))
+history = model.fit_generator(training, samples_per_epoch=7000, nb_epoch=5, verbose=2)
 
 # Save
 
-model.save("model.h5")
+model.save_weights("model.h5")
 with open("model.json", "w") as f:
     f.write(model.to_json())
 
