@@ -1,44 +1,34 @@
 SHELL=/bin/bash
 export SHELL
-.PHONY: usage environment bootstrap docs data harness model validate clean cleandocs cleandata cleanharness cleanmodel 
+.PHONY: environment docs validate clean cleandocs cleandata cleanmodel simulator telemetry
 .ONESHELL:
-SAMPLES=10
+SAMPLES=7000
 EPOCHS=5
 
 # Phony targets
 
-usage:
-
 environment: 
 	conda env create -f environment.yml
 
-bootstrap: docs data harness
+docs: end-to-end-dl-using-px.pdf Makefile.svg
 
-docs: end-to-end-dl-using-px.pdf Makefile.png
+validate: telemetry simulator
 
-data: data/driving_log_all.csv data/driving_log_overtrain.csv data/driving_log_random_sample.csv data/driving_log_train.csv data/driving_log_validation.csv
+simulator: simulator-linux simulator-beta
+	"simulator-beta/Dominique Development Linux desktop 64-bit.x86_64"
 
-harness: drive.py
+telemetry: model.h5
+	python drive.py model.json
 
-model: data/driving_log_train.csv 
-	python model.py "data/driving_log_train.csv" "data/" $(SAMPLES) $(EPOCHS)
-
-validate: model.h5 model.json
-	python drive.py
-
-clean: cleandocs cleandata cleanharness cleanmodel
-	rm -f drive.py
+clean: cleandocs cleandata cleanmodel
 
 cleandocs:
 	rm -f end-to-end-dl-using-px.pdf
-	rm Makefile.png
+	rm -f Makefile.svg
 
 cleandata:
 	rm -rf data
 	rm -f data.zip
-
-cleanharness:
-	rm drive.py
 
 cleanmodel:
 	rm -f model.json
@@ -46,11 +36,11 @@ cleanmodel:
 
 # File targets
 
-model.h5:
-	model
+model.h5: model.json
 
-model.json:
-	model
+model.json: data/driving_log_train.csv data/driving_log_validation.csv
+	python model.py "data/driving_log_train.csv" "data/" $(SAMPLES) $(EPOCHS)
+
 
 data/driving_log.csv: data.zip
 	unzip -u $< > /dev/null 2>&1
@@ -75,10 +65,22 @@ data/driving_log_validation.csv: data/driving_log_all.csv
 	cat $< | tail -n+7000 > $@
 
 end-to-end-dl-using-px.pdf:
-	wget https://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf
+	wget "https://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf"
 
 drive.py:
-	wget -O - https://d17h27t6h515a5.cloudfront.net/topher/2017/January/586c4a66_drive/drive.py | dos2unix > $@
+	wget -O - "https://d17h27t6h515a5.cloudfront.net/topher/2017/January/586c4a66_drive/drive.py" | dos2unix > $@
 
-Makefile.png:
-	cat Makefile | python makefile2dot.py | dot -Tpng > $@
+Makefile.svg:
+	cat Makefile | python makefile2dot.py | dot -Tsvg > $@
+
+simulator-linux.zip:
+	wget -O $@ "https://d17h27t6h515a5.cloudfront.net/topher/2016/November/5831f0f7_simulator-linux/simulator-linux.zip"
+
+simulator-beta.zip:
+	wget -O $@ "https://d17h27t6h515a5.cloudfront.net/topher/2017/January/587527cb_udacity-sdc-udacity-self-driving-car-simulator-dominique-development-linux-desktop-64-bit-5/udacity-sdc-udacity-self-driving-car-simulator-dominique-development-linux-desktop-64-bit-5.zip"
+
+simulator-linux: simulator-linux.zip
+	unzip -d $@ -u $< > /dev/null 2>&1
+
+simulator-beta: simulator-beta.zip
+	unzip -d $@ -u $< > /dev/null 2>&1
