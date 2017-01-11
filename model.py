@@ -77,7 +77,6 @@ model.summary()
 plot(model, to_file="model.png", show_shapes=True)
 
 training = batch(transpose(group(pair(cycle(fetch(select(split(feed(training_index))), base_path, (input_shape[1], input_shape[0]))), 0, 1), 100)))
-# validation = batch(transpose(group(pair(cycle(fetch(select(split(feed(validation_index))), base_path, (input_shape[1], input_shape[0]))), 0, 1), 512)))
 history = model.fit_generator(training, samples_per_epoch=7000, nb_epoch=5, verbose=2)
 
 # Save
