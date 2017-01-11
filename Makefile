@@ -1,16 +1,15 @@
-SHELL=/bin/bash
-export SHELL
-.PHONY: environment docs validate clean cleandocs cleandata cleanmodel simulator telemetry
-.ONESHELL:
+export SHELL=/bin/bash
 SAMPLES=7000
 EPOCHS=5
+
+.PHONY: environment docs validate simulator telemetry clean cleandocs cleandata cleanmodel cleansimulators
 
 # Phony targets
 
 environment: 
 	conda env create -f environment.yml
 
-docs: end-to-end-dl-using-px.pdf Makefile.svg
+docs: Makefile.svg
 
 validate: telemetry simulator
 
@@ -20,7 +19,7 @@ simulator: simulator-linux simulator-beta
 telemetry: model.h5
 	python drive.py model.json
 
-clean: cleandocs cleandata cleanmodel
+clean: cleandocs cleandata cleanmodel cleansimulators
 
 cleandocs:
 	rm -f end-to-end-dl-using-px.pdf
@@ -33,6 +32,12 @@ cleandata:
 cleanmodel:
 	rm -f model.json
 	rm -f model.h5
+
+cleansimulators:
+	rm -rf simulator-linux
+	rm -rf simulator-beta
+	rm -rf simulator-linux.zip
+	rm -rf simulator-beta.zip
 
 # File targets
 

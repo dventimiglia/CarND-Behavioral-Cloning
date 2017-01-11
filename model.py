@@ -71,8 +71,8 @@ input_shape = [x//2 for x in image_shape[:2]] + image_shape[2:]
 input_shape = [64, 64, 3]
 training_index = sys.argv[1]
 base_path = sys.argv[2]
-samples = sys.argv[3]
-epochs = sys.argv[4]
+samples = int(sys.argv[3])
+epochs = int(sys.argv[4])
 
 model = nvidia(input_shape)
 model.summary()
