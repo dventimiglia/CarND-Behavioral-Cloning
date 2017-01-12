@@ -127,8 +127,3 @@ with open("model.json", "w") as f:
 # Cleanup
 
 gc.collect()
-
-# with open("model.json", 'r') as jfile:
-#     model = model_from_json(jfile.read())
-# model.compile("adam", "mse")
-# model.load_weights("model.h5")
