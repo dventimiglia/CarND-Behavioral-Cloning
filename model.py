@@ -35,15 +35,17 @@ split = lambda x : (line.split(",") for line in x)
 
 select = lambda x, indices=[0, 3]: ([r[i] for i in indices] for r in x)
 
-fetch = lambda x, base, shape : ([cv2.resize(np.asarray(img.load_img(base+f.strip())), shape, interpolation=cv2.INTER_AREA) for f in record[:1]]+[float(v) for v in record[1:]] for record in x)
+fetch = lambda x, base, shape : ([cv2.resize(np.asarray(Image.open(base+f.strip())), shape, interpolation=cv2.INTER_AREA) for f in record[:1]]+[float(v) for v in record[1:]] for record in x)
 
-pair = lambda x, l, r : ([s[l], s[r]] for s in x)
+process = lambda x, f = lambda y : y : (f(l) for l in x)
+
+flip = lambda y : y if random.choice([True, False]) else [img.flip_axis(y[0],1), -1*y[1]]
 
 group = lambda x, n, fillvalue=None : zip_longest(*([iter(x)]*n), fillvalue=fillvalue)
 
 transpose = lambda x : (list(map(list, zip(*g))) for g in x)
 
-batch = lambda x : ([np.asarray(t[0]), np.asarray(t[1])] for t in x)
+batch = lambda x, indices=[0, 1] : ([np.asarray(t[i]) for i in indices] for t in x)
 
 # Model
 
@@ -69,16 +71,22 @@ def nvidia(input_shape):
 image_shape = [160, 320, 3]
 input_shape = [x//2 for x in image_shape[:2]] + image_shape[2:]
 input_shape = [64, 64, 3]
-training_index = sys.argv[1]
-base_path = sys.argv[2]
-samples = int(sys.argv[3])
-epochs = int(sys.argv[4])
+if len(sys.argv)==5:
+    training_index = sys.argv[1]
+    base_path = sys.argv[2]
+    samples = int(sys.argv[3])
+    epochs = int(sys.argv[4])
+else:
+    training_index = "data/driving_log_train.csv"
+    base_path = "data/"
+    samples = 7000
+    epochs = 5
 
 model = nvidia(input_shape)
 model.summary()
 plot(model, to_file="model.png", show_shapes=True)
 
-training = batch(transpose(group(pair(cycle(fetch(select(split(feed(training_index))), base_path, (input_shape[1], input_shape[0]))), 0, 1), 100)))
+training = batch(transpose(group(process(select(cycle(fetch(select(split(feed(training_index))), base_path, (input_shape[1], input_shape[0]))), [0, 1]), f=flip), 100)))
 history = model.fit_generator(training, samples_per_epoch=samples, nb_epoch=epochs, verbose=2)
 
 # Save
