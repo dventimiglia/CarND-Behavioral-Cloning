@@ -25,17 +25,15 @@
     - In the meantime I managed to write a Python generator that works
       with =model.fit_generator=.
 *** Upcoming tasks
-***** TODO Refactor the generator code.
-******* TODO Parameterize batch size
-******* TODO Return multiple inputs and multiple outputs.
-******* TODO Make more concise
-***** TODO Scale the model output to [-1, 1]
+***** DONE Refactor the generator code.
+******* DONE Parameterize batch size
+******* DONE Make more concise
+***** DONE Scale the model output to [-1, 1]
       Right now, I think it's nowhere near to that interval.  That
       can't possibly be good for training.
 ***** TODO Possibly kill the softmax activation function at the end.
-***** TODO Parameterize the input shape dynamically based on input images.
-***** TODO Probably scale down the input images.
-***** TODO Possibly find a way to include the other two camera angles.
+***** DONE Parameterize the input shape dynamically based on input images.
+***** DONE Probably scale down the input images.
 ***** TODO Possibly use cv2 edge-detection.  I mean, why not?
 * <2017-01-09 Mon>
 *** Batch numbers
@@ -64,4 +62,16 @@
     different distribution.  Right now, it's heavily represented by
     samples with small steering angles, since most of the time the car
     is driving straight.
-
+* <2017-01-11 Wed>
+  - Implemented image/angle flipping and also sample weighting.
+  - My model still basically produces no useful steering angles.
+  - Tomorrow, I need to fold in validation data.
+  - Also, need to analyze the training data that's being fed in.  Is
+    it correct?
+  - Plot a histogram of angles.
+  - Plot a gallery of images, along with the angles.
+  - Check the images that are being processed in drive.py.  Make sure
+    they're the same shape, color, etc. as training data!
+  - Again, may have to consider shuffling on every epoch.  Ugh, that's
+    really going to slow things down.
+  - Unless I can rewrite cycle so that it's a random cycler.
