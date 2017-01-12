@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from PIL import Image
-from itertools import groupby
+from itertools import groupby, dropwhile, filterfalse, takewhile
 from itertools import islice, chain
 from itertools import zip_longest, cycle, permutations, combinations, combinations_with_replacement
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Activation, Dense, Input, Dropout, Lambda, ELU
@@ -9,6 +9,7 @@ from keras.layers.convolutional import Convolution2D
 from keras.models import Sequential
 from keras.utils import np_utils
 from keras.utils.visualize_util import plot
+from scipy.stats import kurtosis, skew, describe
 import cv2
 import gc
 import keras.preprocessing.image as img
@@ -29,6 +30,12 @@ def cyclefeed(path):
         for line in f:
             yield line
         f.close()
+
+def singlefeed(path):
+    f = open(path)
+    for line in f:
+        yield line
+    f.close()
 
 feed = lambda x : [l for l in open(x)]
 
@@ -71,7 +78,7 @@ def nvidia(input_shape):
     model.compile(loss="mse", optimizer="adam")
     return model
 
-# Training
+# Data
                      
 image_shape = [160, 320, 3]
 input_shape = [x//2 for x in image_shape[:2]] + image_shape[2:]
@@ -82,10 +89,20 @@ if len(sys.argv)==5:
     samples = int(sys.argv[3])
     epochs = int(sys.argv[4])
 else:
-    training_index = "data/driving_log_train.csv"
+    training_index = "data/driving_log_overtrain.csv"
     base_path = "data/"
-    samples = 7000
+    samples = 3
     epochs = 5
+
+# Analyze
+
+plt.ion()
+print(describe([float(s[1]) for s in select(split(singlefeed("data/driving_log_train.csv")))]))
+print(plt.hist([float(s[1]) for s in select(split(singlefeed("data/driving_log_train.csv")))],bins=100))
+print(describe([l for l in filter(lambda x: math.fabs(x)>0.01, map(lambda x: x*random.choice([1,-1]), [float(l[0]) for l in select(split(singlefeed("data/driving_log_train.csv")),[3])]))]))
+print(plt.hist([l for l in filter(lambda x: math.fabs(x)>0.01, map(lambda x: x*random.choice([1,-1]), [float(l[0]) for l in select(split(singlefeed("data/driving_log_train.csv")),[3])]))],100))
+
+# Train
 
 model = nvidia(input_shape)
 model.summary()
@@ -103,3 +120,5 @@ with open("model.json", "w") as f:
 # Cleanup
 
 gc.collect()
+
+plt.hist
