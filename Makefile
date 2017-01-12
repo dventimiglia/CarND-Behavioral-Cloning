@@ -1,6 +1,9 @@
+#!/usr/bin/Make -f
+
 export SHELL=/bin/bash
-SAMPLES=20000
+SAMPLES_PER_EPOCH=7000
 EPOCHS=5
+BATCH_SIZE=1000
 
 .PHONY: environment docs validate simulator telemetry clean cleandocs cleandata cleanmodel cleansimulators
 
@@ -44,8 +47,7 @@ cleansimulators:
 model.h5: model.json
 
 model.json: data/driving_log_train.csv data/driving_log_validation.csv
-	python model.py "data/driving_log_train.csv" "data/" $(SAMPLES) $(EPOCHS)
-
+	python model.py "data/driving_log_train.csv" "data/" $(SAMPLES_PER_EPOCH) $(EPOCHS) $(BATCH_SIZE)
 
 data/driving_log.csv: data.zip
 	unzip -u $< > /dev/null 2>&1

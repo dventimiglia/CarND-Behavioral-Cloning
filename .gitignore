@@ -13,3 +13,4 @@ recordings
 simulator-beta
 simulator-linux
 wget-log*
+__pycache__

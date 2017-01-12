@@ -7,9 +7,11 @@ from itertools import zip_longest, cycle, permutations, combinations, combinatio
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Activation, Dense, Input, Dropout, Lambda, ELU
 from keras.layers.convolutional import Convolution2D
 from keras.models import Sequential
+from keras.models import model_from_json
 from keras.utils import np_utils
 from keras.utils.visualize_util import plot
 from scipy.stats import kurtosis, skew, describe
+from util import process
 import cv2
 import gc
 import keras.preprocessing.image as img
@@ -41,11 +43,11 @@ feed = lambda x : [l for l in open(x)]
 
 split = lambda x : (line.split(",") for line in x)
 
-select = lambda x, indices=[0, 3]: ([r[i] for i in indices] for r in x)
+select = lambda x, indices : ([r[i] for i in indices] for r in x)
 
-fetch = lambda x, base, shape : ([cv2.resize(np.asarray(Image.open(base+f.strip())), shape, interpolation=cv2.INTER_AREA) for f in record[:1]]+[float(v) for v in record[1:]] for record in x)
+# process = lambda x, shape : cv2.resize(np.asarray(Image.open(x)), tuple(shape[:-1]), interpolation=cv2.INTER_AREA)
 
-process = lambda x, f = lambda y : y : map(f, x)
+fetch = lambda x, base, shape : ([process(base+f.strip(), shape) for f in record[:1]]+[float(v) for v in record[1:]] for record in x)
 
 flip = lambda y : y if random.choice([True, False]) else [img.flip_axis(y[0],1), -1*y[1]]
 
@@ -73,8 +75,7 @@ def nvidia(input_shape):
     model.add(Dense(100, activation='relu', name="FC2"))
     model.add(Dense(50, activation='relu', name="FC3"))
     model.add(Dense(10, activation='relu', name="FC4"))
-    model.add(Dense(1, activation='sigmoid', name="Readout"))
-    model.add(Lambda(lambda x: 2.*x-1., trainable=False, name="Postprocess"))
+    model.add(Dense(1, activation='tanh', trainable=False, name="Readout"))
     model.compile(loss="mse", optimizer="adam")
     return model
 
@@ -86,13 +87,15 @@ input_shape = [64, 64, 3]
 if len(sys.argv)==5:
     training_index = sys.argv[1]
     base_path = sys.argv[2]
-    samples = int(sys.argv[3])
+    samples_per_epoch = int(sys.argv[3])
     epochs = int(sys.argv[4])
+    batch_size = int(sys.arg[5])
 else:
     training_index = "data/driving_log_overtrain.csv"
     base_path = "data/"
-    samples = 1000
+    samples_per_epoch = 3000
     epochs = 5
+    batch_size = 3
 
 # Analyze
 
@@ -108,8 +111,12 @@ model = nvidia(input_shape)
 model.summary()
 plot(model, to_file="model.png", show_shapes=True)
 
-training = batch(transpose(group(map(flip_and_weight, select(cycle(fetch(select(split(feed(training_index))), base_path, (input_shape[1], input_shape[0]))), [0, 1])), 100)))
-history = model.fit_generator(training, samples_per_epoch=samples, nb_epoch=epochs, verbose=2)
+datafeed = select(cycle(fetch(select(split(feed(training_index)), [0,3]), base_path, input_shape)), [0,1])
+groupfeed = group(datafeed, batch_size)
+batchgen = batch(transpose(groupfeed))
+# x, y = zip(*islice(datafeed, 1000))
+# x, y = np.asarray(x), np.asarray(y)
+history = model.fit_generator(batchgen, samples_per_epoch=samples_per_epoch, nb_epoch=epochs, verbose=2)
 
 # Save
 
@@ -121,4 +128,7 @@ with open("model.json", "w") as f:
 
 gc.collect()
 
-plt.hist
+# with open("model.json", 'r') as jfile:
+#     model = model_from_json(jfile.read())
+# model.compile("adam", "mse")
+# model.load_weights("model.h5")
