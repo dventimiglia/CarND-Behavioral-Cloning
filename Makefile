@@ -1,5 +1,5 @@
 export SHELL=/bin/bash
-SAMPLES=7000
+SAMPLES=20000
 EPOCHS=5
 
 .PHONY: environment docs validate simulator telemetry clean cleandocs cleandata cleanmodel cleansimulators
