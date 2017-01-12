@@ -45,7 +45,7 @@ select = lambda x, indices=[0, 3]: ([r[i] for i in indices] for r in x)
 
 fetch = lambda x, base, shape : ([cv2.resize(np.asarray(Image.open(base+f.strip())), shape, interpolation=cv2.INTER_AREA) for f in record[:1]]+[float(v) for v in record[1:]] for record in x)
 
-process = lambda x, f = lambda y : y : (f(l) for l in x)
+process = lambda x, f = lambda y : y : map(f, x)
 
 flip = lambda y : y if random.choice([True, False]) else [img.flip_axis(y[0],1), -1*y[1]]
 
@@ -91,16 +91,16 @@ if len(sys.argv)==5:
 else:
     training_index = "data/driving_log_overtrain.csv"
     base_path = "data/"
-    samples = 3
+    samples = 1000
     epochs = 5
 
 # Analyze
 
-plt.ion()
-print(describe([float(s[1]) for s in select(split(singlefeed("data/driving_log_train.csv")))]))
-print(plt.hist([float(s[1]) for s in select(split(singlefeed("data/driving_log_train.csv")))],bins=100))
-print(describe([l for l in filter(lambda x: math.fabs(x)>0.01, map(lambda x: x*random.choice([1,-1]), [float(l[0]) for l in select(split(singlefeed("data/driving_log_train.csv")),[3])]))]))
-print(plt.hist([l for l in filter(lambda x: math.fabs(x)>0.01, map(lambda x: x*random.choice([1,-1]), [float(l[0]) for l in select(split(singlefeed("data/driving_log_train.csv")),[3])]))],100))
+# plt.ion()
+# print(describe([float(s[1]) for s in select(split(singlefeed("data/driving_log_train.csv")))]))
+# print(plt.hist([float(s[1]) for s in select(split(singlefeed("data/driving_log_train.csv")))],bins=100))
+# print(describe([l for l in filter(lambda x: math.fabs(x)>0.01, map(lambda x: x*random.choice([1,-1]), [float(l[0]) for l in select(split(singlefeed("data/driving_log_train.csv")),[3])]))]))
+# print(plt.hist([l for l in filter(lambda x: math.fabs(x)>0.01, map(lambda x: x*random.choice([1,-1]), [float(l[0]) for l in select(split(singlefeed("data/driving_log_train.csv")),[3])]))],100))
 
 # Train
 
@@ -108,7 +108,7 @@ model = nvidia(input_shape)
 model.summary()
 plot(model, to_file="model.png", show_shapes=True)
 
-training = batch(transpose(group(process(select(cycle(fetch(select(split(feed(training_index))), base_path, (input_shape[1], input_shape[0]))), [0, 1]), f=flip_and_weight), 100)))
+training = batch(transpose(group(map(flip_and_weight, select(cycle(fetch(select(split(feed(training_index))), base_path, (input_shape[1], input_shape[0]))), [0, 1])), 100)))
 history = model.fit_generator(training, samples_per_epoch=samples, nb_epoch=epochs, verbose=2)
 
 # Save
