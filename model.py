@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pdb
 import pickle
+import random
 import sys
 
 # Utilities
@@ -40,6 +41,10 @@ fetch = lambda x, base, shape : ([cv2.resize(np.asarray(Image.open(base+f.strip(
 process = lambda x, f = lambda y : y : (f(l) for l in x)
 
 flip = lambda y : y if random.choice([True, False]) else [img.flip_axis(y[0],1), -1*y[1]]
+
+weight = lambda y : [y[0], y[1], y[1]*y[1]*0.5 + 0.5]
+
+flip_and_weight = lambda y: weight(flip(y))
 
 group = lambda x, n, fillvalue=None : zip_longest(*([iter(x)]*n), fillvalue=fillvalue)
 
@@ -86,7 +91,7 @@ model = nvidia(input_shape)
 model.summary()
 plot(model, to_file="model.png", show_shapes=True)
 
-training = batch(transpose(group(process(select(cycle(fetch(select(split(feed(training_index))), base_path, (input_shape[1], input_shape[0]))), [0, 1]), f=flip), 100)))
+training = batch(transpose(group(process(select(cycle(fetch(select(split(feed(training_index))), base_path, (input_shape[1], input_shape[0]))), [0, 1]), f=flip_and_weight), 100)))
 history = model.fit_generator(training, samples_per_epoch=samples, nb_epoch=epochs, verbose=2)
 
 # Save
