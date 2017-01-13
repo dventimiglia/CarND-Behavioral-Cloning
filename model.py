@@ -87,7 +87,6 @@ def dventimi(input_shape):
     model.add(Conv2D(48, 5, 5, subsample=(2,2), name="Conv2D3", activation='relu'))
     model.add(Conv2D(64, 5, 5, name="Conv2D4", activation='relu'))
     model.add(Flatten(name="Flatten"))
-    model.add(Dense(1164, activation='relu', name="FC1"))
     model.add(Dense(100, activation='relu', name="FC2"))
     model.add(Dense(50, activation='relu', name="FC3"))
     model.add(Dense(10, activation='relu', name="FC4"))
@@ -98,8 +97,10 @@ def dventimi(input_shape):
 # Data
                      
 image_shape = [320, 160, 3]
-input_shape = [64, 64, 3]
 input_shape = [200, 66, 3]
+input_shape = [100, 33, 3]
+input_shape = [64, 64, 3]
+# input_shape = [32, 32, 3]
 if len(sys.argv)>1:
     training_index = sys.argv[1]
     base_path = sys.argv[2]
@@ -123,7 +124,7 @@ else:
 
 # Train
 
-model = nvidia([input_shape[1],input_shape[0],input_shape[2]])
+model = dventimi([input_shape[1],input_shape[0],input_shape[2]])
 model.summary()
 plot(model, to_file="model.png", show_shapes=True)
 
