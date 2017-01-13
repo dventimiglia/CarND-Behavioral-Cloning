@@ -5,6 +5,8 @@ SAMPLES_PER_EPOCH=7000
 EPOCHS=2
 BATCH_SIZE=1000
 
+.ONESHELL:
+
 .PHONY: environment docs validate simulator telemetry clean cleandocs cleandata cleanmodel cleansimulators
 
 # Phony targets
@@ -20,6 +22,7 @@ simulator: simulator-linux simulator-beta
 	"simulator-beta/Dominique Development Linux desktop 64-bit.x86_64"
 
 telemetry: model.h5
+	source activate carnd-term1
 	python drive.py model.json
 
 clean: cleandocs cleandata cleanmodel cleansimulators
@@ -47,6 +50,7 @@ cleansimulators:
 model.h5: model.json
 
 model.json: data/driving_log_train.csv data/driving_log_validation.csv
+	source activate carnd-term1
 	python model.py "data/driving_log_train.csv" "data/" $(SAMPLES_PER_EPOCH) $(EPOCHS) $(BATCH_SIZE)
 
 data/driving_log.csv: data.zip
