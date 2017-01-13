@@ -75,3 +75,27 @@
   - Again, may have to consider shuffling on every epoch.  Ugh, that's
     really going to slow things down.
   - Unless I can rewrite cycle so that it's a random cycler.
+* <2017-01-12 Thu>
+  - Analyzed the Udacity data, first.
+  - Data have non-zero mean, non-zero skew, non-zero kurtosis.
+  - Image-flipping if done carefully potentially should set the mean
+    and skew to zero, and potentially fight leftward drift.
+  - But, before doing any of that, I made some improvements to the
+    generator util functions.
+  - Also, fixed a major bug in drive.py, which finally allowed the
+    model to make real steering angle predictions.  The car makes it
+    to the bridge before ditching in the water!  That's progress.
+* <2017-01-13 Fri>
+  - Change to /exactly/ the NVidia model.  See if that helps.
+  - Train for more epochs.  See if that helps.
+  - More samples per epoch.
+  - If the images will fit in memory, try =model.fit= instead of
+    =model.fit_generator= and shuffle the data.
+  - With =model.fit_generator=, try using the validation data.
+  - With =model.fit=, try the validation split parameter.
+  - If stuck with =model.fit_generator=, see about some kind of
+    shuffling iterator.
+  - If too many parameters, shrink the target image size, and the
+    model accordingly.
+  - Add random flipping.  See if that helps.
+  - Just flip all the data and concatenate.  See if that helps.
