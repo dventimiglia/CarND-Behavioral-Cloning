@@ -66,7 +66,7 @@ data/driving_log_random_sample.csv: data/driving_log_all.csv
 	cat $< | shuf | head > $@
 
 data/driving_log_train.csv: data/driving_log_all.csv
-	cat $< | head -n7000 > $@
+	cat $< | head -n8000 > $@
 
 data/driving_log_validation.csv: data/driving_log_all.csv
 	cat $< | tail -n+7000 > $@
