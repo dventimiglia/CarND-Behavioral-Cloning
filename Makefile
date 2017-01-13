@@ -2,7 +2,7 @@
 
 export SHELL=/bin/bash
 SAMPLES_PER_EPOCH=7000
-EPOCHS=5
+EPOCHS=2
 BATCH_SIZE=1000
 
 .PHONY: environment docs validate simulator telemetry clean cleandocs cleandata cleanmodel cleansimulators

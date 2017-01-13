@@ -75,7 +75,7 @@ def nvidia(input_shape):
     model.add(Dense(100, activation='relu', name="FC2"))
     model.add(Dense(50, activation='relu', name="FC3"))
     model.add(Dense(10, activation='relu', name="FC4"))
-    model.add(Dense(1, activation='tanh', trainable=False, name="Readout"))
+    model.add(Dense(1, activation='tanh', name="Readout"))
     model.compile(loss="mse", optimizer="adam")
     return model
 
@@ -84,12 +84,12 @@ def nvidia(input_shape):
 image_shape = [160, 320, 3]
 input_shape = [x//2 for x in image_shape[:2]] + image_shape[2:]
 input_shape = [64, 64, 3]
-if len(sys.argv)==5:
+if len(sys.argv)>0:
     training_index = sys.argv[1]
     base_path = sys.argv[2]
     samples_per_epoch = int(sys.argv[3])
     epochs = int(sys.argv[4])
-    batch_size = int(sys.arg[5])
+    batch_size = int(sys.argv[5])
 else:
     training_index = "data/driving_log_overtrain.csv"
     base_path = "data/"
