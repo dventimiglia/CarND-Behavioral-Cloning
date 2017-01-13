@@ -65,6 +65,22 @@ batch = lambda x, indices=[0, 1] : ([np.asarray(t[i]) for i in indices] for t in
 
 def nvidia(input_shape):
     model = Sequential()
+    model.add(Lambda(lambda x: x/127.5 - 1., input_shape=input_shape, output_shape=input_shape, trainable=False, name="normalize"))
+    model.add(Conv2D(24, 5, 5, subsample=(2,2), name="conv1", activation="elu", input_shape=input_shape))
+    model.add(Conv2D(36, 5, 5, subsample=(2,2), name="conv2", activation="elu", input_shape=input_shape))
+    model.add(Conv2D(48, 5, 5, subsample=(2,2), name="conv3", activation="elu", input_shape=input_shape))
+    model.add(Conv2D(64, 3, 3, name="conv4", activation="elu", input_shape=input_shape))
+    model.add(Conv2D(64, 3, 3, name="conv5", activation="elu", input_shape=input_shape))
+    model.add(Flatten(name="flatten1"))
+    model.add(Dense(100, activation="elu", name="fc1"))
+    model.add(Dense(50, activation="elu", name="fc2"))
+    model.add(Dense(10, activation="elu", name="fc3"))
+    model.add(Dense(1, trainable=False, name="output"))
+    model.compile(loss="mse", optimizer="adam")
+    return model
+
+def dventimi(input_shape):
+    model = Sequential()
     model.add(Lambda(lambda x: x/127.5 - 1., input_shape=input_shape, output_shape=input_shape, trainable=False, name="Preprocess"))
     model.add(Conv2D(24, 5, 5, subsample=(2,2), name="Conv2D1", activation='relu', input_shape=input_shape))
     model.add(Conv2D(36, 5, 5, subsample=(2,2), name="Conv2D2", activation='relu'))
@@ -81,10 +97,10 @@ def nvidia(input_shape):
 
 # Data
                      
-image_shape = [160, 320, 3]
-input_shape = [x//2 for x in image_shape[:2]] + image_shape[2:]
+image_shape = [320, 160, 3]
 input_shape = [64, 64, 3]
-if len(sys.argv)>0:
+input_shape = [200, 66, 3]
+if len(sys.argv)>1:
     training_index = sys.argv[1]
     base_path = sys.argv[2]
     samples_per_epoch = int(sys.argv[3])
@@ -107,7 +123,7 @@ else:
 
 # Train
 
-model = nvidia(input_shape)
+model = nvidia([input_shape[1],input_shape[0],input_shape[2]])
 model.summary()
 plot(model, to_file="model.png", show_shapes=True)
 
