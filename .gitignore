@@ -14,3 +14,4 @@ simulator-beta
 simulator-linux
 wget-log*
 __pycache__
+*.bak
