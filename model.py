@@ -90,17 +90,33 @@ def dventimi(input_shape):
     model.add(Dense(100, activation='relu', name="FC2"))
     model.add(Dense(50, activation='relu', name="FC3"))
     model.add(Dense(10, activation='relu', name="FC4"))
-    model.add(Dense(1, activation='tanh', name="Readout"))
+    model.add(Dense(1, name="Readout", trainable=False))
+    model.compile(loss="mse", optimizer="adam")
+    return model
+
+def tiny(input_shape):
+    model = Sequential()
+    model.add(Lambda(lambda x: x/127.5 - 1., input_shape=input_shape, name="Preprocess"))
+    model.add(Conv2D(2, 3, 3, border_mode='valid', input_shape=(16,32,1), activation='relu'))
+    model.add(MaxPooling2D((4,4),(4,4),'valid'))
+    model.add(Dropout(0.25))
+    model.add(Flatten())
+    model.add(Dense(1))
     model.compile(loss="mse", optimizer="adam")
     return model
 
 # Data
                      
-image_shape = [320, 160, 3]
-input_shape = [200, 66, 3]
-input_shape = [100, 33, 3]
+# input_shape = [320, 70, 3]
+# input_shape = [160, 35, 3]
+# input_shape = [80, 20, 3]
+# input_shape = [160, 80, 3]
+# input_shape = [80, 40, 3]
+# input_shape = [200, 66, 3]
+# input_shape = [100, 33, 3]
 input_shape = [64, 64, 3]
 # input_shape = [32, 32, 3]
+# input_shape = [200, 64, 3]
 if len(sys.argv)>1:
     training_index = sys.argv[1]
     base_path = sys.argv[2]
@@ -116,7 +132,7 @@ else:
 
 # Analyze
 
-# plt.ion()
+plt.ion()
 # print(describe([float(s[1]) for s in select(split(singlefeed("data/driving_log_train.csv")))]))
 # print(plt.hist([float(s[1]) for s in select(split(singlefeed("data/driving_log_train.csv")))],bins=100))
 # print(describe([l for l in filter(lambda x: math.fabs(x)>0.01, map(lambda x: x*random.choice([1,-1]), [float(l[0]) for l in select(split(singlefeed("data/driving_log_train.csv")),[3])]))]))
@@ -128,12 +144,18 @@ model = dventimi([input_shape[1],input_shape[0],input_shape[2]])
 model.summary()
 plot(model, to_file="model.png", show_shapes=True)
 
-datafeed = select(cycle(fetch(select(split(feed(training_index)), [0,3]), base_path, input_shape)), [0,1])
-groupfeed = group(datafeed, batch_size)
-batchgen = batch(transpose(groupfeed))
-# x, y = zip(*islice(datafeed, 1000))
-# x, y = np.asarray(x), np.asarray(y)
-history = model.fit_generator(batchgen, samples_per_epoch=samples_per_epoch, nb_epoch=epochs, verbose=2)
+# datafeed = select(cycle(fetch(select(split(feed(training_index)), [0,3]), base_path, input_shape)), [0,1])
+# groupfeed = group(datafeed, batch_size)
+# batchgen = batch(transpose(groupfeed))
+# history = model.fit_generator(batchgen, samples_per_epoch=samples_per_epoch, nb_epoch=epochs, verbose=2)
+
+lines = open(training_index)
+records = (l.split(",") for l in lines)
+samples = zip(*((process(base_path + r[0].strip(), input_shape), float(r[3])) for r in records))
+X_train, y_train = (np.asarray(c) for c in samples)
+X_train = np.append(X_train, X_train[:,:,::-1], axis=0)
+y_train = np.append(y_train, -y_train, axis=0)
+history = model.fit(X_train, y_train, batch_size, epochs)
 
 # Save
 
