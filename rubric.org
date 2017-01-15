@@ -1,15 +1,15 @@
 * TODO Quality of Code
 *** TODO Is the code functional?
-***** TODO The model provided can be used to successfully operate the simulation.
+***** DONE The model provided can be used to successfully operate the simulation.
 *** TODO Is the code usable and readable?
 ***** TODO The code in =model.py= uses a Python generator.
 ***** TODO The =model.py= code is clearly organized.
 ***** TODO The =model.py= code has comments included where needed.
 * TODO Model Architecture and Training Strategy
 *** TODO Has an appropriate model architecture been employed for the task?
-***** TODO The data is normalized in the model.
+***** DONE The data is normalized in the model.
 ***** TODO The neural network uses convolution layers with appropriate filter sizes.
-***** TODO Layers exist to introduce nonlinearity into the model.
+***** DONE Layers exist to introduce nonlinearity into the model.
 *** TODO Has an attempt been made to reduce overfitting of the model?
 ***** TODO Train/validation/test splits have been used.
 ***** TODO The model uses dropout layers or other methods to reduce overfitting.
