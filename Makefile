@@ -1,7 +1,7 @@
 #!/usr/bin/Make -f
 
 export SHELL=/bin/bash
-SAMPLES_PER_EPOCH=8000
+SAMPLES_PER_EPOCH=16000
 EPOCHS=5
 BATCH_SIZE=100
 

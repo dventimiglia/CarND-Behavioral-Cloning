@@ -10,6 +10,7 @@ from keras.models import Sequential
 from keras.models import model_from_json
 from keras.utils import np_utils
 from keras.utils.visualize_util import plot
+from random import shuffle
 from scipy.stats import kurtosis, skew, describe
 from util import process
 import cv2
@@ -33,6 +34,16 @@ def cyclefeed(path):
             yield line
         f.close()
 
+def rcycle(iterable):
+    saved = []
+    for element in iterable:
+        yield element
+        saved.append(element)
+    while saved:
+        shuffle(saved)
+        for element in saved:
+              yield element
+              
 def singlefeed(path):
     f = open(path)
     for line in f:
@@ -106,18 +117,18 @@ model = dventimi([input_shape[1],input_shape[0],input_shape[2]])
 model.summary()
 plot(model, to_file="model.png", show_shapes=True)
 
-# datafeed = select(cycle(fetch(select(split(feed(training_index)), [0,3]), base_path, input_shape)), [0,1])
-# groupfeed = group(datafeed, batch_size)
-# batchgen = batch(transpose(groupfeed))
-# history = model.fit_generator(batchgen, samples_per_epoch=samples_per_epoch, nb_epoch=epochs, verbose=2)
+datafeed = select(rcycle(fetch(select(split(feed(training_index)), [0,3]), base_path, input_shape)), [0,1])
+groupfeed = group(datafeed, batch_size)
+batchgen = batch(transpose(groupfeed))
+history = model.fit_generator(batchgen, samples_per_epoch=samples_per_epoch, nb_epoch=epochs)
 
-lines = open(training_index)
-records = (l.split(",") for l in lines)
-samples = zip(*((process(base_path + r[0].strip(), input_shape), float(r[3])) for r in records))
-X_train, y_train = (np.asarray(c) for c in samples)
-X_train = np.append(X_train, X_train[:,:,::-1], axis=0)
-y_train = np.append(y_train, -y_train, axis=0)
-history = model.fit(X_train, y_train, batch_size, epochs)
+# lines = open(training_index)
+# records = (l.split(",") for l in lines)
+# columns = zip(*((process(base_path + r[0].strip(), input_shape), float(r[3])) for r in records))
+# X_train, y_train = (np.asarray(c) for c in columns)
+# X_train = np.append(X_train, X_train[:,:,::-1], axis=0)
+# y_train = np.append(y_train, -y_train, axis=0)
+# history = model.fit(X_train, y_train, batch_size, epochs)
 
 # Save
 
