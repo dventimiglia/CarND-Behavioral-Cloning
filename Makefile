@@ -51,7 +51,7 @@ model.h5: model.json
 
 model.json: data/driving_log_train.csv data/driving_log_validation.csv
 	source activate carnd-term1
-	python model.py "data/driving_log_train.csv" "data/" $(SAMPLES_PER_EPOCH) $(EPOCHS) $(BATCH_SIZE)
+	python model.py "data/driving_log_train.csv" "data/driving_log_validation.csv" "data/" $(SAMPLES_PER_EPOCH) $(EPOCHS) $(BATCH_SIZE)
 
 data/driving_log.csv: data.zip
 	unzip -u $< > /dev/null 2>&1
@@ -70,7 +70,7 @@ data/driving_log_random_sample.csv: data/driving_log_all.csv
 	cat $< | shuf | head > $@
 
 data/driving_log_train.csv: data/driving_log_all.csv
-	cat $< | head -n8000 > $@
+	cat $< | head -n7000 > $@
 
 data/driving_log_validation.csv: data/driving_log_all.csv
 	cat $< | tail -n+7000 > $@

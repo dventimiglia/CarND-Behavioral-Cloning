@@ -27,13 +27,6 @@ import sys
 
 # Utilities
 
-def cyclefeed(path):
-    while 1:
-        f = open(path)
-        for line in f:
-            yield line
-        f.close()
-
 def rcycle(iterable):
     saved = []
     for element in iterable:
@@ -44,12 +37,6 @@ def rcycle(iterable):
         for element in saved:
               yield element
               
-def singlefeed(path):
-    f = open(path)
-    for line in f:
-        yield line
-    f.close()
-
 feed = lambda x : [l for l in open(x)]
 
 split = lambda x : (line.split(",") for line in x)
@@ -92,14 +79,18 @@ def dventimi(input_shape):
 input_shape = [64, 64, 3]
 if len(sys.argv)>1:
     training_index = sys.argv[1]
-    base_path = sys.argv[2]
-    samples_per_epoch = int(sys.argv[3])
-    epochs = int(sys.argv[4])
-    batch_size = int(sys.argv[5])
+    validation_index = sys.argv[2]
+    base_path = sys.argv[3]
+    samples_per_epoch = int(sys.argv[4])
+    valid_samples_per_epoch = int(sys.argv[4])
+    epochs = int(sys.argv[5])
+    batch_size = int(sys.argv[6])
 else:
     training_index = "data/driving_log_overtrain.csv"
+    validation_index = "data/driving_log_overtrain.csv"
     base_path = "data/"
     samples_per_epoch = 3000
+    valid_samples_per_epoch = 3000
     epochs = 5
     batch_size = 3
 
@@ -117,10 +108,15 @@ model = dventimi([input_shape[1],input_shape[0],input_shape[2]])
 model.summary()
 plot(model, to_file="model.png", show_shapes=True)
 
-datafeed = select(rcycle(fetch(select(split(feed(training_index)), [0,3]), base_path, input_shape)), [0,1])
-groupfeed = group(datafeed, batch_size)
-batchgen = batch(transpose(groupfeed))
-history = model.fit_generator(batchgen, samples_per_epoch=samples_per_epoch, nb_epoch=epochs)
+def pipeline(training_index, base_path, input_shape):
+    datafeed = select(rcycle(fetch(select(split(feed(training_index)), [0,3]), base_path, input_shape)), [0,1])
+    groupfeed = group(datafeed, batch_size)
+    batchgen = batch(transpose(groupfeed))
+    return batchgen
+
+train = pipeline(training_index, base_path, input_shape)
+valid = pipeline(validation_index, base_path, input_shape)
+history = model.fit_generator(train, samples_per_epoch, epochs, validation_data=valid, nb_val_samples=valid_samples_per_epoch)
 
 # lines = open(training_index)
 # records = (l.split(",") for l in lines)
