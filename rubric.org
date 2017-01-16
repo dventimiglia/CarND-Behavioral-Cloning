@@ -12,9 +12,9 @@
 ***** DONE Layers exist to introduce nonlinearity into the model.
 *** TODO Has an attempt been made to reduce overfitting of the model?
 ***** DONE Train/validation/test splits have been used.
-***** TODO The model uses dropout layers or other methods to reduce overfitting.
+***** DONE The model uses dropout layers or other methods to reduce overfitting.
 *** TODO Have the model parameters been tuned appropriately?
-***** TODO Learning rate parameters are chosen with explanation, or an Adam optimizer is used.
+***** DONE Learning rate parameters are chosen with explanation, or an Adam optimizer is used.
 *** TODO Is the training data chosen appropriately?
 ***** TODO Training data has been chosen to induce the desired behavior in the simulation (i.e. keeping the car on the track).
 * TODO Architecture and Training Documentation

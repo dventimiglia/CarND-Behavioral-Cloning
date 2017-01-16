@@ -46,11 +46,9 @@ process = lambda x, shape, crop: cv2.resize(np.asarray(Image.open(x))[crop[0]:cr
 
 fetch = lambda x, base, shape, crop=[100,120]: ([process(base+f.strip(), shape, crop) for f in record[:1]]+[float(v) for v in record[1:]] for record in x)
 
-flip = lambda y: y if random.choice([True, False]) else [img.flip_axis(y[0],1), -1*y[1]]
+flip = lambda x: x if random.choice([True, False]) else [img.flip_axis(x[0],1), -1*x[1]]
 
-weight = lambda y: [y[0], y[1], y[1]*y[1]*0.5 + 0.5]
-
-flip_and_weight = lambda y: weight(flip(y))
+shift = lambda x: [img.random_shift(x[0], 0.1, 0.0, 0, 1, 2, fill_mode='wrap'), x[1]]
 
 group = lambda x, n, fillvalue=None: zip_longest(*([iter(x)]*n), fillvalue=fillvalue)
 
@@ -93,15 +91,23 @@ def analyze():
 
 # Train
 
-def pipeline(training_index, base_path, input_shape, crop):
-    datafeed = select(rcycle(fetch(select(split(feed(training_index)), [0,3], [100, 120]), base_path, input_shape)), [0,1])
-    groupfeed = group(datafeed, batch_size)
-    batchgen = batch(transpose(groupfeed))
-    return batchgen
+def training_pipeline(training_index, base_path, input_shape, crop):
+    images = select(rcycle(fetch(select(split(feed(training_index)), [0,3]), base_path, input_shape, crop)), [0,1])
+    # images = (flip(x) for x in images)
+    # images = (shift(x) for x in images)
+    groups = group(images, batch_size)
+    batches = batch(transpose(groups))
+    return batches
+
+def validation_pipeline(validation_index, base_path, input_shape, crop):
+    images = select(rcycle(fetch(select(split(feed(training_index)), [0,3]), base_path, input_shape, crop)), [0,1])
+    groups = group(images, batch_size)
+    batches = batch(transpose(groups))
+    return batches
 
 def train():
-    traingen = pipeline(training_index, base_path, input_shape)
-    validgen = pipeline(validation_index, base_path, input_shape)
+    traingen = training_pipeline(training_index, base_path, input_shape, crop)
+    validgen = validation_pipeline(validation_index, base_path, input_shape, crop)
     history = model.fit_generator(traingen, samples_per_epoch, epochs, validation_data=validgen, nb_val_samples=valid_samples_per_epoch)
 
 if __name__=="__main__":
@@ -120,8 +126,9 @@ if __name__=="__main__":
         samples_per_epoch = 3000
         valid_samples_per_epoch = 3000
         epochs = 5
-        batch_size = 3
+        batch_size = 100
     input_shape = [64, 64, 3]
+    crop = [100, 120]
     model = dventimi([input_shape[1],input_shape[0],input_shape[2]])
     model.summary()
     plot(model, to_file="model.png", show_shapes=True)
