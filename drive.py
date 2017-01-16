@@ -37,7 +37,7 @@ def telemetry(sid, data):
     speed = data["speed"]
     # The current image from the center camera of the car
     imgString = data["image"]
-    image_array = process(BytesIO(base64.b64decode(imgString)), input_shape)
+    image_array = process(BytesIO(base64.b64decode(imgString)), input_shape, [100,120])
     transformed_image_array = image_array[None, :, :, :]
     # This model currently assumes that the features of the model are just the images. Feel free to change this.
     steering_angle = float(model.predict(transformed_image_array, batch_size=1))

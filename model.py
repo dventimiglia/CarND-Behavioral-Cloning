@@ -36,9 +36,15 @@ def rcycle(iterable):
         for element in saved:
               yield element
               
+feed = lambda x : (l for l in open(x))
+
+split = lambda x : (line.split(",") for line in x)
+
 select = lambda x, indices: ([r[i] for i in indices] for r in x)
 
-fetch = lambda x, base, shape: ([process(base+f.strip(), shape) for f in record[:1]]+[float(v) for v in record[1:]] for record in x)
+process = lambda x, shape, crop: cv2.resize(np.asarray(Image.open(x))[crop[0]:crop[1]], tuple(shape[:2]), interpolation=cv2.INTER_AREA)
+
+fetch = lambda x, base, shape, crop=[100,120]: ([process(base+f.strip(), shape, crop) for f in record[:1]]+[float(v) for v in record[1:]] for record in x)
 
 flip = lambda y: y if random.choice([True, False]) else [img.flip_axis(y[0],1), -1*y[1]]
 
@@ -52,21 +58,26 @@ transpose = lambda x: (list(map(list, zip(*g))) for g in x)
 
 batch = lambda x, indices=[0, 1]: ([np.asarray(t[i]) for i in indices] for t in x)
 
-process = lambda x, shape: cv2.resize(np.asarray(Image.open(x))[100:120], tuple(shape[:2]), interpolation=cv2.INTER_AREA)
-
 # Model
 
 def dventimi(input_shape):
     model = Sequential()
     model.add(Lambda(lambda x: x/127.5 - 1., input_shape=input_shape, output_shape=input_shape, trainable=False, name="Preprocess"))
-    model.add(Conv2D(24, 5, 5, subsample=(2,2), name="Conv2D1", activation='relu', input_shape=input_shape))
-    model.add(Conv2D(36, 5, 5, subsample=(2,2), name="Conv2D2", activation='relu'))
-    model.add(Conv2D(48, 5, 5, subsample=(2,2), name="Conv2D3", activation='relu'))
-    model.add(Conv2D(64, 5, 5, name="Conv2D4", activation='relu'))
+    model.add(Conv2D(24, 5, 5, subsample=(1,1), name="Conv2D1", activation='relu', input_shape=input_shape))
+    model.add(MaxPooling2D(name="MaxPool1"))
+    model.add(Conv2D(36, 5, 5, subsample=(1,1), name="Conv2D2", activation='relu'))
+    model.add(MaxPooling2D(name="MaxPool2"))
+    model.add(Conv2D(48, 5, 5, subsample=(1,1), name="Conv2D3", activation='relu'))
+    model.add(MaxPooling2D(name="MaxPool3"))
+    model.add(Conv2D(64, 3, 3, name="Conv2D4", activation='relu'))
+    model.add(MaxPooling2D(name="MaxPool4"))
     model.add(Flatten(name="Flatten"))
     model.add(Dense(100, activation='relu', name="FC2"))
+    model.add(Dropout(0.5))
     model.add(Dense(50, activation='relu', name="FC3"))
+    model.add(Dropout(0.5))
     model.add(Dense(10, activation='relu', name="FC4"))
+    model.add(Dropout(0.5))
     model.add(Dense(1, name="Readout", trainable=False))
     model.compile(loss="mse", optimizer="adam")
     return model
@@ -82,8 +93,8 @@ def analyze():
 
 # Train
 
-def pipeline(training_index, base_path, input_shape):
-    datafeed = select(rcycle(fetch(select(split(feed(training_index)), [0,3]), base_path, input_shape)), [0,1])
+def pipeline(training_index, base_path, input_shape, crop):
+    datafeed = select(rcycle(fetch(select(split(feed(training_index)), [0,3], [100, 120]), base_path, input_shape)), [0,1])
     groupfeed = group(datafeed, batch_size)
     batchgen = batch(transpose(groupfeed))
     return batchgen
