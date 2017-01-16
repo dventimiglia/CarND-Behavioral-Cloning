@@ -45,8 +45,6 @@ split = lambda x : (line.split(",") for line in x)
 
 select = lambda x, indices : ([r[i] for i in indices] for r in x)
 
-# process = lambda x, shape : cv2.resize(np.asarray(Image.open(x)), tuple(shape[:-1]), interpolation=cv2.INTER_AREA)
-
 fetch = lambda x, base, shape : ([process(base+f.strip(), shape) for f in record[:1]]+[float(v) for v in record[1:]] for record in x)
 
 flip = lambda y : y if random.choice([True, False]) else [img.flip_axis(y[0],1), -1*y[1]]
@@ -63,22 +61,6 @@ batch = lambda x, indices=[0, 1] : ([np.asarray(t[i]) for i in indices] for t in
 
 # Model
 
-def nvidia(input_shape):
-    model = Sequential()
-    model.add(Lambda(lambda x: x/127.5 - 1., input_shape=input_shape, output_shape=input_shape, trainable=False, name="normalize"))
-    model.add(Conv2D(24, 5, 5, subsample=(2,2), name="conv1", activation="elu", input_shape=input_shape))
-    model.add(Conv2D(36, 5, 5, subsample=(2,2), name="conv2", activation="elu", input_shape=input_shape))
-    model.add(Conv2D(48, 5, 5, subsample=(2,2), name="conv3", activation="elu", input_shape=input_shape))
-    model.add(Conv2D(64, 3, 3, name="conv4", activation="elu", input_shape=input_shape))
-    model.add(Conv2D(64, 3, 3, name="conv5", activation="elu", input_shape=input_shape))
-    model.add(Flatten(name="flatten1"))
-    model.add(Dense(100, activation="elu", name="fc1"))
-    model.add(Dense(50, activation="elu", name="fc2"))
-    model.add(Dense(10, activation="elu", name="fc3"))
-    model.add(Dense(1, trainable=False, name="output"))
-    model.compile(loss="mse", optimizer="adam")
-    return model
-
 def dventimi(input_shape):
     model = Sequential()
     model.add(Lambda(lambda x: x/127.5 - 1., input_shape=input_shape, output_shape=input_shape, trainable=False, name="Preprocess"))
@@ -94,29 +76,9 @@ def dventimi(input_shape):
     model.compile(loss="mse", optimizer="adam")
     return model
 
-def tiny(input_shape):
-    model = Sequential()
-    model.add(Lambda(lambda x: x/127.5 - 1., input_shape=input_shape, name="Preprocess"))
-    model.add(Conv2D(2, 3, 3, border_mode='valid', input_shape=(16,32,1), activation='relu'))
-    model.add(MaxPooling2D((4,4),(4,4),'valid'))
-    model.add(Dropout(0.25))
-    model.add(Flatten())
-    model.add(Dense(1))
-    model.compile(loss="mse", optimizer="adam")
-    return model
-
 # Data
                      
-# input_shape = [320, 70, 3]
-# input_shape = [160, 35, 3]
-# input_shape = [80, 20, 3]
-# input_shape = [160, 80, 3]
-# input_shape = [80, 40, 3]
-# input_shape = [200, 66, 3]
-# input_shape = [100, 33, 3]
 input_shape = [64, 64, 3]
-# input_shape = [32, 32, 3]
-# input_shape = [200, 64, 3]
 if len(sys.argv)>1:
     training_index = sys.argv[1]
     base_path = sys.argv[2]
