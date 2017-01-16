@@ -7,7 +7,7 @@ import socketio
 import eventlet
 import eventlet.wsgi
 import time
-from util import process
+from model import process
 from PIL import Image
 from PIL import ImageOps
 from flask import Flask, render_template

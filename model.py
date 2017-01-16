@@ -12,7 +12,6 @@ from keras.utils import np_utils
 from keras.utils.visualize_util import plot
 from random import shuffle
 from scipy.stats import kurtosis, skew, describe
-from util import process
 import cv2
 import gc
 import keras.preprocessing.image as img
@@ -37,25 +36,23 @@ def rcycle(iterable):
         for element in saved:
               yield element
               
-feed = lambda x : [l for l in open(x)]
+select = lambda x, indices: ([r[i] for i in indices] for r in x)
 
-split = lambda x : (line.split(",") for line in x)
+fetch = lambda x, base, shape: ([process(base+f.strip(), shape) for f in record[:1]]+[float(v) for v in record[1:]] for record in x)
 
-select = lambda x, indices : ([r[i] for i in indices] for r in x)
+flip = lambda y: y if random.choice([True, False]) else [img.flip_axis(y[0],1), -1*y[1]]
 
-fetch = lambda x, base, shape : ([process(base+f.strip(), shape) for f in record[:1]]+[float(v) for v in record[1:]] for record in x)
-
-flip = lambda y : y if random.choice([True, False]) else [img.flip_axis(y[0],1), -1*y[1]]
-
-weight = lambda y : [y[0], y[1], y[1]*y[1]*0.5 + 0.5]
+weight = lambda y: [y[0], y[1], y[1]*y[1]*0.5 + 0.5]
 
 flip_and_weight = lambda y: weight(flip(y))
 
-group = lambda x, n, fillvalue=None : zip_longest(*([iter(x)]*n), fillvalue=fillvalue)
+group = lambda x, n, fillvalue=None: zip_longest(*([iter(x)]*n), fillvalue=fillvalue)
 
-transpose = lambda x : (list(map(list, zip(*g))) for g in x)
+transpose = lambda x: (list(map(list, zip(*g))) for g in x)
 
-batch = lambda x, indices=[0, 1] : ([np.asarray(t[i]) for i in indices] for t in x)
+batch = lambda x, indices=[0, 1]: ([np.asarray(t[i]) for i in indices] for t in x)
+
+process = lambda x, shape: cv2.resize(np.asarray(Image.open(x))[100:120], tuple(shape[:2]), interpolation=cv2.INTER_AREA)
 
 # Model
 
@@ -74,39 +71,16 @@ def dventimi(input_shape):
     model.compile(loss="mse", optimizer="adam")
     return model
 
-# Data
-                     
-input_shape = [64, 64, 3]
-if len(sys.argv)>1:
-    training_index = sys.argv[1]
-    validation_index = sys.argv[2]
-    base_path = sys.argv[3]
-    samples_per_epoch = int(sys.argv[4])
-    valid_samples_per_epoch = int(sys.argv[4])
-    epochs = int(sys.argv[5])
-    batch_size = int(sys.argv[6])
-else:
-    training_index = "data/driving_log_overtrain.csv"
-    validation_index = "data/driving_log_overtrain.csv"
-    base_path = "data/"
-    samples_per_epoch = 3000
-    valid_samples_per_epoch = 3000
-    epochs = 5
-    batch_size = 3
-
 # Analyze
 
-plt.ion()
-# print(describe([float(s[1]) for s in select(split(singlefeed("data/driving_log_train.csv")))]))
-# print(plt.hist([float(s[1]) for s in select(split(singlefeed("data/driving_log_train.csv")))],bins=100))
-# print(describe([l for l in filter(lambda x: math.fabs(x)>0.01, map(lambda x: x*random.choice([1,-1]), [float(l[0]) for l in select(split(singlefeed("data/driving_log_train.csv")),[3])]))]))
-# print(plt.hist([l for l in filter(lambda x: math.fabs(x)>0.01, map(lambda x: x*random.choice([1,-1]), [float(l[0]) for l in select(split(singlefeed("data/driving_log_train.csv")),[3])]))],100))
+def analyze():
+    plt.ion()
+    # print(describe([float(s[1]) for s in select(split(singlefeed("data/driving_log_train.csv")))]))
+    # print(plt.hist([float(s[1]) for s in select(split(singlefeed("data/driving_log_train.csv")))],bins=100))
+    # print(describe([l for l in filter(lambda x: math.fabs(x)>0.01, map(lambda x: x*random.choice([1,-1]), [float(l[0]) for l in select(split(singlefeed("data/driving_log_train.csv")),[3])]))]))
+    # print(plt.hist([l for l in filter(lambda x: math.fabs(x)>0.01, map(lambda x: x*random.choice([1,-1]), [float(l[0]) for l in select(split(singlefeed("data/driving_log_train.csv")),[3])]))],100))
 
 # Train
-
-model = dventimi([input_shape[1],input_shape[0],input_shape[2]])
-model.summary()
-plot(model, to_file="model.png", show_shapes=True)
 
 def pipeline(training_index, base_path, input_shape):
     datafeed = select(rcycle(fetch(select(split(feed(training_index)), [0,3]), base_path, input_shape)), [0,1])
@@ -114,9 +88,37 @@ def pipeline(training_index, base_path, input_shape):
     batchgen = batch(transpose(groupfeed))
     return batchgen
 
-train = pipeline(training_index, base_path, input_shape)
-valid = pipeline(validation_index, base_path, input_shape)
-history = model.fit_generator(train, samples_per_epoch, epochs, validation_data=valid, nb_val_samples=valid_samples_per_epoch)
+def train():
+    traingen = pipeline(training_index, base_path, input_shape)
+    validgen = pipeline(validation_index, base_path, input_shape)
+    history = model.fit_generator(traingen, samples_per_epoch, epochs, validation_data=validgen, nb_val_samples=valid_samples_per_epoch)
+
+if __name__=="__main__":
+    if len(sys.argv)>1:
+        training_index = sys.argv[1]
+        validation_index = sys.argv[2]
+        base_path = sys.argv[3]
+        samples_per_epoch = int(sys.argv[4])
+        valid_samples_per_epoch = int(sys.argv[4])
+        epochs = int(sys.argv[5])
+        batch_size = int(sys.argv[6])
+    else:
+        training_index = "data/driving_log_overtrain.csv"
+        validation_index = "data/driving_log_overtrain.csv"
+        base_path = "data/"
+        samples_per_epoch = 3000
+        valid_samples_per_epoch = 3000
+        epochs = 5
+        batch_size = 3
+    input_shape = [64, 64, 3]
+    model = dventimi([input_shape[1],input_shape[0],input_shape[2]])
+    model.summary()
+    plot(model, to_file="model.png", show_shapes=True)
+    train()
+    model.save_weights("model.h5")
+    with open("model.json", "w") as f:
+        f.write(model.to_json())
+    gc.collect()
 
 # lines = open(training_index)
 # records = (l.split(",") for l in lines)
@@ -125,13 +127,3 @@ history = model.fit_generator(train, samples_per_epoch, epochs, validation_data=
 # X_train = np.append(X_train, X_train[:,:,::-1], axis=0)
 # y_train = np.append(y_train, -y_train, axis=0)
 # history = model.fit(X_train, y_train, batch_size, epochs)
-
-# Save
-
-model.save_weights("model.h5")
-with open("model.json", "w") as f:
-    f.write(model.to_json())
-
-# Cleanup
-
-gc.collect()
