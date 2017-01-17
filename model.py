@@ -229,7 +229,7 @@ if __name__=="__main__":        # In case this module is imported
     theta.base_path = "data/"
     theta.flip = False
     theta.shift = False
-    if len(sys.argv)>0:         # Running from the command line
+    if sys.argv[0]!='':         # Running from the command line
         theta.training_index = os.environ['TRAINING_INDEX']
         theta.validation_index = os.environ['VALIDATION_INDEX']
         theta.base_path = os.environ['BASE_PATH']
