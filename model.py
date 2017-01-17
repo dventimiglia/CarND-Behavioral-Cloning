@@ -24,6 +24,8 @@ import pickle
 import random
 import sys
 
+plt.ion()
+
 # Utilities
 
 def rcycle(iterable):
@@ -42,13 +44,19 @@ split = lambda x : (line.split(",") for line in x)
 
 select = lambda x, indices: ([r[i] for i in indices] for r in x)
 
-process = lambda x, shape, crop: cv2.resize(np.asarray(Image.open(x))[crop[0]:crop[1]], tuple(shape[:2]), interpolation=cv2.INTER_AREA)
+load = lambda x: np.asarray(Image.open(x))
 
-fetch = lambda x, base, shape, crop=[100,120]: ([process(base+f.strip(), shape, crop) for f in record[:1]]+[float(v) for v in record[1:]] for record in x)
+fetch = lambda x, base: ([load(base+f.strip()) for f in record[:1]]+[float(v) for v in record[1:]] for record in x)
 
 flip = lambda x: x if random.choice([True, False]) else [img.flip_axis(x[0],1), -1*x[1]]
 
-shift = lambda x: [img.random_shift(x[0], 0.1, 0.0, 0, 1, 2, fill_mode='wrap'), x[1]]
+shift = lambda x: img.random_shift(x, 0.1, 0.0, 0, 1, 2, fill_mode='wrap')
+
+crop = lambda x, s: x[s[0][0]:s[0][1],s[1][0]:s[1][1]]
+
+resize = lambda x, s: cv2.resize(x, tuple(s[:2]))
+
+process = lambda x, c, s: resize(crop(x, c), s)
 
 group = lambda x, n, fillvalue=None: zip_longest(*([iter(x)]*n), fillvalue=fillvalue)
 
@@ -71,43 +79,40 @@ def dventimi(input_shape):
     model.add(MaxPooling2D(name="MaxPool4"))
     model.add(Flatten(name="Flatten"))
     model.add(Dense(100, activation='relu', name="FC2"))
-    model.add(Dropout(0.5))
+    # model.add(Dropout(0.5))
     model.add(Dense(50, activation='relu', name="FC3"))
-    model.add(Dropout(0.5))
+    # model.add(Dropout(0.5))
     model.add(Dense(10, activation='relu', name="FC4"))
-    model.add(Dropout(0.5))
+    # model.add(Dropout(0.5))
     model.add(Dense(1, name="Readout", trainable=False))
     model.compile(loss="mse", optimizer="adam")
     return model
 
 # Analyze
 
-def analyze():
-    plt.ion()
-    # print(describe([float(s[1]) for s in select(split(singlefeed("data/driving_log_train.csv")))]))
-    # print(plt.hist([float(s[1]) for s in select(split(singlefeed("data/driving_log_train.csv")))],bins=100))
-    # print(describe([l for l in filter(lambda x: math.fabs(x)>0.01, map(lambda x: x*random.choice([1,-1]), [float(l[0]) for l in select(split(singlefeed("data/driving_log_train.csv")),[3])]))]))
-    # print(plt.hist([l for l in filter(lambda x: math.fabs(x)>0.01, map(lambda x: x*random.choice([1,-1]), [float(l[0]) for l in select(split(singlefeed("data/driving_log_train.csv")),[3])]))],100))
+# def analyze():
+#     plt.ion()
+#     print(describe([float(s[1]) for s in select(split(singlefeed("data/driving_log_train.csv")))]))
+#     print(plt.hist([float(s[1]) for s in select(split(singlefeed("data/driving_log_train.csv")))],bins=100))
+#     print(describe([l for l in filter(lambda x: math.fabs(x)>0.01, map(lambda x: x*random.choice([1,-1]), [float(l[0]) for l in select(split(singlefeed("data/driving_log_train.csv")),[3])]))]))
+#     print(plt.hist([l for l in filter(lambda x: math.fabs(x)>0.01, map(lambda x: x*random.choice([1,-1]), [float(l[0]) for l in select(split(singlefeed("data/driving_log_train.csv")),[3])]))],100))
 
 # Train
 
-def training_pipeline(training_index, base_path, input_shape, crop):
-    images = select(rcycle(fetch(select(split(feed(training_index)), [0,3]), base_path, input_shape, crop)), [0,1])
-    # images = (flip(x) for x in images)
-    # images = (shift(x) for x in images)
-    groups = group(images, batch_size)
-    batches = batch(transpose(groups))
-    return batches
-
-def validation_pipeline(validation_index, base_path, input_shape, crop):
-    images = select(rcycle(fetch(select(split(feed(training_index)), [0,3]), base_path, input_shape, crop)), [0,1])
-    groups = group(images, batch_size)
+def pipeline(training_index, base_path, input_shape, crop_shape, training=False):
+    samples = select(rcycle(fetch(select(split(feed(training_index)), [0,3]), base_path)), [0,1])
+    if training:
+        samples = (flip(x) for x in samples)
+        # samples = ((shift(x[0]),x[1]) for x in samples)
+    # samples = ((resize(crop(x[0], crop_shape), input_shape), x[1]) for x in samples)
+    samples = ((process(x[0], crop_shape, input_shape), x[1]) for x in samples)
+    groups = group(samples, batch_size)
     batches = batch(transpose(groups))
     return batches
 
 def train():
-    traingen = training_pipeline(training_index, base_path, input_shape, crop)
-    validgen = validation_pipeline(validation_index, base_path, input_shape, crop)
+    traingen = pipeline(training_index, base_path, input_shape, crop_shape, training=True)
+    validgen = pipeline(validation_index, base_path, input_shape, crop_shape)
     history = model.fit_generator(traingen, samples_per_epoch, epochs, validation_data=validgen, nb_val_samples=valid_samples_per_epoch)
 
 if __name__=="__main__":
@@ -127,8 +132,9 @@ if __name__=="__main__":
         valid_samples_per_epoch = 3000
         epochs = 5
         batch_size = 100
+    # input_shape = [256, 60, 3]
     input_shape = [64, 64, 3]
-    crop = [100, 120]
+    crop_shape = ((100,140),(0,320))
     model = dventimi([input_shape[1],input_shape[0],input_shape[2]])
     model.summary()
     plot(model, to_file="model.png", show_shapes=True)

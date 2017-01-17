@@ -7,11 +7,12 @@ import socketio
 import eventlet
 import eventlet.wsgi
 import time
-from model import process
+from model import load, crop, resize, process
 from PIL import Image
 from PIL import ImageOps
 from flask import Flask, render_template
 from io import BytesIO
+import pdb
 
 from keras.models import model_from_json
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array
@@ -37,7 +38,10 @@ def telemetry(sid, data):
     speed = data["speed"]
     # The current image from the center camera of the car
     imgString = data["image"]
-    image_array = process(BytesIO(base64.b64decode(imgString)), input_shape, [100,120])
+    image_array = np.asarray(load(BytesIO(base64.b64decode(imgString))))
+    # pdb.set_trace()
+    image_array = process(image_array, crop_shape, input_shape)
+    # image_array = resize(crop(image_array, crop_shape), input_shape)
     transformed_image_array = image_array[None, :, :, :]
     # This model currently assumes that the features of the model are just the images. Feel free to change this.
     steering_angle = float(model.predict(transformed_image_array, batch_size=1))
@@ -81,6 +85,7 @@ if __name__ == '__main__':
     # input_shape = [d.value for d in model.get_input_at(0).get_shape().dims[1:]]
     input_shape = model.get_input_at(0).get_shape()
     input_shape = [input_shape[2], input_shape[1], input_shape[3]]
+    crop_shape = ((100,140),(0,320))
 
     print(input_shape)
 
