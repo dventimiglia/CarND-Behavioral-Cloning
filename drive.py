@@ -7,7 +7,7 @@ import socketio
 import eventlet
 import eventlet.wsgi
 import time
-from model import process       # !!! Use the model.process !!!
+from model import process, load       # !!! Use model.load and model.process !!!
 from PIL import Image
 from PIL import ImageOps
 from flask import Flask, render_template
@@ -40,7 +40,7 @@ def telemetry(sid, data):
 
     # Coerce the current image data into a form the model can accept.
     image_array = np.asarray(load(BytesIO(base64.b64decode(imgString)))) # Turn into NumPy array
-    image_array = process(image_array, crop_shape, input_shape)     # !!! Use model.process !!!
+    image_array = process(image_array, crop_shape, resize_shape)     # !!! Use model.process !!!
     transformed_image_array = image_array[None, :, :, :]            # Reshape into a 'batch' of size 1.
 
     # This model currently assumes that the features of the model are just the images. Feel free to change this.
@@ -78,16 +78,16 @@ if __name__ == '__main__':
         # instead.
         model = model_from_json(jfile.read())
 
-
     model.compile("adam", "mse")
     weights_file = args.model.replace('json', 'h5')
     model.load_weights(weights_file)
-    # input_shape = [d.value for d in model.get_input_at(0).get_shape().dims[1:]]
-    input_shape = model.get_input_at(0).get_shape()
-    input_shape = [input_shape[2], input_shape[1], input_shape[3]]
-    crop_shape = ((100,140),(0,320))
+    crop_shape = ((70,140),(0,320))
+    resize_shape = [64, 64, 3]
 
-    print(input_shape)
+    # Sanity check on the crop_shape and resize_shape, which are the
+    # easiest things to get wrong.
+    print(crop_shape)
+    print(resize_shape)
 
     # wrap Flask application with engineio's middleware
     app = socketio.Middleware(sio, app)

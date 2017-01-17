@@ -1,9 +1,15 @@
 #!/usr/bin/Make -f
 
 export SHELL=/bin/bash
-SAMPLES_PER_EPOCH=16000
-EPOCHS=5
-BATCH_SIZE=100
+export TRAINING_INDEX=data/driving_log_train.csv
+export VALIDATION_INDEX=data/driving_log_validation.csv
+export BASE_PATH=data/
+export SAMPLES_PER_EPOCH=7000
+export VALID_SAMPLES_PER_EPOCH=7000
+export EPOCHS=5
+export BATCH_SIZE=100
+export FLIP=no
+export SHIFT=no
 
 .ONESHELL:
 
@@ -51,7 +57,7 @@ model.h5: model.json
 
 model.json: data/driving_log_train.csv data/driving_log_validation.csv
 	source activate carnd-term1
-	python model.py "data/driving_log_train.csv" "data/driving_log_validation.csv" "data/" $(SAMPLES_PER_EPOCH) $(EPOCHS) $(BATCH_SIZE)
+	python model.py
 
 data/driving_log.csv: data.zip
 	unzip -u $< > /dev/null 2>&1
@@ -63,17 +69,14 @@ data.zip:
 data/driving_log_all.csv: data/driving_log.csv
 	cat $< | tail -n+2 | shuf > $@
 
-data/driving_log_overtrain.csv: data/driving_log_all.csv
-	cat <(cat $< | sort -k4 -n -t, | head -n1) <(cat $< | sort -k4 -nr -t, | head -n1) <(cat $< | awk -F, -vOFS=, '{print $$1, $$2, $$3, sqrt($$4*$$4), $$5, $$6, $$7}' | sort -k4 -n -t, | head -n1) > $@
-
-data/driving_log_random_sample.csv: data/driving_log_all.csv
-	cat $< | shuf | head > $@
-
 data/driving_log_train.csv: data/driving_log_all.csv
 	cat $< | head -n7000 > $@
 
 data/driving_log_validation.csv: data/driving_log_all.csv
 	cat $< | tail -n+7000 > $@
+
+data/driving_log_overtrain.csv: data/driving_log_all.csv
+	cat <(cat $< | sort -k4 -n -t, | head -n1) <(cat $< | sort -k4 -nr -t, | head -n1) <(cat $< | awk -F, -vOFS=, '{print $$1, $$2, $$3, sqrt($$4*$$4), $$5, $$6, $$7}' | sort -k4 -n -t, | head -n1) > $@
 
 end-to-end-dl-using-px.pdf:
 	wget "https://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf"

@@ -3,6 +3,7 @@
 from PIL import Image
 from itertools import groupby, islice, zip_longest, cycle
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda
+from keras.layers.convolutional import Cropping2D
 from keras.models import Sequential, model_from_json
 from keras.utils.visualize_util import plot
 from scipy.stats import kurtosis, skew, describe
@@ -10,8 +11,8 @@ import cv2
 import gc
 import keras.preprocessing.image as img
 import math
-import matplotlib.pyplot as plt
 import numpy as np
+import os
 import random
 import sys
 
@@ -130,12 +131,13 @@ types."""
 
 
 # Model
+    
 
 def CarND(input_shape):
     """Return a Keras neural network model."""
     model = Sequential()
 
-    # Normalize input to be in [-0.5,0.5].
+    # Normalize input.
     model.add(Lambda(lambda x: x/127.5 - 1., input_shape=input_shape, name="Normalize"))
 
     # Reduce dimensions through trainable convolution, activation, and
@@ -146,8 +148,6 @@ def CarND(input_shape):
     model.add(MaxPooling2D(name="MaxPool2"))
     model.add(Conv2D(48, 5, 5, subsample=(1,1), name="Conv2D3", activation="relu"))
     model.add(MaxPooling2D(name="MaxPool3"))
-    # model.add(Conv2D(64, 3, 3, name="Conv2D4", activation="relu"))
-    # model.add(MaxPooling2D(name="MaxPool4"))
 
     # Flatten input in a non-trainable layer before feeding into
     # fully-connected layers.
@@ -156,26 +156,14 @@ def CarND(input_shape):
     # Model steering through trainable layers comprising dense units
     # as ell as dropout units for regularization.
     model.add(Dense(100, activation="relu", name="FC2"))
-    model.add(Dropout(0.5))
+    # model.add(Dropout(0.5))
     model.add(Dense(50, activation="relu", name="FC3"))
-    # model.add(Dropout(0.5))
     model.add(Dense(10, activation="relu", name="FC4"))
-    # model.add(Dropout(0.5))
 
     # Generate output (steering angles) with a single non-trainable
     # node.
     model.add(Dense(1, name="Readout", trainable=False))
     return model
-
-
-# Analyze
-
-# def analyze():
-#     plt.ion()
-#     print(describe([float(s[1]) for s in select(split(singlefeed("data/driving_log_train.csv")))]))
-#     print(plt.hist([float(s[1]) for s in select(split(singlefeed("data/driving_log_train.csv")))],bins=100))
-#     print(describe([l for l in filter(lambda x: math.fabs(x)>0.01, map(lambda x: x*random.choice([1,-1]), [float(l[0]) for l in select(split(singlefeed("data/driving_log_train.csv")),[3])]))]))
-#     print(plt.hist([l for l in filter(lambda x: math.fabs(x)>0.01, map(lambda x: x*random.choice([1,-1]), [float(l[0]) for l in select(split(singlefeed("data/driving_log_train.csv")),[3])]))],100))
 
 
 # Training
@@ -188,19 +176,22 @@ the directory path for the image filenames.  The pipeline itself is a
 generator (which is an iterable), where each item from the generator
 is a batch of samples (X,y).  X and y are each NumPy arrays, with X as
 a batch of images and y as a batch of outputs.  The images in X are
-cropped and reshaped according to the 'input_shape' and 'crop_shape'
+cropped and reshaped according to the 'resize_shape' and 'crop_shape'
 parameters.  Finally, augmentation may be performed if a training
 pipeline is desired, determined by the 'training' parameter.  Training
 pipelines have their images randomly flipped along the horizontal
 axis, and are randomly shifted along their horizontal axis."""
     samples = select(rcycle(fetch(select(split(feed(theta.training_index)), [0,3]), theta.base_path)), [0,1])
     if training:
-        samples = (rflip(x) for x in samples)
-        samples = ((rshift(x[0]),x[1]) for x in samples)
-    samples = ((process(x[0], theta.crop_shape, theta.input_shape), x[1]) for x in samples)
+        if theta.flip:
+            samples = (rflip(x) for x in samples)
+        if theta.shift:
+            samples = ((rshift(x[0]),x[1]) for x in samples)
+    samples = ((process(x[0], theta.crop_shape, theta.resize_shape), x[1]) for x in samples)
     groups = group(samples, theta.batch_size)
     batches = batch(transpose(groups))
     return batches
+
 
 def train(model):
     """Train the model."""
@@ -217,6 +208,8 @@ def train(model):
 # Data Structures
 
 class HyperParameters:
+    """Essentially a struct just to gather hyper-parameters into one
+place, for convenience."""
     def __init__(self):
         return
 
@@ -225,8 +218,8 @@ class HyperParameters:
 
 if __name__=="__main__":        # In case this module is imported
     theta = HyperParameters()
-    theta.input_shape = [256, 40, 3]
-    theta.crop_shape = ((100,140),(32,288))
+    theta.crop_shape = ((70,140),(0,320))
+    theta.resize_shape = [64, 64, 3]
     theta.samples_per_epoch = 3000
     theta.valid_samples_per_epoch = 3000
     theta.epochs = 5
@@ -234,20 +227,26 @@ if __name__=="__main__":        # In case this module is imported
     theta.training_index = "data/driving_log_overtrain.csv"
     theta.validation_index = "data/driving_log_overtrain.csv"
     theta.base_path = "data/"
-    if len(sys.argv)>1:         # Running from the command line
-        training_index = sys.argv[1]
-        validation_index = sys.argv[2]
-        base_path = sys.argv[3]
-        samples_per_epoch = int(sys.argv[4])
-        valid_samples_per_epoch = int(sys.argv[4])
-        epochs = int(sys.argv[5])
-        batch_size = int(sys.argv[6])
-    model = CarND([theta.input_shape[1],
-                   theta.input_shape[0],
-                   theta.input_shape[2]])
+    theta.flip = False
+    theta.shift = False
+    if len(sys.argv)>0:         # Running from the command line
+        theta.training_index = os.environ['TRAINING_INDEX']
+        theta.validation_index = os.environ['VALIDATION_INDEX']
+        theta.base_path = os.environ['BASE_PATH']
+        theta.samples_per_epoch = int(os.environ['SAMPLES_PER_EPOCH'])
+        theta.valid_samples_per_epoch = int(os.environ['VALID_SAMPLES_PER_EPOCH'])
+        theta.epochs = int(os.environ['EPOCHS'])
+        theta.batch_size = int(os.environ['BATCH_SIZE'])
+        theta.flip = os.environ['FLIP']=='yes'
+        theta.shift = os.environ['SHIFT']=='yes'
+    model = CarND([theta.resize_shape[1],
+                   theta.resize_shape[0],
+                   theta.resize_shape[2]])
     model.compile(loss="mse", optimizer="adam")
+    model.theta = theta
     model.summary()
     plot(model, to_file="model.png", show_shapes=True)
+    print(theta.__dict__)
     train(model)
     model.save_weights("model.h5")
     with open("model.json", "w") as f:
