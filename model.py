@@ -15,6 +15,7 @@ import numpy as np
 import random
 import sys
 
+
 # Utilities
 
 def rcycle(iterable):
@@ -179,7 +180,7 @@ def CarND(input_shape):
 
 # Training
 
-def pipeline(training_index, base_path, input_shape, crop_shape, training=False):
+def pipeline(theta, training=False):
     """Create a data-processing pipeline.  The 'training_index' parameter
 is the name of a CSV index file specifying samples, with fields for
 image filenames and for steering angles.  The 'base_path' parameter is
@@ -192,25 +193,47 @@ parameters.  Finally, augmentation may be performed if a training
 pipeline is desired, determined by the 'training' parameter.  Training
 pipelines have their images randomly flipped along the horizontal
 axis, and are randomly shifted along their horizontal axis."""
-    samples = select(rcycle(fetch(select(split(feed(training_index)), [0,3]), base_path)), [0,1])
+    samples = select(rcycle(fetch(select(split(feed(theta.training_index)), [0,3]), theta.base_path)), [0,1])
     if training:
         samples = (rflip(x) for x in samples)
         samples = ((rshift(x[0]),x[1]) for x in samples)
-    samples = ((process(x[0], crop_shape, input_shape), x[1]) for x in samples)
-    groups = group(samples, batch_size)
+    samples = ((process(x[0], theta.crop_shape, theta.input_shape), x[1]) for x in samples)
+    groups = group(samples, theta.batch_size)
     batches = batch(transpose(groups))
     return batches
 
-def train():
+def train(model):
     """Train the model."""
-    traingen = pipeline(training_index, base_path, input_shape, crop_shape, training=True)
-    validgen = pipeline(validation_index, base_path, input_shape, crop_shape)
-    history = model.fit_generator(traingen, samples_per_epoch, epochs, validation_data=validgen, nb_val_samples=valid_samples_per_epoch)
+    traingen = pipeline(theta, training=True)
+    validgen = pipeline(theta)
+    history = model.fit_generator(
+        traingen,
+        theta.samples_per_epoch,
+        theta.epochs,
+        validation_data=validgen,
+        nb_val_samples=theta.valid_samples_per_epoch)
+
+
+# Data Structures
+
+class HyperParameters:
+    def __init__(self):
+        return
 
 
 # Entry-point
 
 if __name__=="__main__":        # In case this module is imported
+    theta = HyperParameters()
+    theta.input_shape = [256, 40, 3]
+    theta.crop_shape = ((100,140),(32,288))
+    theta.samples_per_epoch = 3000
+    theta.valid_samples_per_epoch = 3000
+    theta.epochs = 5
+    theta.batch_size = 100
+    theta.training_index = "data/driving_log_overtrain.csv"
+    theta.validation_index = "data/driving_log_overtrain.csv"
+    theta.base_path = "data/"
     if len(sys.argv)>1:         # Running from the command line
         training_index = sys.argv[1]
         validation_index = sys.argv[2]
@@ -219,22 +242,13 @@ if __name__=="__main__":        # In case this module is imported
         valid_samples_per_epoch = int(sys.argv[4])
         epochs = int(sys.argv[5])
         batch_size = int(sys.argv[6])
-    else:                       # Not running from the command line
-        training_index = "data/driving_log_overtrain.csv"
-        validation_index = "data/driving_log_overtrain.csv"
-        base_path = "data/"
-        samples_per_epoch = 3000
-        valid_samples_per_epoch = 3000
-        epochs = 5
-        batch_size = 100
-    input_shape = [256, 40, 3]
-    # input_shape = [64, 64, 3]
-    crop_shape = ((100,140),(32,288))
-    model = CarND([input_shape[1],input_shape[0],input_shape[2]])
+    model = CarND([theta.input_shape[1],
+                   theta.input_shape[0],
+                   theta.input_shape[2]])
     model.compile(loss="mse", optimizer="adam")
     model.summary()
     plot(model, to_file="model.png", show_shapes=True)
-    train()
+    train(model)
     model.save_weights("model.h5")
     with open("model.json", "w") as f:
         f.write(model.to_json())
