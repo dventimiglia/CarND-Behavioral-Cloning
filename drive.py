@@ -40,7 +40,7 @@ def telemetry(sid, data):
 
     # Coerce the current image data into a form the model can accept.
     image_array = np.asarray(load(BytesIO(base64.b64decode(imgString)))) # Turn into NumPy array
-    image_array = process(image_array, crop_shape, resize_shape)     # !!! Use model.process !!!
+    image_array = process(image_array, crop_shape)                  # !!! Use model.process !!!
     transformed_image_array = image_array[None, :, :, :]            # Reshape into a 'batch' of size 1.
 
     # This model currently assumes that the features of the model are just the images. Feel free to change this.
@@ -81,13 +81,11 @@ if __name__ == '__main__':
     model.compile("adam", "mse")
     weights_file = args.model.replace('json', 'h5')
     model.load_weights(weights_file)
-    crop_shape = ((70,140),(0,320))
-    resize_shape = [64, 64, 3]
+    crop_shape = ((80,140),(0,320))
 
-    # Sanity check on the crop_shape and resize_shape, which are the
-    # easiest things to get wrong.
+    # Sanity check on the crop_shape and which is the easiest thing to
+    # get wrong.
     print(crop_shape)
-    print(resize_shape)
 
     # wrap Flask application with engineio's middleware
     app = socketio.Middleware(sio, app)
