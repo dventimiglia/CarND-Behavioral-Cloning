@@ -18,7 +18,7 @@ export SHIFT=no
 # Phony targets
 
 environment: 
-	conda env create -f environment.yml
+	conda env create --file environment.yml --name CarND-Behavioral-Cloning
 
 docs: Makefile.svg
 
