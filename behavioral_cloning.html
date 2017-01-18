@@ -1,0 +1,647 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>David A. Ventimiglia : CarND Errata</title>
+<!-- 2017-01-18 Wed 15:31 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="David A. Ventimiglia" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.right  { text-align: center;  }
+  th.left   { text-align: center;   }
+  th.center { text-align: center; }
+  td.right  { text-align: right;  }
+  td.left   { text-align: left;   }
+  td.center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara:nth-child(2) { display: inline; }
+  .footpara { display: block; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">CarND Errata</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">1. What</a></li>
+<li><a href="#sec-2">2. Why</a></li>
+<li><a href="#sec-3">3. How</a>
+<ul>
+<li><a href="#sec-3-1">3.1. Approach</a></li>
+<li><a href="#sec-3-2">3.2. Architecture</a>
+<ul>
+<li><a href="#sec-3-2-1">3.2.1. Imports</a></li>
+<li><a href="#sec-3-2-2">3.2.2. Utilities</a></li>
+<li><a href="#sec-3-2-3">3.2.3. Model</a></li>
+</ul>
+</li>
+<li><a href="#sec-3-3">3.3. Data</a>
+<ul>
+<li><a href="#sec-3-3-1">3.3.1. Characteristics</a></li>
+<li><a href="#sec-3-3-2">3.3.2. Examples</a></li>
+</ul>
+</li>
+<li><a href="#sec-3-4">3.4. Training</a>
+<ul>
+<li><a href="#sec-3-4-1">3.4.1. Data Pipeline</a></li>
+<li><a href="#sec-3-4-2">3.4.2. Training</a></li>
+<li><a href="#sec-3-4-3">3.4.3. Data Structures</a></li>
+<li><a href="#sec-3-4-4">3.4.4. Entry-point</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> What</h2>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2"><span class="section-number-2">2</span> Why</h2>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3"><span class="section-number-2">3</span> How</h2>
+<div class="outline-text-2" id="text-3">
+</div><div id="outline-container-sec-3-1" class="outline-3">
+<h3 id="sec-3-1"><span class="section-number-3">3.1</span> Approach</h3>
+</div>
+
+<div id="outline-container-sec-3-2" class="outline-3">
+<h3 id="sec-3-2"><span class="section-number-3">3.2</span> Architecture</h3>
+<div class="outline-text-3" id="text-3-2">
+</div><div id="outline-container-sec-3-2-1" class="outline-4">
+<h4 id="sec-3-2-1"><span class="section-number-4">3.2.1</span> Imports</h4>
+<div class="outline-text-4" id="text-3-2-1">
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">from</span> PIL <span style="color: #b4fa70;">import</span> Image
+<span style="color: #b4fa70;">from</span> itertools <span style="color: #b4fa70;">import</span> groupby, islice, zip_longest, cycle
+<span style="color: #b4fa70;">from</span> keras.layers <span style="color: #b4fa70;">import</span> Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
+<span style="color: #b4fa70;">from</span> keras.layers.convolutional <span style="color: #b4fa70;">import</span> Cropping2D, Convolution2D
+<span style="color: #b4fa70;">from</span> keras.models <span style="color: #b4fa70;">import</span> Sequential, model_from_json
+<span style="color: #b4fa70;">from</span> keras.utils.visualize_util <span style="color: #b4fa70;">import</span> plot
+<span style="color: #b4fa70;">from</span> scipy.stats <span style="color: #b4fa70;">import</span> kurtosis, skew, describe
+<span style="color: #b4fa70;">import</span> cv2
+<span style="color: #b4fa70;">import</span> gc
+<span style="color: #b4fa70;">import</span> keras.preprocessing.image <span style="color: #b4fa70;">as</span> img
+<span style="color: #b4fa70;">import</span> math
+<span style="color: #b4fa70;">import</span> numpy <span style="color: #b4fa70;">as</span> np
+<span style="color: #b4fa70;">import</span> os
+<span style="color: #b4fa70;">import</span> random
+<span style="color: #b4fa70;">import</span> sys
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-2-2" class="outline-4">
+<h4 id="sec-3-2-2"><span class="section-number-4">3.2.2</span> Utilities</h4>
+<div class="outline-text-4" id="text-3-2-2">
+<p>
+Return elements from the iterable.  Shuffle the elements of the
+iterable when it becomes exhausted, then begin returning them
+again.  Repeat this sequence of operations indefinitely.  Note
+that the elements of the iterable are essentially returned in
+batches, and that the first batch is not shuffled.  If you want
+only to return random elements then you must know batch size,
+which will be the number of elements in the underlying finite
+iterable, and you must discard the first batch.  The
+itertools.islice function can be helpful here.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">rcycle</span>(iterable):
+    <span style="color: #fcaf3e;">saved</span> = []
+    <span style="color: #b4fa70;">for</span> element <span style="color: #b4fa70;">in</span> iterable:
+        <span style="color: #b4fa70;">yield</span> element
+        saved.append(element)
+    <span style="color: #b4fa70;">while</span> saved:
+        random.shuffle(saved)
+        <span style="color: #b4fa70;">for</span> element <span style="color: #b4fa70;">in</span> saved:
+              <span style="color: #b4fa70;">yield</span> element
+</pre>
+</div>
+
+<p>
+Return an iterable over the lines the file with name 'filename'.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">feed</span>(filename):
+    <span style="color: #b4fa70;">return</span> (l <span style="color: #b4fa70;">for</span> l <span style="color: #b4fa70;">in</span> <span style="color: #e090d7;">open</span>(filename))
+</pre>
+</div>
+
+<p>
+Return an iterable over 'lines', splitting each into records
+comprising fields, using 'delimiter'.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">split</span>(lines, delimiter=<span style="color: #e9b96e;">","</span>):
+    <span style="color: #b4fa70;">return</span> (line.split(delimiter) <span style="color: #b4fa70;">for</span> line <span style="color: #b4fa70;">in</span> lines)
+</pre>
+</div>
+
+<p>
+Return an iterable over records of fields, selecting only the
+fields listed in 'indices'.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">select</span>(fields, indices):
+    <span style="color: #b4fa70;">return</span> ([r[i] <span style="color: #b4fa70;">for</span> i <span style="color: #b4fa70;">in</span> indices] <span style="color: #b4fa70;">for</span> r <span style="color: #b4fa70;">in</span> fields)
+</pre>
+</div>
+
+<p>
+Return a NumPy array for the image indicated by 'f'.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">load</span>(f):
+    <span style="color: #b4fa70;">return</span> np.asarray(Image.<span style="color: #e090d7;">open</span>(f))
+</pre>
+</div>
+
+<p>
+Return an iterable over 'records', fetching a sample [X,y] for
+each record.  A sample is a ordered pair with the first element
+X a NumPy array (typically, an image) and the second element y
+floating point number (the label).
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">fetch</span>(records, base):
+    <span style="color: #b4fa70;">return</span> ([load(base+f.strip()) <span style="color: #b4fa70;">for</span> f <span style="color: #b4fa70;">in</span> record[:1]]+[<span style="color: #e090d7;">float</span>(v) <span style="color: #b4fa70;">for</span> v <span style="color: #b4fa70;">in</span> record[1:]] <span style="color: #b4fa70;">for</span> record <span style="color: #b4fa70;">in</span> records)
+</pre>
+</div>
+
+<p>
+Randomly flip an image 'x' along its horizontal axis 50% of the
+time.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">rflip</span>(x):
+    <span style="color: #b4fa70;">return</span> x <span style="color: #b4fa70;">if</span> random.choice([<span style="color: #e9b2e3;">True</span>, <span style="color: #e9b2e3;">False</span>]) <span style="color: #b4fa70;">else</span> [img.flip_axis(x[0],1), -1*x[1]]
+</pre>
+</div>
+
+<p>
+Randomly shift an image 'x' along its horizontal axis by
+'factor' amount.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">rshift</span>(x, factor=0.1):
+    <span style="color: #b4fa70;">return</span> img.random_shift(x, factor, 0.0, 0, 1, 2, fill_mode=<span style="color: #e9b96e;">'wrap'</span>)
+</pre>
+</div>
+
+<p>
+Iterate over 'items' but return them in groups of size 'n'.  If
+need be, fill the last group with 'fillvalue'.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">group</span>(items, n, fillvalue=<span style="color: #e9b2e3;">None</span>):
+    <span style="color: #b4fa70;">return</span> zip_longest(*([<span style="color: #e090d7;">iter</span>(items)]*n), fillvalue=fillvalue)
+</pre>
+</div>
+
+<p>
+Transpose items in the 'tuples' iterable.  Each item is expected
+to be a tuple and all tuples are expected to have the same
+length.  The transposition is such that for each position 'i'
+within the tuples, all of the elements at that position across
+all the items are themselves grouped together.  Each group is
+realized into a list.  If 'tuples' contains m items and each
+item is itself a tuple of n elements, then what is returned is a
+set of n lists, and each list contains m elements.  The n lists
+are themselves presented as an iterable.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">transpose</span>(tuples):
+    <span style="color: #b4fa70;">return</span> (<span style="color: #e090d7;">list</span>(<span style="color: #e090d7;">map</span>(<span style="color: #e090d7;">list</span>, <span style="color: #e090d7;">zip</span>(*g))) <span style="color: #b4fa70;">for</span> g <span style="color: #b4fa70;">in</span> tuples)
+</pre>
+</div>
+
+<p>
+Iterate over 'groups', each of which is itself an iterable (such
+as a list), and turn the groups selected by 'indices' into a
+NumPy array.  Naturally, the groups are expected to be of items
+that are compatible with NumPy arrays, which would be any of the
+appropriate numeric types.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">batch</span>(groups, indices=[0, 1]):
+    <span style="color: #b4fa70;">return</span> ([np.asarray(t[i]) <span style="color: #b4fa70;">for</span> i <span style="color: #b4fa70;">in</span> indices] <span style="color: #b4fa70;">for</span> t <span style="color: #b4fa70;">in</span> groups)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-2-3" class="outline-4">
+<h4 id="sec-3-2-3"><span class="section-number-4">3.2.3</span> Model</h4>
+<div class="outline-text-4" id="text-3-2-3">
+<p>
+Return a Keras neural network model.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">CarND</span>(input_shape):
+    <span style="color: #fcaf3e;">model</span> = Sequential()
+
+    <span style="color: #73d216;"># </span><span style="color: #73d216;">Crop</span>
+    model.add(Cropping2D(((80,20),(1,1)), input_shape=input_shape, name=<span style="color: #e9b96e;">"Crop"</span>))
+
+    <span style="color: #73d216;"># </span><span style="color: #73d216;">Resize</span>
+    model.add(AveragePooling2D(pool_size=(1,4), name=<span style="color: #e9b96e;">"Resize"</span>, trainable=<span style="color: #e9b2e3;">False</span>))
+
+    <span style="color: #73d216;"># </span><span style="color: #73d216;">Normalize input.</span>
+    model.add(Lambda(<span style="color: #b4fa70;">lambda</span> x: x/127.5 - 1., name=<span style="color: #e9b96e;">"Normalize"</span>))
+
+    <span style="color: #73d216;"># </span><span style="color: #73d216;">Reduce dimensions through trainable convolution, activation, and</span>
+    <span style="color: #73d216;"># </span><span style="color: #73d216;">pooling layers.</span>
+    model.add(Convolution2D(24, 3, 3, subsample=(2,2), name=<span style="color: #e9b96e;">"Convolution2D1"</span>, activation=<span style="color: #e9b96e;">"relu"</span>))
+    model.add(MaxPooling2D(name=<span style="color: #e9b96e;">"MaxPool1"</span>))
+    model.add(Convolution2D(36, 3, 3, subsample=(1,1), name=<span style="color: #e9b96e;">"Convolution2D2"</span>, activation=<span style="color: #e9b96e;">"relu"</span>))
+    model.add(MaxPooling2D(name=<span style="color: #e9b96e;">"MaxPool2"</span>))
+    model.add(Convolution2D(48, 3, 3, subsample=(1,1), name=<span style="color: #e9b96e;">"Convolution2D3"</span>, activation=<span style="color: #e9b96e;">"relu"</span>))
+    model.add(MaxPooling2D(name=<span style="color: #e9b96e;">"MaxPool3"</span>))
+
+    <span style="color: #73d216;"># </span><span style="color: #73d216;">Dropout for regularization</span>
+    model.add(Dropout(0.1, name=<span style="color: #e9b96e;">"Dropout"</span>))
+
+    <span style="color: #73d216;"># </span><span style="color: #73d216;">Flatten input in a non-trainable layer before feeding into</span>
+    <span style="color: #73d216;"># </span><span style="color: #73d216;">fully-connected layers.</span>
+    model.add(Flatten(name=<span style="color: #e9b96e;">"Flatten"</span>))
+
+    <span style="color: #73d216;"># </span><span style="color: #73d216;">Model steering through trainable layers comprising dense units</span>
+    <span style="color: #73d216;"># </span><span style="color: #73d216;">as ell as dropout units for regularization.</span>
+    model.add(Dense(100, activation=<span style="color: #e9b96e;">"relu"</span>, name=<span style="color: #e9b96e;">"FC2"</span>))
+    model.add(Dense(50, activation=<span style="color: #e9b96e;">"relu"</span>, name=<span style="color: #e9b96e;">"FC3"</span>))
+    model.add(Dense(10, activation=<span style="color: #e9b96e;">"relu"</span>, name=<span style="color: #e9b96e;">"FC4"</span>))
+
+    <span style="color: #73d216;"># </span><span style="color: #73d216;">Generate output (steering angles) with a single non-trainable</span>
+    <span style="color: #73d216;"># </span><span style="color: #73d216;">node.</span>
+    model.add(Dense(1, name=<span style="color: #e9b96e;">"Readout"</span>, trainable=<span style="color: #e9b2e3;">False</span>))
+    <span style="color: #b4fa70;">return</span> model
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-python">CarND([160, 320, 3]).summary()
+</pre>
+</div>
+
+<pre class="example">
+____________________________________________________________________________________________________
+Layer (type)                     Output Shape          Param #     Connected to                     
+====================================================================================================
+Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_30[0][0]        
+____________________________________________________________________________________________________
+Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
+____________________________________________________________________________________________________
+Normalize (Lambda)               (None, 60, 79, 3)     0           Resize[0][0]                     
+____________________________________________________________________________________________________
+Convolution2D1 (Convolution2D)   (None, 29, 39, 24)    672         Normalize[0][0]                  
+____________________________________________________________________________________________________
+MaxPool1 (MaxPooling2D)          (None, 14, 19, 24)    0           Convolution2D1[0][0]             
+____________________________________________________________________________________________________
+Convolution2D2 (Convolution2D)   (None, 12, 17, 36)    7812        MaxPool1[0][0]                   
+____________________________________________________________________________________________________
+MaxPool2 (MaxPooling2D)          (None, 6, 8, 36)      0           Convolution2D2[0][0]             
+____________________________________________________________________________________________________
+Convolution2D3 (Convolution2D)   (None, 4, 6, 48)      15600       MaxPool2[0][0]                   
+____________________________________________________________________________________________________
+MaxPool3 (MaxPooling2D)          (None, 2, 3, 48)      0           Convolution2D3[0][0]             
+____________________________________________________________________________________________________
+Dropout (Dropout)                (None, 2, 3, 48)      0           MaxPool3[0][0]                   
+____________________________________________________________________________________________________
+Flatten (Flatten)                (None, 288)           0           Dropout[0][0]                    
+____________________________________________________________________________________________________
+FC2 (Dense)                      (None, 100)           28900       Flatten[0][0]                    
+____________________________________________________________________________________________________
+FC3 (Dense)                      (None, 50)            5050        FC2[0][0]                        
+____________________________________________________________________________________________________
+FC4 (Dense)                      (None, 10)            510         FC3[0][0]                        
+____________________________________________________________________________________________________
+Readout (Dense)                  (None, 1)             0           FC4[0][0]                        
+====================================================================================================
+Total params: 58,544
+Trainable params: 58,544
+Non-trainable params: 0
+____________________________________________________________________________________________________
+</pre>
+
+<div class="org-src-container">
+
+<pre class="src src-python">plot(CarND([160, 320, 3]), to_file=<span style="color: #e9b96e;">"model.png"</span>, show_shapes=<span style="color: #e9b2e3;">True</span>)
+</pre>
+</div>
+
+
+<div class="figure">
+<p><img src="model.png" alt="CarND/Architecture Image" title="Architecture" />
+</p>
+<p><span class="figure-number">Figure 1:</span> CarND Neural-Net Architecture</p>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-3" class="outline-3">
+<h3 id="sec-3-3"><span class="section-number-3">3.3</span> Data</h3>
+<div class="outline-text-3" id="text-3-3">
+</div><div id="outline-container-sec-3-3-1" class="outline-4">
+<h4 id="sec-3-3-1"><span class="section-number-4">3.3.1</span> Characteristics</h4>
+</div>
+
+<div id="outline-container-sec-3-3-2" class="outline-4">
+<h4 id="sec-3-3-2"><span class="section-number-4">3.3.2</span> Examples</h4>
+</div>
+</div>
+
+<div id="outline-container-sec-3-4" class="outline-3">
+<h3 id="sec-3-4"><span class="section-number-3">3.4</span> Training</h3>
+<div class="outline-text-3" id="text-3-4">
+</div><div id="outline-container-sec-3-4-1" class="outline-4">
+<h4 id="sec-3-4-1"><span class="section-number-4">3.4.1</span> Data Pipeline</h4>
+<div class="outline-text-4" id="text-3-4-1">
+<p>
+Create a data-processing pipeline.  The 'training<sub>index'</sub>
+parameter is the name of a CSV index file specifying samples,
+with fields for image filenames and for steering angles.  The
+'base<sub>path'</sub> parameter is the directory path for the image
+filenames.  The pipeline itself is a generator (which is an
+iterable), where each item from the generator is a batch of
+samples (X,y).  X and y are each NumPy arrays, with X as a batch
+of images and y as a batch of outputs.  Finally, augmentation
+may be performed if a training pipeline is desired, determined
+by the 'training' parameter.  Training pipelines have their
+images randomly flipped along the horizontal axis, and are
+randomly shifted along their horizontal axis.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">pipeline</span>(theta, training=<span style="color: #e9b2e3;">False</span>):
+    <span style="color: #fcaf3e;">samples</span> = select(rcycle(fetch(select(split(feed(theta.training_index)), [0,3]), theta.base_path)), [0,1])
+    <span style="color: #b4fa70;">if</span> training:
+        <span style="color: #b4fa70;">if</span> theta.flip:
+            <span style="color: #fcaf3e;">samples</span> = (rflip(x) <span style="color: #b4fa70;">for</span> x <span style="color: #b4fa70;">in</span> samples)
+        <span style="color: #b4fa70;">if</span> theta.shift:
+            <span style="color: #fcaf3e;">samples</span> = ((rshift(x[0]),x[1]) <span style="color: #b4fa70;">for</span> x <span style="color: #b4fa70;">in</span> samples)
+    <span style="color: #fcaf3e;">groups</span> = group(samples, theta.batch_size)
+    <span style="color: #fcaf3e;">batches</span> = batch(transpose(groups))
+    <span style="color: #b4fa70;">return</span> batches
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-4-2" class="outline-4">
+<h4 id="sec-3-4-2"><span class="section-number-4">3.4.2</span> Training</h4>
+<div class="outline-text-4" id="text-3-4-2">
+<p>
+Train the model.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">train</span>(model):
+    <span style="color: #fcaf3e;">traingen</span> = pipeline(theta, training=<span style="color: #e9b2e3;">True</span>)
+    <span style="color: #fcaf3e;">validgen</span> = pipeline(theta)
+    <span style="color: #fcaf3e;">history</span> = model.fit_generator(
+        traingen,
+        theta.samples_per_epoch,
+        theta.epochs,
+        validation_data=validgen,
+        verbose=2,
+        nb_val_samples=theta.valid_samples_per_epoch)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-4-3" class="outline-4">
+<h4 id="sec-3-4-3"><span class="section-number-4">3.4.3</span> Data Structures</h4>
+<div class="outline-text-4" id="text-3-4-3">
+<p>
+Essentially a struct just to gather hyper-parameters into one
+place, for convenience.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">class</span> <span style="color: #8cc4ff;">HyperParameters</span>:
+    <span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">__init__</span>(<span style="color: #b4fa70;">self</span>):
+        <span style="color: #b4fa70;">return</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-4-4" class="outline-4">
+<h4 id="sec-3-4-4"><span class="section-number-4">3.4.4</span> Entry-point</h4>
+<div class="outline-text-4" id="text-3-4-4">
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">if</span> <span style="color: #e090d7;">__name__</span>==<span style="color: #e9b96e;">"__main__"</span>:        <span style="color: #73d216;"># </span><span style="color: #73d216;">In case this module is imported</span>
+    <span style="color: #fcaf3e;">theta</span> = HyperParameters()
+    <span style="color: #fcaf3e;">theta.input_shape</span> = [160, 320, 3]
+    <span style="color: #fcaf3e;">theta.samples_per_epoch</span> = 300
+    <span style="color: #fcaf3e;">theta.valid_samples_per_epoch</span> = 300
+    <span style="color: #fcaf3e;">theta.epochs</span> = 3
+    <span style="color: #fcaf3e;">theta.batch_size</span> = 100
+    <span style="color: #fcaf3e;">theta.training_index</span> = <span style="color: #e9b96e;">"data/driving_log_overtrain.csv"</span>
+    <span style="color: #fcaf3e;">theta.validation_index</span> = <span style="color: #e9b96e;">"data/driving_log_overtrain.csv"</span>
+    <span style="color: #fcaf3e;">theta.base_path</span> = <span style="color: #e9b96e;">"data/"</span>
+    <span style="color: #fcaf3e;">theta.flip</span> = <span style="color: #e9b2e3;">False</span>
+    <span style="color: #fcaf3e;">theta.shift</span> = <span style="color: #e9b2e3;">False</span>
+    <span style="color: #b4fa70;">if</span> sys.argv[0]!=<span style="color: #e9b96e;">''</span>:         <span style="color: #73d216;"># </span><span style="color: #73d216;">Running from the command line</span>
+        <span style="color: #fcaf3e;">theta.training_index</span> = os.environ[<span style="color: #e9b96e;">'TRAINING_INDEX'</span>]
+        <span style="color: #fcaf3e;">theta.validation_index</span> = os.environ[<span style="color: #e9b96e;">'VALIDATION_INDEX'</span>]
+        <span style="color: #fcaf3e;">theta.base_path</span> = os.environ[<span style="color: #e9b96e;">'BASE_PATH'</span>]
+        <span style="color: #fcaf3e;">theta.samples_per_epoch</span> = <span style="color: #e090d7;">int</span>(os.environ[<span style="color: #e9b96e;">'SAMPLES_PER_EPOCH'</span>])
+        <span style="color: #fcaf3e;">theta.valid_samples_per_epoch</span> = <span style="color: #e090d7;">int</span>(os.environ[<span style="color: #e9b96e;">'VALID_SAMPLES_PER_EPOCH'</span>])
+        <span style="color: #fcaf3e;">theta.epochs</span> = <span style="color: #e090d7;">int</span>(os.environ[<span style="color: #e9b96e;">'EPOCHS'</span>])
+        <span style="color: #fcaf3e;">theta.batch_size</span> = <span style="color: #e090d7;">int</span>(os.environ[<span style="color: #e9b96e;">'BATCH_SIZE'</span>])
+        <span style="color: #fcaf3e;">theta.flip</span> = os.environ[<span style="color: #e9b96e;">'FLIP'</span>]==<span style="color: #e9b96e;">'yes'</span>
+        <span style="color: #fcaf3e;">theta.shift</span> = os.environ[<span style="color: #e9b96e;">'SHIFT'</span>]==<span style="color: #e9b96e;">'yes'</span>
+    <span style="color: #fcaf3e;">model</span> = CarND(theta.input_shape)
+    model.<span style="color: #e090d7;">compile</span>(loss=<span style="color: #e9b96e;">"mse"</span>, optimizer=<span style="color: #e9b96e;">"adam"</span>)
+    <span style="color: #b4fa70;">print</span>(<span style="color: #e9b96e;">""</span>)
+    train(model)
+    model.save_weights(<span style="color: #e9b96e;">"model.h5"</span>)
+    <span style="color: #b4fa70;">with</span> <span style="color: #e090d7;">open</span>(<span style="color: #e9b96e;">"model.json"</span>, <span style="color: #e9b96e;">"w"</span>) <span style="color: #b4fa70;">as</span> f:
+        f.write(model.to_json())
+    gc.collect()
+</pre>
+</div>
+
+<pre class="example">
+... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
+Epoch 1/3
+2s - loss: 0.6189 - val_loss: 0.5805
+Epoch 2/3
+1s - loss: 0.5380 - val_loss: 0.4108
+Epoch 3/3
+1s - loss: 0.3283 - val_loss: 0.1612
+4046
+4644
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Date: <span class="timestamp-wrapper"><span class="timestamp">&lt;2016-12-19&gt;</span></span></p>
+<p class="author">Author: David A. Ventimiglia</p>
+<p class="date">Created: 2017-01-18 Wed 15:31</p>
+<p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.5.1 (<a href="http://orgmode.org">Org</a> mode 8.2.10)</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
