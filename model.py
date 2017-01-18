@@ -17,9 +17,8 @@ import os
 import random
 import sys
 
-
 # Utilities
-
+ 
 def rcycle(iterable):
     """Return elements from the iterable.  Shuffle the elements of the
 iterable when it becomes exhausted, then begin returning them again.
@@ -29,7 +28,7 @@ the first batch is not shuffled.  If you want only to return random
 elements then you must know batch size, which will be the number of
 elements in the underlying finite iterable, and you must discard the
 first batch.  The itertools.islice function can be helpful here.
-
+ 
     """
     saved = []
     for element in iterable:
@@ -128,9 +127,8 @@ types.
     """
     return ([np.asarray(t[i]) for i in indices] for t in groups)
 
-
 # Model
-    
+
 def CarND(input_shape):
     """Return a Keras neural network model."""
     model = Sequential()
@@ -171,8 +169,7 @@ def CarND(input_shape):
     model.add(Dense(1, name="Readout", trainable=False))
     return model
 
-
-# Training
+# Data Pipeline
 
 def pipeline(theta, training=False):
     """Create a data-processing pipeline.  The 'training_index' parameter
@@ -199,6 +196,7 @@ shifted along their horizontal axis.
     batches = batch(transpose(groups))
     return batches
 
+# Training
 
 def train(model):
     """Train the model."""
