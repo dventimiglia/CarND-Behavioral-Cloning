@@ -1,22 +1,22 @@
 * TODO Quality of Code
-*** TODO Is the code functional?
+*** DONE Is the code functional?
 ***** DONE The model provided can be used to successfully operate the simulation.
 *** TODO Is the code usable and readable?
 ***** DONE The code in =model.py= uses a Python generator.
-***** TODO The =model.py= code is clearly organized.
-***** TODO The =model.py= code has comments included where needed.
+***** DONE The =model.py= code is clearly organized.
+***** DONE The =model.py= code has comments included where needed.
 * TODO Model Architecture and Training Strategy
-*** TODO Has an appropriate model architecture been employed for the task?
+*** DONE Has an appropriate model architecture been employed for the task?
 ***** DONE The data is normalized in the model.
 ***** DONE The neural network uses convolution layers with appropriate filter sizes.
 ***** DONE Layers exist to introduce nonlinearity into the model.
-*** TODO Has an attempt been made to reduce overfitting of the model?
+*** DONE Has an attempt been made to reduce overfitting of the model?
 ***** DONE Train/validation/test splits have been used.
 ***** DONE The model uses dropout layers or other methods to reduce overfitting.
 *** TODO Have the model parameters been tuned appropriately?
 ***** DONE Learning rate parameters are chosen with explanation, or an Adam optimizer is used.
-*** TODO Is the training data chosen appropriately?
-***** TODO Training data has been chosen to induce the desired behavior in the simulation (i.e. keeping the car on the track).
+*** DONE Is the training data chosen appropriately?
+***** DONE Training data has been chosen to induce the desired behavior in the simulation (i.e. keeping the car on the track).
 * TODO Architecture and Training Documentation
 *** TODO Is the solution design documented?
 ***** TODO The README thoroughly discusses the approach taken for deriving and designing a model architecture fit for solving the given problem.
