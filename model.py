@@ -18,18 +18,18 @@ import random
 import sys
 
 # Utilities
- 
+
+#       Return elements from the iterable.  Shuffle the elements of the
+#       iterable when it becomes exhausted, then begin returning them
+#       again.  Repeat this sequence of operations indefinitely.  Note
+#       that the elements of the iterable are essentially returned in
+#       batches, and that the first batch is not shuffled.  If you want
+#       only to return random elements then you must know batch size,
+#       which will be the number of elements in the underlying finite
+#       iterable, and you must discard the first batch.  The
+#       itertools.islice function can be helpful here.
+
 def rcycle(iterable):
-    """Return elements from the iterable.  Shuffle the elements of the
-iterable when it becomes exhausted, then begin returning them again.
-Repeat this sequence of operations indefinitely.  Note that the
-elements of the iterable are essentially returned in batches, and that
-the first batch is not shuffled.  If you want only to return random
-elements then you must know batch size, which will be the number of
-elements in the underlying finite iterable, and you must discard the
-first batch.  The itertools.islice function can be helpful here.
- 
-    """
     saved = []
     for element in iterable:
         yield element
@@ -38,110 +38,93 @@ first batch.  The itertools.islice function can be helpful here.
         random.shuffle(saved)
         for element in saved:
               yield element
-              
+
+# Return an iterable over the lines the file with name 'filename'.
 
 def feed(filename):
-    """Return an iterable over the lines the file with name 'filename'.
-
-    """
     return (l for l in open(filename))
 
+# Return an iterable over 'lines', splitting each into records
+#       comprising fields, using 'delimiter'.
 
 def split(lines, delimiter=","):
-    """Return an iterable over 'lines', splitting each into records
-comprising fields, using 'delimiter'.
-
-    """
     return (line.split(delimiter) for line in lines)
 
+# Return an iterable over records of fields, selecting only the
+#       fields listed in 'indices'.
 
 def select(fields, indices):
-    """Return an iterable over records of fields, selecting only the
-fields listed in 'indices'.
-
-    """
     return ([r[i] for i in indices] for r in fields)
 
+# Return a NumPy array for the image indicated by 'f'.
 
 def load(f):
-    """Return a NumPy array for the image indicated by 'f'."""
     return np.asarray(Image.open(f))
 
+# Return an iterable over 'records', fetching a sample [X,y] for
+#       each record.  A sample is a ordered pair with the first element
+#       X a NumPy array (typically, an image) and the second element y
+#       floating point number (the label).
 
 def fetch(records, base):
-    """Return an iterable over 'records', fetching a sample [X,y] for each
-record.  A sample is a ordered pair with the first element X a NumPy
-array (typically, an image) and the second element y floating point
-number (the label).
-
-    """
     return ([load(base+f.strip()) for f in record[:1]]+[float(v) for v in record[1:]] for record in records)
 
+# Randomly flip an image 'x' along its horizontal axis 50% of the
+#       time.
 
 def rflip(x):
-    """Randomly flip an image 'x' along its horizontal axis 50% of the
-    time.
-
-    """
     return x if random.choice([True, False]) else [img.flip_axis(x[0],1), -1*x[1]]
 
+# Randomly shift an image 'x' along its horizontal axis by
+#       'factor' amount.
 
 def rshift(x, factor=0.1):
-    """Randomly shift an image 'x' along its horizontal axis by 'factor'
-amount.
-
-    """
     return img.random_shift(x, factor, 0.0, 0, 1, 2, fill_mode='wrap')
 
+# Iterate over 'items' but return them in groups of size 'n'.  If
+#       need be, fill the last group with 'fillvalue'.
 
 def group(items, n, fillvalue=None):
-    """Iterate over 'items' but return them in groups of size 'n'.  If
-need be, fill the last group with 'fillvalue'.
-
-    """
     return zip_longest(*([iter(items)]*n), fillvalue=fillvalue)
 
+# Transpose items in the 'tuples' iterable.  Each item is expected
+#       to be a tuple and all tuples are expected to have the same
+#       length.  The transposition is such that for each position 'i'
+#       within the tuples, all of the elements at that position across
+#       all the items are themselves grouped together.  Each group is
+#       realized into a list.  If 'tuples' contains m items and each
+#       item is itself a tuple of n elements, then what is returned is a
+#       set of n lists, and each list contains m elements.  The n lists
+#       are themselves presented as an iterable.
 
 def transpose(tuples):
-    """Transpose items in the 'tuples' iterable.  Each item is expected to
-be a tuple and all tuples are expected to have the same length.  The
-transposition is such that for each position 'i' within the tuples,
-all of the elements at that position across all the items are
-themselves grouped together.  Each group is realized into a list.  If
-'tuples' contains m items and each item is itself a tuple of n
-elements, then what is returned is a set of n lists, and each list
-contains m elements.  The n lists are themselves presented as an
-iterable.
-
-    """
     return (list(map(list, zip(*g))) for g in tuples)
 
+# Iterate over 'groups', each of which is itself an iterable (such
+#       as a list), and turn the groups selected by 'indices' into a
+#       NumPy array.  Naturally, the groups are expected to be of items
+#       that are compatible with NumPy arrays, which would be any of the
+#       appropriate numeric types.
 
 def batch(groups, indices=[0, 1]):
-    """Iterate over 'groups', each of which is itself an iterable (such as
-a list), and turn the groups selected by 'indices' into a NumPy array.
-Naturally, the groups are expected to be of items that are compatible
-with NumPy arrays, which would be any of the appropriate numeric
-types.
-
-    """
     return ([np.asarray(t[i]) for i in indices] for t in groups)
 
 # Model
 
+#       Return a Keras neural network model.
+
 def CarND(input_shape):
-    """Return a Keras neural network model."""
     model = Sequential()
-
+ 
     # Crop
-    model.add(Cropping2D(((1,1),(80,20)), input_shape=input_shape, name="Crop"))
-
+    model.add(Cropping2D(((80,20),(1,1)), input_shape=input_shape, name="Crop"))
+ 
     # Resize
     model.add(AveragePooling2D(pool_size=(1,4), name="Resize", trainable=False))
-
+ 
     # Normalize input.
     model.add(Lambda(lambda x: x/127.5 - 1., name="Normalize"))
-
+ 
     # Reduce dimensions through trainable convolution, activation, and
     # pooling layers.
     model.add(Convolution2D(24, 3, 3, subsample=(2,2), name="Convolution2D1", activation="relu"))
@@ -150,20 +133,20 @@ def CarND(input_shape):
     model.add(MaxPooling2D(name="MaxPool2"))
     model.add(Convolution2D(48, 3, 3, subsample=(1,1), name="Convolution2D3", activation="relu"))
     model.add(MaxPooling2D(name="MaxPool3"))
-
+ 
     # Dropout for regularization
-    model.add(Dropout(0.1))
-
+    model.add(Dropout(0.1, name="Dropout"))
+ 
     # Flatten input in a non-trainable layer before feeding into
     # fully-connected layers.
     model.add(Flatten(name="Flatten"))
-
+ 
     # Model steering through trainable layers comprising dense units
     # as ell as dropout units for regularization.
     model.add(Dense(100, activation="relu", name="FC2"))
     model.add(Dense(50, activation="relu", name="FC3"))
     model.add(Dense(10, activation="relu", name="FC4"))
-
+ 
     # Generate output (steering angles) with a single non-trainable
     # node.
     model.add(Dense(1, name="Readout", trainable=False))
@@ -171,21 +154,20 @@ def CarND(input_shape):
 
 # Data Pipeline
 
-def pipeline(theta, training=False):
-    """Create a data-processing pipeline.  The 'training_index' parameter
-is the name of a CSV index file specifying samples, with fields for
-image filenames and for steering angles.  The 'base_path' parameter is
-the directory path for the image filenames.  The pipeline itself is a
-generator (which is an iterable), where each item from the generator
-is a batch of samples (X,y).  X and y are each NumPy arrays, with X as
-a batch of images and y as a batch of outputs.  The images in X are
-cropped according to the 'crop_shape' parameter.  Finally,
-augmentation may be performed if a training pipeline is desired,
-determined by the 'training' parameter.  Training pipelines have their
-images randomly flipped along the horizontal axis, and are randomly
-shifted along their horizontal axis.
+#       Create a data-processing pipeline.  The 'training_index'
+#       parameter is the name of a CSV index file specifying samples,
+#       with fields for image filenames and for steering angles.  The
+#       'base_path' parameter is the directory path for the image
+#       filenames.  The pipeline itself is a generator (which is an
+#       iterable), where each item from the generator is a batch of
+#       samples (X,y).  X and y are each NumPy arrays, with X as a batch
+#       of images and y as a batch of outputs.  Finally, augmentation
+#       may be performed if a training pipeline is desired, determined
+#       by the 'training' parameter.  Training pipelines have their
+#       images randomly flipped along the horizontal axis, and are
+#       randomly shifted along their horizontal axis.
 
-    """
+def pipeline(theta, training=False):
     samples = select(rcycle(fetch(select(split(feed(theta.training_index)), [0,3]), theta.base_path)), [0,1])
     if training:
         if theta.flip:
@@ -198,8 +180,9 @@ shifted along their horizontal axis.
 
 # Training
 
+#       Train the model.
+
 def train(model):
-    """Train the model."""
     traingen = pipeline(theta, training=True)
     validgen = pipeline(theta)
     history = model.fit_generator(
@@ -209,25 +192,20 @@ def train(model):
         validation_data=validgen,
         nb_val_samples=theta.valid_samples_per_epoch)
 
-
 # Data Structures
 
-class HyperParameters:
-    """Essentially a struct just to gather hyper-parameters into one
-place, for convenience.
+#       Essentially a struct just to gather hyper-parameters into one
+#       place, for convenience.
 
-    """
+class HyperParameters:
     def __init__(self):
         return
-
 
 # Entry-point
 
 if __name__=="__main__":        # In case this module is imported
     theta = HyperParameters()
-    # theta.crop_shape = ((80,140),(0,320))
-    theta.crop_shape = ((0,160),(0,320))
-    theta.input_shape = [theta.crop_shape[0][1]-theta.crop_shape[0][0], theta.crop_shape[1][1]-theta.crop_shape[1][0], 3]
+    theta.input_shape = [160, 320, 3]
     theta.samples_per_epoch = 300
     theta.valid_samples_per_epoch = 300
     theta.epochs = 3

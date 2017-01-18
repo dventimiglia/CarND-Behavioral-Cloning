@@ -19,7 +19,7 @@
 
 ***** Imports
 
-      #+BEGIN_SRC python :results output :session :tangle model2.py
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
       from PIL import Image
       from itertools import groupby, islice, zip_longest, cycle
       from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
@@ -49,7 +49,7 @@
       iterable, and you must discard the first batch.  The
       itertools.islice function can be helpful here.
 
-      #+BEGIN_SRC python :results output :session :tangle model2.py
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
       def rcycle(iterable):
           saved = []
           for element in iterable:
@@ -63,7 +63,7 @@
                     
       Return an iterable over the lines the file with name 'filename'.
 
-      #+BEGIN_SRC python :results output :session :tangle model2.py
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
       def feed(filename):
           return (l for l in open(filename))
       #+END_SRC
@@ -71,7 +71,7 @@
       Return an iterable over 'lines', splitting each into records
       comprising fields, using 'delimiter'.
 
-      #+BEGIN_SRC python :results output :session :tangle model2.py
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
       def split(lines, delimiter=","):
           return (line.split(delimiter) for line in lines)
       #+END_SRC
@@ -79,14 +79,14 @@
       Return an iterable over records of fields, selecting only the
       fields listed in 'indices'.
 
-      #+BEGIN_SRC python :results output :session :tangle model2.py
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
       def select(fields, indices):
           return ([r[i] for i in indices] for r in fields)
       #+END_SRC
                     
       Return a NumPy array for the image indicated by 'f'.
 
-      #+BEGIN_SRC python :results output :session :tangle model2.py
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
       def load(f):
           return np.asarray(Image.open(f))
       #+END_SRC
@@ -96,7 +96,7 @@
       X a NumPy array (typically, an image) and the second element y
       floating point number (the label).
 
-      #+BEGIN_SRC python :results output :session :tangle model2.py
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
       def fetch(records, base):
           return ([load(base+f.strip()) for f in record[:1]]+[float(v) for v in record[1:]] for record in records)
       #+END_SRC
@@ -104,24 +104,23 @@
       Randomly flip an image 'x' along its horizontal axis 50% of the
       time.
 
-      #+BEGIN_SRC python :results output :session :tangle model2.py
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
       def rflip(x):
           return x if random.choice([True, False]) else [img.flip_axis(x[0],1), -1*x[1]]
       #+END_SRC
                     
-      #+BEGIN_SRC python :results output :session :tangle model2.py
+      Randomly shift an image 'x' along its horizontal axis by
+      'factor' amount.
+
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
       def rshift(x, factor=0.1):
-          """Randomly shift an image 'x' along its horizontal axis by 'factor'
-      amount.
-       
-          """
           return img.random_shift(x, factor, 0.0, 0, 1, 2, fill_mode='wrap')
       #+END_SRC
                     
       Iterate over 'items' but return them in groups of size 'n'.  If
       need be, fill the last group with 'fillvalue'.
 
-      #+BEGIN_SRC python :results output :session :tangle model2.py
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
       def group(items, n, fillvalue=None):
           return zip_longest(*([iter(items)]*n), fillvalue=fillvalue)
       #+END_SRC
@@ -136,7 +135,7 @@
       set of n lists, and each list contains m elements.  The n lists
       are themselves presented as an iterable.
 
-      #+BEGIN_SRC python :results output :session :tangle model2.py
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
       def transpose(tuples):
           return (list(map(list, zip(*g))) for g in tuples)
       #+END_SRC
@@ -147,7 +146,7 @@
       that are compatible with NumPy arrays, which would be any of the
       appropriate numeric types.
 
-      #+BEGIN_SRC python :results output :session :tangle model2.py
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
       def batch(groups, indices=[0, 1]):
           return ([np.asarray(t[i]) for i in indices] for t in groups)
       #+END_SRC
@@ -156,12 +155,12 @@
 
       Return a Keras neural network model.
 
-      #+BEGIN_SRC python :results output :session :tangle model2.py
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
       def CarND(input_shape):
           model = Sequential()
        
           # Crop
-          model.add(Cropping2D(((1,1),(80,20)), input_shape=input_shape, name="Crop"))
+          model.add(Cropping2D(((80,20),(1,1)), input_shape=input_shape, name="Crop"))
        
           # Resize
           model.add(AveragePooling2D(pool_size=(1,4), name="Resize", trainable=False))
@@ -179,7 +178,7 @@
           model.add(MaxPooling2D(name="MaxPool3"))
        
           # Dropout for regularization
-          model.add(Dropout(0.1))
+          model.add(Dropout(0.1, name="Dropout"))
        
           # Flatten input in a non-trainable layer before feeding into
           # fully-connected layers.
@@ -220,7 +219,7 @@
       images randomly flipped along the horizontal axis, and are
       randomly shifted along their horizontal axis.
 
-      #+BEGIN_SRC python :results output :session :tangle model2.py
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
       def pipeline(theta, training=False):
           samples = select(rcycle(fetch(select(split(feed(theta.training_index)), [0,3]), theta.base_path)), [0,1])
           if training:
@@ -237,7 +236,7 @@
 
       Train the model.
 
-      #+BEGIN_SRC python :results output :session :tangle model2.py 
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org 
       def train(model):
           traingen = pipeline(theta, training=True)
           validgen = pipeline(theta)
@@ -254,7 +253,7 @@
       Essentially a struct just to gather hyper-parameters into one
       place, for convenience.
 
-      #+BEGIN_SRC python :results output :session :tangle model2.py
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
       class HyperParameters:
           def __init__(self):
               return
@@ -262,7 +261,7 @@
 
 ***** Entry-point
 
-      #+BEGIN_SRC python :results output :session :tangle model2.py
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
       if __name__=="__main__":        # In case this module is imported
           theta = HyperParameters()
           theta.input_shape = [160, 320, 3]
