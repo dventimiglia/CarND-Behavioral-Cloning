@@ -19,7 +19,7 @@
 
 ***** Imports
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       from PIL import Image
       from itertools import groupby, islice, zip_longest, cycle
       from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
@@ -37,6 +37,8 @@
       import sys
       #+END_SRC
 
+      #+RESULTS:
+
 ***** Utilities
 
       Return elements from the iterable.  Shuffle the elements of the
@@ -49,7 +51,7 @@
       iterable, and you must discard the first batch.  The
       itertools.islice function can be helpful here.
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def rcycle(iterable):
           saved = []
           for element in iterable:
@@ -60,70 +62,88 @@
               for element in saved:
                     yield element
       #+END_SRC
+
+      #+RESULTS:
                     
       Return an iterable over the lines the file with name 'filename'.
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def feed(filename):
           return (l for l in open(filename))
       #+END_SRC
+
+      #+RESULTS:
                     
       Return an iterable over 'lines', splitting each into records
       comprising fields, using 'delimiter'.
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def split(lines, delimiter=","):
           return (line.split(delimiter) for line in lines)
       #+END_SRC
+
+      #+RESULTS:
                     
       Return an iterable over records of fields, selecting only the
       fields listed in 'indices'.
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def select(fields, indices):
           return ([r[i] for i in indices] for r in fields)
       #+END_SRC
+
+      #+RESULTS:
                     
       Return a NumPy array for the image indicated by 'f'.
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def load(f):
           return np.asarray(Image.open(f))
       #+END_SRC
+
+      #+RESULTS:
                     
       Return an iterable over 'records', fetching a sample [X,y] for
       each record.  A sample is a ordered pair with the first element
       X a NumPy array (typically, an image) and the second element y
       floating point number (the label).
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def fetch(records, base):
           return ([load(base+f.strip()) for f in record[:1]]+[float(v) for v in record[1:]] for record in records)
       #+END_SRC
+
+      #+RESULTS:
                     
       Randomly flip an image 'x' along its horizontal axis 50% of the
       time.
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def rflip(x):
           return x if random.choice([True, False]) else [img.flip_axis(x[0],1), -1*x[1]]
       #+END_SRC
+
+      #+RESULTS:
                     
       Randomly shift an image 'x' along its horizontal axis by
       'factor' amount.
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def rshift(x, factor=0.1):
           return img.random_shift(x, factor, 0.0, 0, 1, 2, fill_mode='wrap')
       #+END_SRC
+
+      #+RESULTS:
                     
       Iterate over 'items' but return them in groups of size 'n'.  If
       need be, fill the last group with 'fillvalue'.
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def group(items, n, fillvalue=None):
           return zip_longest(*([iter(items)]*n), fillvalue=fillvalue)
       #+END_SRC
+
+      #+RESULTS:
                     
       Transpose items in the 'tuples' iterable.  Each item is expected
       to be a tuple and all tuples are expected to have the same
@@ -135,10 +155,12 @@
       set of n lists, and each list contains m elements.  The n lists
       are themselves presented as an iterable.
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def transpose(tuples):
           return (list(map(list, zip(*g))) for g in tuples)
       #+END_SRC
+
+      #+RESULTS:
                     
       Iterate over 'groups', each of which is itself an iterable (such
       as a list), and turn the groups selected by 'indices' into a
@@ -146,16 +168,18 @@
       that are compatible with NumPy arrays, which would be any of the
       appropriate numeric types.
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def batch(groups, indices=[0, 1]):
           return ([np.asarray(t[i]) for i in indices] for t in groups)
       #+END_SRC
+
+      #+RESULTS:
 
 ***** Model
 
       Return a Keras neural network model.
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def CarND(input_shape):
           model = Sequential()
        
@@ -196,6 +220,63 @@
           return model
       #+END_SRC
 
+      #+RESULTS:
+
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
+      CarND([160, 320, 3]).summary()
+      #+END_SRC
+
+      #+RESULTS:
+      #+begin_example
+      ____________________________________________________________________________________________________
+      Layer (type)                     Output Shape          Param #     Connected to                     
+      ====================================================================================================
+      Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_8[0][0]         
+      ____________________________________________________________________________________________________
+      Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
+      ____________________________________________________________________________________________________
+      Normalize (Lambda)               (None, 60, 79, 3)     0           Resize[0][0]                     
+      ____________________________________________________________________________________________________
+      Convolution2D1 (Convolution2D)   (None, 29, 39, 24)    672         Normalize[0][0]                  
+      ____________________________________________________________________________________________________
+      MaxPool1 (MaxPooling2D)          (None, 14, 19, 24)    0           Convolution2D1[0][0]             
+      ____________________________________________________________________________________________________
+      Convolution2D2 (Convolution2D)   (None, 12, 17, 36)    7812        MaxPool1[0][0]                   
+      ____________________________________________________________________________________________________
+      MaxPool2 (MaxPooling2D)          (None, 6, 8, 36)      0           Convolution2D2[0][0]             
+      ____________________________________________________________________________________________________
+      Convolution2D3 (Convolution2D)   (None, 4, 6, 48)      15600       MaxPool2[0][0]                   
+      ____________________________________________________________________________________________________
+      MaxPool3 (MaxPooling2D)          (None, 2, 3, 48)      0           Convolution2D3[0][0]             
+      ____________________________________________________________________________________________________
+      Dropout (Dropout)                (None, 2, 3, 48)      0           MaxPool3[0][0]                   
+      ____________________________________________________________________________________________________
+      Flatten (Flatten)                (None, 288)           0           Dropout[0][0]                    
+      ____________________________________________________________________________________________________
+      FC2 (Dense)                      (None, 100)           28900       Flatten[0][0]                    
+      ____________________________________________________________________________________________________
+      FC3 (Dense)                      (None, 50)            5050        FC2[0][0]                        
+      ____________________________________________________________________________________________________
+      FC4 (Dense)                      (None, 10)            510         FC3[0][0]                        
+      ____________________________________________________________________________________________________
+      Readout (Dense)                  (None, 1)             0           FC4[0][0]                        
+      ====================================================================================================
+      Total params: 58,544
+      Trainable params: 58,544
+      Non-trainable params: 0
+      ____________________________________________________________________________________________________
+      #+end_example
+
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
+      plot(CarND([160, 320, 3]), to_file="model.png", show_shapes=True)
+      #+END_SRC
+
+      #+RESULTS:
+
+      #+CAPTION: CarND Neural-Net Architecture
+      #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
+      [[file:model.png]]
+
 *** Data
 
 ***** Characteristics
@@ -219,7 +300,7 @@
       images randomly flipped along the horizontal axis, and are
       randomly shifted along their horizontal axis.
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def pipeline(theta, training=False):
           samples = select(rcycle(fetch(select(split(feed(theta.training_index)), [0,3]), theta.base_path)), [0,1])
           if training:
@@ -232,11 +313,13 @@
           return batches
       #+END_SRC
 
+      #+RESULTS:
+
 ***** Training
 
       Train the model.
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org 
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code 
       def train(model):
           traingen = pipeline(theta, training=True)
           validgen = pipeline(theta)
@@ -245,23 +328,28 @@
               theta.samples_per_epoch,
               theta.epochs,
               validation_data=validgen,
+              verbose=2,
               nb_val_samples=theta.valid_samples_per_epoch)
       #+END_SRC
+
+      #+RESULTS:
 
 ***** Data Structures
 
       Essentially a struct just to gather hyper-parameters into one
       place, for convenience.
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       class HyperParameters:
           def __init__(self):
               return
       #+END_SRC
 
+      #+RESULTS:
+
 ***** Entry-point
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
       if __name__=="__main__":        # In case this module is imported
           theta = HyperParameters()
           theta.input_shape = [160, 320, 3]
@@ -286,13 +374,24 @@
               theta.shift = os.environ['SHIFT']=='yes'
           model = CarND(theta.input_shape)
           model.compile(loss="mse", optimizer="adam")
-          model.theta = theta
-          model.summary()
-          plot(model, to_file="model.png", show_shapes=True)
-          print(theta.__dict__)
+          print("")
           train(model)
           model.save_weights("model.h5")
           with open("model.json", "w") as f:
               f.write(model.to_json())
           gc.collect()
       #+END_SRC
+
+      #+RESULTS:
+      #+begin_example
+
+      ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
+      Epoch 1/3
+      2s - loss: 0.6083 - val_loss: 0.5462
+      Epoch 2/3
+      1s - loss: 0.4868 - val_loss: 0.3082
+      Epoch 3/3
+      1s - loss: 0.2283 - val_loss: 0.1706
+      4046
+      109
+#+end_example
