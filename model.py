@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+
+# Imports
 
 from PIL import Image
 from itertools import groupby, islice, zip_longest, cycle
