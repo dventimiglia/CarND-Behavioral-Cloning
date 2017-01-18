@@ -3,7 +3,7 @@
 from PIL import Image
 from itertools import groupby, islice, zip_longest, cycle
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
-from keras.layers.convolutional import Cropping2D
+from keras.layers.convolutional import Cropping2D, Convolution2D
 from keras.models import Sequential, model_from_json
 from keras.utils.visualize_util import plot
 from scipy.stats import kurtosis, skew, describe
@@ -94,29 +94,6 @@ amount.
     return img.random_shift(x, factor, 0.0, 0, 1, 2, fill_mode='wrap')
 
 
-def crop(x, shape):
-    """Crop an image 'x' by the boundaries given in 'shape', which is a
-tuple of tuples: ((x1,x2),(y1,y2)).
-
-    """
-    return x[shape[0][0]:shape[0][1],shape[1][0]:shape[1][1]]
-
-
-def resize(x):
-    """Resize an image 'x' in its height and width dimensions (not in its
-channel dimension) according to 'shape'.  Note that in this case,
-'shape' is a triple such as is returned by the NumPy 'shape'
-operation.
-
-    """
-    return x
-
-
-def process(data, crop_shape):
-    """Process 'data' into a cropped and resized NumPy array image."""
-    return resize(crop(data, crop_shape))
-
-
 def group(items, n, fillvalue=None):
     """Iterate over 'items' but return them in groups of size 'n'.  If
 need be, fill the last group with 'fillvalue'.
@@ -153,25 +130,27 @@ types.
 
 # Model
     
-
 def CarND(input_shape):
     """Return a Keras neural network model."""
     model = Sequential()
 
+    # Crop
+    model.add(Cropping2D(((1,1),(80,20)), input_shape=input_shape, name="Crop"))
+
     # Resize
-    model.add(AveragePooling2D(pool_size=(1,4), name="Resize", input_shape=input_shape, trainable=False))
+    model.add(AveragePooling2D(pool_size=(1,4), name="Resize", trainable=False))
 
     # Normalize input.
     model.add(Lambda(lambda x: x/127.5 - 1., name="Normalize"))
 
     # Reduce dimensions through trainable convolution, activation, and
     # pooling layers.
-    model.add(Conv2D(24, 3, 3, subsample=(2,2), name="Conv2D1", activation="relu"))
+    model.add(Convolution2D(24, 3, 3, subsample=(2,2), name="Convolution2D1", activation="relu"))
     model.add(MaxPooling2D(name="MaxPool1"))
-    model.add(Conv2D(36, 3, 3, subsample=(1,1), name="Conv2D2", activation="relu"))
+    model.add(Convolution2D(36, 3, 3, subsample=(1,1), name="Convolution2D2", activation="relu"))
     model.add(MaxPooling2D(name="MaxPool2"))
-    # model.add(Conv2D(48, 3, 3, subsample=(1,1), name="Conv2D3", activation="relu"))
-    # model.add(MaxPooling2D(name="MaxPool3"))
+    model.add(Convolution2D(48, 3, 3, subsample=(1,1), name="Convolution2D3", activation="relu"))
+    model.add(MaxPooling2D(name="MaxPool3"))
 
     # Dropout for regularization
     model.add(Dropout(0.1))
@@ -215,7 +194,6 @@ shifted along their horizontal axis.
             samples = (rflip(x) for x in samples)
         if theta.shift:
             samples = ((rshift(x[0]),x[1]) for x in samples)
-    samples = ((process(x[0], theta.crop_shape), x[1]) for x in samples)
     groups = group(samples, theta.batch_size)
     batches = batch(transpose(groups))
     return batches
@@ -248,7 +226,8 @@ place, for convenience.
 
 if __name__=="__main__":        # In case this module is imported
     theta = HyperParameters()
-    theta.crop_shape = ((80,140),(0,320))
+    # theta.crop_shape = ((80,140),(0,320))
+    theta.crop_shape = ((0,160),(0,320))
     theta.input_shape = [theta.crop_shape[0][1]-theta.crop_shape[0][0], theta.crop_shape[1][1]-theta.crop_shape[1][0], 3]
     theta.samples_per_epoch = 300
     theta.valid_samples_per_epoch = 300
