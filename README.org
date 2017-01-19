@@ -65,94 +65,26 @@
       cat data/driving_log.csv | tail -n+2 | shuf > data/driving_log_all.csv
       cat data/driving_log_all.csv | head -n7000 > data/driving_log_train.csv
       cat data/driving_log_all.csv | tail -n+7000 > data/driving_log_validation.csv
+      #+END_SRC
 
-      wc -l data/driving_log.csv
+      #+BEGIN_SRC sh :results output :tangle no :exports both
+      wc -l data/driving_log_all.csv
       wc -l data/driving_log_train.csv
       wc -l data/driving_log_validation.csv
       #+END_SRC
 
       #+RESULTS:
-      : 8037 data/driving_log.csv
+      : 8036 data/driving_log_all.csv
       : 7000 data/driving_log_train.csv
       : 1037 data/driving_log_validation.csv
 
-***** Exploratory Analysis
-
-      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both 
-      import matplotlib.pyplot as plt
-      import numpy as np
-      f = plt.figure()
-      y = np.array([float(s[0]) for s in select(split(feed("data/driving_log_all.csv")),[3])])
-      h = plt.hist(y,bins=100)
-      s = plt.savefig("hist1.png", format='png')
-      describe(y)
-      #+END_SRC
-
-      #+RESULTS:
-      : DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332515, variance=0.016599764281272529, skewness=-0.13028924577521922, kurtosis=6.311554102057668)
-
-      #+CAPTION: All Samples - No Reflection
-      #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
-      [[file:hist1.png]]
-
-      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both 
-      f = plt.figure()
-      p = lambda x: abs(float(x[0]))<0.01
-      y = np.array([float(s[0]) for s in filterfalse(p, select(split(feed("data/driving_log_all.csv")),[3]))])
-      h = plt.hist(y,bins=100)
-      s = plt.savefig("hist2.png", format='png')
-      describe(y)
-      #+END_SRC
-
-      #+RESULTS:
-      : DescribeResult(nobs=3584, minmax=(-0.94269539999999996, 1.0), mean=0.0091718659514508933, variance=0.037178302717086116, skewness=-0.16657825969015194, kurtosis=1.1768785967587378)
-
-      #+CAPTION: abs(angle)>0.01 - No Reflection
-      #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
-      [[file:hist2.png]]
-
-      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both 
-      f = plt.figure()
-      p = lambda x: abs(float(x[0]))<0.01
-      y = np.array([float(s[0]) for s in filterfalse(p, select(split(feed("data/driving_log_all.csv")),[3]))])
-      z = np.append(y, -y)
-      h = plt.hist(z,bins=100)
-      s = plt.savefig("hist3.png", format='png')
-      describe(z)
-      #+END_SRC
-
-      #+RESULTS:
-      : DescribeResult(nobs=7168, minmax=(-1.0, 1.0), mean=0.0, variance=0.03725725015081123, skewness=0.0, kurtosis=1.1400026599654973)
-
-      #+CAPTION: abs(angle)>0.01 - Full Reflection
-      #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
-      [[file:hist3.png]]
-
-***** Examples
-
-*** Implementation
-
 ***** Setup
 
-      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both
-      from PIL import Image
-      from itertools import groupby, islice, zip_longest, cycle, filterfalse
-      from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
-      from keras.layers.convolutional import Cropping2D, Convolution2D
-      from keras.models import Sequential, model_from_json
-      from keras.utils.visualize_util import plot
-      from scipy.stats import kurtosis, skew, describe
-      import gc
-      import keras.preprocessing.image as img
-      import matplotlib.pyplot as plt
-      import math
-      import numpy as np
-      import os
-      import random
-      import sys
-      #+END_SRC
+      Create the Conda environment.
 
-      #+RESULTS:
+      #+BEGIN_SRC sh :results output :tangle no :exports code
+      conda env create --file environment.yml --name CarND-Behavioral-Cloning
+      #+END_SRC
 
 ***** Utilities
 
@@ -165,6 +97,20 @@
       which will be the number of elements in the underlying finite
       iterable, and you must discard the first batch.  The
       itertools.islice function can be helpful here.
+
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
+      from PIL import Image
+      from itertools import groupby, islice, zip_longest, cycle, filterfalse
+      from scipy.stats import kurtosis, skew, describe
+      import math
+      import matplotlib.pyplot as plt
+      import numpy as np
+      import os
+      import random
+      import sys
+      #+END_SRC
+
+      #+RESULTS:
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def rcycle(iterable):
@@ -190,6 +136,119 @@
       group = lambda items, n, fillvalue=None: zip_longest(*([iter(items)]*n), fillvalue=fillvalue)
       transpose = lambda tuples: (list(map(list, zip(*g))) for g in tuples)
       batch = lambda groups, indices=[0, 1]: ([np.asarray(t[i]) for i in indices] for t in groups)
+      #+END_SRC
+
+      #+RESULTS:
+
+***** Exploratory Analysis
+
+      Get the target labels---the steering angles---for /all/ of the
+      data, from =data/driving_log_all.csv=, plot a histogram, and
+      generate basic descriptive statistics.
+
+      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both 
+      f = plt.figure()
+      y1 = np.array([float(s[0]) for s in select(split(feed("data/driving_log_all.csv")),[3])])
+      h = plt.hist(y1,bins=100)
+      s = plt.savefig("hist1.png", format='png')
+      describe(y1)
+      #+END_SRC
+
+      #+RESULTS:
+      : DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332515, variance=0.016599764281272529, skewness=-0.13028924577521922, kurtosis=6.311554102057668)
+
+      #+CAPTION: All Samples - No Reflection
+      #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
+      [[file:hist1.png]]
+
+      The data have non-zero /mean/ and /skewness/.  perhaps arising
+      from a bias toward left-hand turns when driving on a closed
+      track.
+
+      - mean=0.0040696440648332515
+      - skewness=-0.13028924577521922
+
+      The data are dominated by small steering angles because the car
+      spends most of its time on the track in straightaways.  The
+      asymmetry in the data is more apparent if we mask out small
+      angles and repeat the analysis.  Steering angles occupy the
+      interval [-1, 1], but the "straight" samples appear to be within
+      the neighborhood [-0.01, 0.01].
+
+      We might consider masking out small angled samples from the
+      actual training data as well, a subject we shall return to in a
+      later section.
+
+      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both 
+      f = plt.figure()
+      p = lambda x: abs(x)<0.01
+      y2 = np.array([s for s in filterfalse(p,y1)])
+      h = plt.hist(y2,bins=100)
+      s = plt.savefig("hist2.png", format='png')
+      describe(y)
+      #+END_SRC
+
+      #+RESULTS:
+      : DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332515, variance=0.016599764281272529, skewness=-0.13028924577521922, kurtosis=6.311554102057668)
+
+      #+CAPTION: abs(angle)>0.01 - No Reflection
+      #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
+      [[file:hist2.png]]
+
+      A simple trick that we can play to remove this asymmetry---if we
+      wish---is to join the data with its reflection, effectively
+      doubling our sample size in the process.  For illustration
+      purposes only, we shall again mask out small angle samples.
+
+      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both 
+      f = plt.figure()
+      y3 = np.append(y2, -y2)
+      h = plt.hist(y3,bins=100)
+      s = plt.savefig("hist3.png", format='png')
+      describe(y3)
+      #+END_SRC
+
+      #+RESULTS:
+      : DescribeResult(nobs=7168, minmax=(-1.0, 1.0), mean=0.0, variance=0.03725725015081123, skewness=0.0, kurtosis=1.1400026599654973)
+
+      #+CAPTION: abs(angle)>0.01 - Full Reflection
+      #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
+      [[file:hist3.png]]
+
+      In one of the least-surprising outcomes of the year, after
+      performing the reflection and joining operations, the data now
+      are symmetrical.
+
+      - mean=0.0
+      - skewness=0.0
+
+      Of course, in this analysis we have only reflected the target
+      labels.  If we apply this strategy to the training data,
+      naturally we need to reflect along their horizontal axes the
+      corresponding input images as well.
+
+***** Examples
+
+*** Implementation
+
+***** Setup
+
+      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both
+      from PIL import Image
+      from itertools import groupby, islice, zip_longest, cycle, filterfalse
+      from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
+      from keras.layers.convolutional import Cropping2D, Convolution2D
+      from keras.models import Sequential, model_from_json
+      from keras.utils.visualize_util import plot
+      from scipy.stats import kurtosis, skew, describe
+      import gc
+      import keras.preprocessing.image as img
+      import matplotlib.pyplot as plt
+      import math
+      import numpy as np
+      import os
+      import random
+      import sys
       #+END_SRC
 
       #+RESULTS:

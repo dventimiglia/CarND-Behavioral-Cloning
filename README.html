@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>CarND Project 3:  Behavioral Cloning</title>
-<!-- 2017-01-18 Wed 19:58 -->
+<!-- 2017-01-19 Thu 10:02 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="David A. Ventimiglia" />
@@ -157,36 +157,74 @@ for the JavaScript code in this tag.
 </div>
 
 <div id="outline-container-sec-3-2" class="outline-3">
-<h3 id="sec-3-2"><span class="section-number-3">3.2</span> Implementation</h3>
+<h3 id="sec-3-2"><span class="section-number-3">3.2</span> Data</h3>
 <div class="outline-text-3" id="text-3-2">
 </div><div id="outline-container-sec-3-2-1" class="outline-4">
-<h4 id="sec-3-2-1"><span class="section-number-4">3.2.1</span> Setup</h4>
+<h4 id="sec-3-2-1"><span class="section-number-4">3.2.1</span> Collection and Preparation</h4>
 <div class="outline-text-4" id="text-3-2-1">
+<p>
+Get the simulators.
+</p>
+
 <div class="org-src-container">
 
-<pre class="src src-python"><span style="color: #b4fa70;">from</span> PIL <span style="color: #b4fa70;">import</span> Image
-<span style="color: #b4fa70;">from</span> itertools <span style="color: #b4fa70;">import</span> groupby, islice, zip_longest, cycle, filterfalse
-<span style="color: #b4fa70;">from</span> keras.layers <span style="color: #b4fa70;">import</span> Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
-<span style="color: #b4fa70;">from</span> keras.layers.convolutional <span style="color: #b4fa70;">import</span> Cropping2D, Convolution2D
-<span style="color: #b4fa70;">from</span> keras.models <span style="color: #b4fa70;">import</span> Sequential, model_from_json
-<span style="color: #b4fa70;">from</span> keras.utils.visualize_util <span style="color: #b4fa70;">import</span> plot
-<span style="color: #b4fa70;">from</span> scipy.stats <span style="color: #b4fa70;">import</span> kurtosis, skew, describe
-<span style="color: #b4fa70;">import</span> gc
-<span style="color: #b4fa70;">import</span> keras.preprocessing.image <span style="color: #b4fa70;">as</span> img
-<span style="color: #b4fa70;">import</span> matplotlib.pyplot <span style="color: #b4fa70;">as</span> plt
-<span style="color: #b4fa70;">import</span> math
-<span style="color: #b4fa70;">import</span> numpy <span style="color: #b4fa70;">as</span> np
-<span style="color: #b4fa70;">import</span> os
-<span style="color: #b4fa70;">import</span> random
-<span style="color: #b4fa70;">import</span> sys
+<pre class="src src-sh">wget -O simulator-linux.zip <span style="color: #e9b96e;">"https://d17h27t6h515a5.cloudfront.net/topher/2016/November/5831f0f7_simulator-linux/simulator-linux.zip"</span>
+wget -O simulator-beta.zip <span style="color: #e9b96e;">"https://d17h27t6h515a5.cloudfront.net/topher/2017/January/587527cb_udacity-sdc-udacity-self-driving-car-simulator-dominique-development-linux-desktop-64-bit-5/udacity-sdc-udacity-self-driving-car-simulator-dominique-development-linux-desktop-64-bit-5.zip"</span>
+unzip -d simulator-linux -u simulator-linux.zip &gt; /dev/null 2&gt;&amp;1
+unzip -d simulator-beta -u simulator-beta.zip &gt; /dev/null 2&gt;&amp;1
+</pre>
+</div>
+
+<p>
+Get the data, shuffle it, and separate it into training and evaluation sets.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-sh">wget -nc <span style="color: #e9b96e;">"https://d17h27t6h515a5.cloudfront.net/topher/2016/December/584f6edd_data/data.zip"</span>
+unzip data.zip &gt; /dev/null 2&gt;&amp;1
+rm -rf __MACOSX
+
+cat data/driving_log.csv | tail -n+2 | shuf &gt; data/driving_log_all.csv
+cat data/driving_log_all.csv | head -n7000 &gt; data/driving_log_train.csv
+cat data/driving_log_all.csv | tail -n+7000 &gt; data/driving_log_validation.csv
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-sh">wc -l data/driving_log.csv
+wc -l data/driving_log_train.csv
+wc -l data/driving_log_validation.csv
+</pre>
+</div>
+
+<pre class="example">
+8037 data/driving_log.csv
+7000 data/driving_log_train.csv
+1037 data/driving_log_validation.csv
+</pre>
+</div>
+</div>
+
+<div id="outline-container-sec-3-2-2" class="outline-4">
+<h4 id="sec-3-2-2"><span class="section-number-4">3.2.2</span> Setup</h4>
+<div class="outline-text-4" id="text-3-2-2">
+<p>
+Create the Conda environment.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-sh">conda env create --file environment.yml --name CarND-Behavioral-Cloning
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-sec-3-2-2" class="outline-4">
-<h4 id="sec-3-2-2"><span class="section-number-4">3.2.2</span> Utilities</h4>
-<div class="outline-text-4" id="text-3-2-2">
+<div id="outline-container-sec-3-2-3" class="outline-4">
+<h4 id="sec-3-2-3"><span class="section-number-4">3.2.3</span> Utilities</h4>
+<div class="outline-text-4" id="text-3-2-3">
 <p>
 Return elements from the iterable.  Shuffle the elements of the
 iterable when it becomes exhausted, then begin returning them
@@ -198,6 +236,20 @@ which will be the number of elements in the underlying finite
 iterable, and you must discard the first batch.  The
 itertools.islice function can be helpful here.
 </p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">from</span> PIL <span style="color: #b4fa70;">import</span> Image
+<span style="color: #b4fa70;">from</span> itertools <span style="color: #b4fa70;">import</span> groupby, islice, zip_longest, cycle, filterfalse
+<span style="color: #b4fa70;">from</span> scipy.stats <span style="color: #b4fa70;">import</span> kurtosis, skew, describe
+<span style="color: #b4fa70;">import</span> math
+<span style="color: #b4fa70;">import</span> matplotlib.pyplot <span style="color: #b4fa70;">as</span> plt
+<span style="color: #b4fa70;">import</span> numpy <span style="color: #b4fa70;">as</span> np
+<span style="color: #b4fa70;">import</span> os
+<span style="color: #b4fa70;">import</span> random
+<span style="color: #b4fa70;">import</span> sys
+</pre>
+</div>
 
 <div class="org-src-container">
 
@@ -229,9 +281,172 @@ itertools.islice function can be helpful here.
 </div>
 </div>
 
-<div id="outline-container-sec-3-2-3" class="outline-4">
-<h4 id="sec-3-2-3"><span class="section-number-4">3.2.3</span> Model</h4>
-<div class="outline-text-4" id="text-3-2-3">
+<div id="outline-container-sec-3-2-4" class="outline-4">
+<h4 id="sec-3-2-4"><span class="section-number-4">3.2.4</span> Exploratory Analysis</h4>
+<div class="outline-text-4" id="text-3-2-4">
+<p>
+Get the target labels&#x2014;the steering angles&#x2014;for <i>all</i> of the
+data, from <code>data/driving_log_all.csv</code>, plot a histogram, and
+generate basic descriptive statistics.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #fcaf3e;">f</span> = plt.figure()
+<span style="color: #fcaf3e;">y1</span> = np.array([<span style="color: #e090d7;">float</span>(s[0]) <span style="color: #b4fa70;">for</span> s <span style="color: #b4fa70;">in</span> select(split(feed(<span style="color: #e9b96e;">"data/driving_log_all.csv"</span>)),[3])])
+<span style="color: #fcaf3e;">h</span> = plt.hist(y1,bins=100)
+<span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"hist1.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">'png'</span>)
+describe(y1)
+</pre>
+</div>
+
+<pre class="example">
+DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332515, variance=0.016599764281272529, skewness=-0.13028924577521922, kurtosis=6.311554102057668)
+</pre>
+
+
+<div class="figure">
+<p><img src="hist1.png" alt="CarND/Architecture Image" title="Architecture" />
+</p>
+<p><span class="figure-number">Figure 1:</span> All Samples - No Reflection</p>
+</div>
+
+<p>
+The data have non-zero <i>mean</i> and <i>skewness</i>.  perhaps arising
+from a bias toward left-hand turns when driving on a closed
+track.
+</p>
+
+<ul class="org-ul">
+<li>mean=0.0040696440648332515
+</li>
+<li>skewness=-0.13028924577521922
+</li>
+</ul>
+
+<p>
+The data are dominated by small steering angles because the car
+spends most of its time on the track in straightaways.  The
+asymmetry in the data is more apparent if we mask out small
+angles and repeat the analysis.  Steering angles occupy the
+interval [-1, 1], but the "straight" samples appear to be within
+the neighborhood [-0.01, 0.01].
+</p>
+
+<p>
+We might consider masking out small angled samples from the
+actual training data as well, a subject we shall return to in a
+later section.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #fcaf3e;">f</span> = plt.figure()
+<span style="color: #fcaf3e;">p</span> = <span style="color: #b4fa70;">lambda</span> x: <span style="color: #e090d7;">abs</span>(x)&lt;0.01
+<span style="color: #fcaf3e;">y2</span> = np.array([s <span style="color: #b4fa70;">for</span> s <span style="color: #b4fa70;">in</span> filterfalse(p,y1)])
+<span style="color: #fcaf3e;">h</span> = plt.hist(y2,bins=100)
+<span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"hist2.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">'png'</span>)
+describe(y)
+</pre>
+</div>
+
+<pre class="example">
+DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332515, variance=0.016599764281272529, skewness=-0.13028924577521922, kurtosis=6.311554102057668)
+</pre>
+
+
+<div class="figure">
+<p><img src="hist2.png" alt="CarND/Architecture Image" title="Architecture" />
+</p>
+<p><span class="figure-number">Figure 2:</span> abs(angle)&gt;0.01 - No Reflection</p>
+</div>
+
+<p>
+A simple trick that we can play to remove this asymmetry&#x2014;if we
+wish&#x2014;is to join the data with its reflection, effectively
+doubling our sample size in the process.  For illustration
+purposes only, we shall again mask out small angle samples.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #fcaf3e;">f</span> = plt.figure()
+<span style="color: #fcaf3e;">y3</span> = np.append(y2, -y2)
+<span style="color: #fcaf3e;">h</span> = plt.hist(y3,bins=100)
+<span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"hist3.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">'png'</span>)
+describe(y3)
+</pre>
+</div>
+
+<pre class="example">
+DescribeResult(nobs=7168, minmax=(-1.0, 1.0), mean=0.0, variance=0.03725725015081123, skewness=0.0, kurtosis=1.1400026599654973)
+</pre>
+
+
+<div class="figure">
+<p><img src="hist3.png" alt="CarND/Architecture Image" title="Architecture" />
+</p>
+<p><span class="figure-number">Figure 3:</span> abs(angle)&gt;0.01 - Full Reflection</p>
+</div>
+
+<p>
+In one of the least-surprising outcomes of the year, after
+performing the reflection and joining operations, the data now
+are symmetrical.
+</p>
+
+<ul class="org-ul">
+<li>mean=0.0
+</li>
+<li>skewness=0.0
+</li>
+</ul>
+
+<p>
+Of course, in this analysis we have only reflected the target
+labels.  If we apply this strategy to the training data,
+naturally we need to reflect along their horizontal axes the
+corresponding input images as well.
+</p>
+</div>
+</div>
+
+<div id="outline-container-sec-3-2-5" class="outline-4">
+<h4 id="sec-3-2-5"><span class="section-number-4">3.2.5</span> Examples</h4>
+</div>
+</div>
+
+<div id="outline-container-sec-3-3" class="outline-3">
+<h3 id="sec-3-3"><span class="section-number-3">3.3</span> Implementation</h3>
+<div class="outline-text-3" id="text-3-3">
+</div><div id="outline-container-sec-3-3-1" class="outline-4">
+<h4 id="sec-3-3-1"><span class="section-number-4">3.3.1</span> Setup</h4>
+<div class="outline-text-4" id="text-3-3-1">
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">from</span> PIL <span style="color: #b4fa70;">import</span> Image
+<span style="color: #b4fa70;">from</span> itertools <span style="color: #b4fa70;">import</span> groupby, islice, zip_longest, cycle, filterfalse
+<span style="color: #b4fa70;">from</span> keras.layers <span style="color: #b4fa70;">import</span> Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
+<span style="color: #b4fa70;">from</span> keras.layers.convolutional <span style="color: #b4fa70;">import</span> Cropping2D, Convolution2D
+<span style="color: #b4fa70;">from</span> keras.models <span style="color: #b4fa70;">import</span> Sequential, model_from_json
+<span style="color: #b4fa70;">from</span> keras.utils.visualize_util <span style="color: #b4fa70;">import</span> plot
+<span style="color: #b4fa70;">from</span> scipy.stats <span style="color: #b4fa70;">import</span> kurtosis, skew, describe
+<span style="color: #b4fa70;">import</span> gc
+<span style="color: #b4fa70;">import</span> keras.preprocessing.image <span style="color: #b4fa70;">as</span> img
+<span style="color: #b4fa70;">import</span> matplotlib.pyplot <span style="color: #b4fa70;">as</span> plt
+<span style="color: #b4fa70;">import</span> math
+<span style="color: #b4fa70;">import</span> numpy <span style="color: #b4fa70;">as</span> np
+<span style="color: #b4fa70;">import</span> os
+<span style="color: #b4fa70;">import</span> random
+<span style="color: #b4fa70;">import</span> sys
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-3-2" class="outline-4">
+<h4 id="sec-3-3-2"><span class="section-number-4">3.3.2</span> Model</h4>
+<div class="outline-text-4" id="text-3-3-2">
 <dl class="org-dl">
 <dt> Crop </dt><dd>crop to region (<i>non-trainable</i>)
 </dd>
@@ -310,7 +525,7 @@ Return a Keras neural network model.
 ____________________________________________________________________________________________________
 Layer (type)                     Output Shape          Param #     Connected to                     
 ====================================================================================================
-Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_37[0][0]        
+Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_7[0][0]         
 ____________________________________________________________________________________________________
 Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
 ____________________________________________________________________________________________________
@@ -356,109 +571,9 @@ ________________________________________________________________________________
 <div class="figure">
 <p><img src="model.png" alt="CarND/Architecture Image" title="Architecture" />
 </p>
-<p><span class="figure-number">Figure 1:</span> CarND Neural-Net Architecture</p>
+<p><span class="figure-number">Figure 4:</span> CarND Neural-Net Architecture</p>
 </div>
 </div>
-</div>
-</div>
-
-<div id="outline-container-sec-3-3" class="outline-3">
-<h3 id="sec-3-3"><span class="section-number-3">3.3</span> Data</h3>
-<div class="outline-text-3" id="text-3-3">
-</div><div id="outline-container-sec-3-3-1" class="outline-4">
-<h4 id="sec-3-3-1"><span class="section-number-4">3.3.1</span> Collection and Preparation</h4>
-<div class="outline-text-4" id="text-3-3-1">
-<div class="org-src-container">
-
-<pre class="src src-sh">wget -nc <span style="color: #e9b96e;">"https://d17h27t6h515a5.cloudfront.net/topher/2016/December/584f6edd_data/data.zip"</span>
-unzip data.zip &gt; /dev/null 2&gt;&amp;1
-rm -rf __MACOSX
-
-cat data/driving_log.csv | tail -n+2 | shuf &gt; data/driving_log_all.csv
-cat data/driving_log_all.csv | head -n7000 &gt; data/driving_log_train.csv
-cat data/driving_log_all.csv | tail -n+7000 &gt; data/driving_log_validation.csv
-
-wc -l data/driving_log.csv
-wc -l data/driving_log_train.csv
-wc -l data/driving_log_validation.csv
-</pre>
-</div>
-</div>
-</div>
-
-<div id="outline-container-sec-3-3-2" class="outline-4">
-<h4 id="sec-3-3-2"><span class="section-number-4">3.3.2</span> Characteristics</h4>
-<div class="outline-text-4" id="text-3-3-2">
-<div class="org-src-container">
-
-<pre class="src src-python"><span style="color: #fcaf3e;">f</span> = plt.figure()
-<span style="color: #fcaf3e;">y</span> = np.array([<span style="color: #e090d7;">float</span>(s[0]) <span style="color: #b4fa70;">for</span> s <span style="color: #b4fa70;">in</span> select(split(feed(<span style="color: #e9b96e;">"data/driving_log_all.csv"</span>)),[3])])
-<span style="color: #fcaf3e;">h</span> = plt.hist(y,bins=100)
-<span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"hist1.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">'png'</span>)
-describe(y)
-</pre>
-</div>
-
-<pre class="example">
-DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332515, variance=0.016599764281272529, skewness=-0.13028924577521922, kurtosis=6.311554102057668)
-</pre>
-
-
-<div class="figure">
-<p><img src="hist1.png" alt="CarND/Architecture Image" title="Architecture" />
-</p>
-<p><span class="figure-number">Figure 2:</span> All Samples - No Reflection</p>
-</div>
-
-<div class="org-src-container">
-
-<pre class="src src-python"><span style="color: #fcaf3e;">f</span> = plt.figure()
-<span style="color: #fcaf3e;">p</span> = <span style="color: #b4fa70;">lambda</span> x: <span style="color: #e090d7;">abs</span>(<span style="color: #e090d7;">float</span>(x[0]))&lt;0.01
-<span style="color: #fcaf3e;">y</span> = np.array([<span style="color: #e090d7;">float</span>(s[0]) <span style="color: #b4fa70;">for</span> s <span style="color: #b4fa70;">in</span> filterfalse(p, select(split(feed(<span style="color: #e9b96e;">"data/driving_log_all.csv"</span>)),[3]))])
-<span style="color: #fcaf3e;">h</span> = plt.hist(y,bins=100)
-<span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"hist2.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">'png'</span>)
-describe(y)
-</pre>
-</div>
-
-<pre class="example">
-DescribeResult(nobs=3584, minmax=(-0.94269539999999996, 1.0), mean=0.0091718659514508933, variance=0.037178302717086116, skewness=-0.16657825969015194, kurtosis=1.1768785967587378)
-</pre>
-
-
-<div class="figure">
-<p><img src="hist2.png" alt="CarND/Architecture Image" title="Architecture" />
-</p>
-<p><span class="figure-number">Figure 3:</span> abs(angle)&gt;0.01 - No Reflection</p>
-</div>
-
-<div class="org-src-container">
-
-<pre class="src src-python"><span style="color: #fcaf3e;">f</span> = plt.figure()
-<span style="color: #fcaf3e;">p</span> = <span style="color: #b4fa70;">lambda</span> x: <span style="color: #e090d7;">abs</span>(<span style="color: #e090d7;">float</span>(x[0]))&lt;0.01
-<span style="color: #fcaf3e;">y</span> = np.array([<span style="color: #e090d7;">float</span>(s[0]) <span style="color: #b4fa70;">for</span> s <span style="color: #b4fa70;">in</span> filterfalse(p, select(split(feed(<span style="color: #e9b96e;">"data/driving_log_all.csv"</span>)),[3]))])
-<span style="color: #fcaf3e;">z</span> = np.append(y, -y)
-<span style="color: #fcaf3e;">h</span> = plt.hist(z,bins=100)
-<span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"hist3.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">'png'</span>)
-describe(z)
-</pre>
-</div>
-
-<pre class="example">
-DescribeResult(nobs=7168, minmax=(-1.0, 1.0), mean=0.0, variance=0.03725725015081123, skewness=0.0, kurtosis=1.1400026599654973)
-</pre>
-
-
-<div class="figure">
-<p><img src="hist3.png" alt="CarND/Architecture Image" title="Architecture" />
-</p>
-<p><span class="figure-number">Figure 4:</span> abs(angle)&gt;0.01 - Full Reflection</p>
-</div>
-</div>
-</div>
-
-<div id="outline-container-sec-3-3-3" class="outline-4">
-<h4 id="sec-3-3-3"><span class="section-number-4">3.3.3</span> Examples</h4>
 </div>
 </div>
 
@@ -582,13 +697,13 @@ place, for convenience.
 <pre class="example">
 ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
 Epoch 1/3
-10/30 [=========&gt;....................] - ETA: 9s - loss: 0.674420/30 [===================&gt;..........] - ETA: 2s - loss: 0.618430/30 [==============================] - 4s - loss: 0.6272 - val_loss: 0.5980
+10/30 [=========&gt;....................] - ETA: 1s - loss: 0.665520/30 [===================&gt;..........] - ETA: 0s - loss: 0.657630/30 [==============================] - 1s - loss: 0.6220 - val_loss: 0.5865
 Epoch 2/3
-10/30 [=========&gt;....................] - ETA: 0s - loss: 0.537720/30 [===================&gt;..........] - ETA: 0s - loss: 0.571130/30 [==============================] - 0s - loss: 0.5675 - val_loss: 0.5216
+10/30 [=========&gt;....................] - ETA: 0s - loss: 0.619920/30 [===================&gt;..........] - ETA: 0s - loss: 0.603730/30 [==============================] - 0s - loss: 0.5530 - val_loss: 0.4388
 Epoch 3/3
-10/30 [=========&gt;....................] - ETA: 0s - loss: 0.445420/30 [===================&gt;..........] - ETA: 0s - loss: 0.448130/30 [==============================] - 0s - loss: 0.4349 - val_loss: 0.2843
+10/30 [=========&gt;....................] - ETA: 0s - loss: 0.457220/30 [===================&gt;..........] - ETA: 0s - loss: 0.393230/30 [==============================] - 0s - loss: 0.3650 - val_loss: 0.2163
 4046
-4866
+105
 </pre>
 </div>
 </div>
@@ -598,7 +713,7 @@ Epoch 3/3
 <div id="postamble" class="status">
 <p class="date">Date: <span class="timestamp-wrapper"><span class="timestamp">&lt;2017-01-19&gt;</span></span></p>
 <p class="author">Author: David A. Ventimiglia</p>
-<p class="date">Created: 2017-01-18 Wed 19:58</p>
+<p class="date">Created: 2017-01-19 Thu 10:02</p>
 <p class="creator">Emacs 24.5.1 (Org mode 8.2.10)</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
