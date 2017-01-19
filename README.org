@@ -20,7 +20,8 @@
 #+CREATOR: <a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.5.1 (<a href="http://orgmode.org">Org</a> mode 8.2.10)
 #+HTML_CONTAINER: div
 #+HTML_DOCTYPE: xhtml-strict
-#+HTML_HEAD_EXTRA: <style>body {font-size:large; max-width:50em}</style>
+#+HTML_HEAD_EXTRA: <style>@import 'https://fonts.googleapis.com/css?family=Quattrocento';</style>
+#+HTML_HEAD_EXTRA: <style>body {font-family: Quattrocento, Georgia, serif; background-color: Linen; font-size:large; max-width:50em}</style>
 #+HTML_HEAD_EXTRA: <style>pre.src {background-color: #2B2B2B; color: #a9b7c6; margin: 0; overflow-x: scroll;}</style>
 
 * What
@@ -60,7 +61,7 @@
 
       #+RESULTS:
 
-      #+BEGIN_SRC sh :results output :tangle no :exports both
+      #+BEGIN_SRC sh :results output :tangle no :exports code
       wc -l data/driving_log_all.csv
       wc -l data/driving_log_train.csv
       wc -l data/driving_log_validation.csv
@@ -136,15 +137,61 @@
 
 ***** Exploratory Analysis
 
+      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code 
+      X = [x for x in fetch(select(split(feed("data/driving_log_overtrain.csv")), [0,3]), "data/")]
+      f = plt.figure()
+      plt.imshow(X[0][0])
+      f.suptitle("Angle: " + str(X[0][1]))
+      s = plt.savefig("road1.png", format="png", bbox_inches='tight')
+      f = plt.figure()
+      plt.imshow(X[1][0])
+      f.suptitle("Angle: " + str(X[1][1]))
+      s = plt.savefig("road2.png", format="png", bbox_inches='tight')
+      f = plt.figure()
+      plt.imshow(X[2][0])
+      f.suptitle("Angle: " + str(X[2][1]))
+      s = plt.savefig("road3.png", format="png", bbox_inches='tight')
+      #+END_SRC
+
+      #+RESULTS:
+      : Text(0.5,0.98,'Angle: 0.0')
+
+      #+CAPTION: Road 1
+      #+ATTR_HTML: :border 1
+      [[file:road1.png]]
+
+      #+CAPTION: Road 2
+      #+ATTR_HTML: :border 1
+      [[file:road2.png]]
+
+      #+CAPTION: Road 3
+      #+ATTR_HTML: :border 1
+      [[file:road3.png]]
+
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code 
+      X = [x[0] for x in fetch(select(split(feed("data/driving_log_overtrain.csv")), [0,3]), "data/")]
+      f = plt.figure()
+      plt.imshow(X[0][80:120])
+      s = plt.savefig("road4.png", format="png", bbox_inches='tight')
+      #+END_SRC
+
+      #+RESULTS:
+      : 
+      : >>> <matplotlib.image.AxesImage object at 0x7f1ba613f128>
+
+      #+CAPTION: Road 3
+      #+ATTR_HTML: :border 1
+      [[file:road4.png]]
+
       Get the target labels---the steering angles---for /all/ of the
       data, from =data/driving_log_all.csv=, plot a histogram, and
       generate basic descriptive statistics.
 
-      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both 
+      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code 
       f = plt.figure()
       y1 = np.array([float(s[0]) for s in select(split(feed("data/driving_log_all.csv")),[3])])
       h = plt.hist(y1,bins=100)
-      s = plt.savefig("hist1.png", format='png')
+      s = plt.savefig("hist1.png", format='png', bbox_inches='tight')
       describe(y1)
       #+END_SRC
 
@@ -152,7 +199,7 @@
       : DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332506, variance=0.016599764281272529, skewness=-0.1302892457752191, kurtosis=6.311554102057668)
 
       #+CAPTION: All Samples - No Reflection
-      #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
+      #+ATTR_HTML: :border 1
       [[file:hist1.png]]
 
       The data have non-zero /mean/ and /skewness/.  perhaps arising
@@ -173,12 +220,12 @@
       actual training data as well, a subject we shall return to in a
       later section.
 
-      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both 
+      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code 
       f = plt.figure()
       p = lambda x: abs(x)<0.01
       y2 = np.array([s for s in filterfalse(p,y1)])
       h = plt.hist(y2,bins=100)
-      s = plt.savefig("hist2.png", format='png')
+      s = plt.savefig("hist2.png", format='png', bbox_inches='tight')
       describe(y2)
       #+END_SRC
 
@@ -186,7 +233,7 @@
       : DescribeResult(nobs=3584, minmax=(-0.94269539999999996, 1.0), mean=0.0091718659514508933, variance=0.037178302717086116, skewness=-0.1665782596901519, kurtosis=1.1768785967587378)
 
       #+CAPTION: abs(angle)>0.01 - No Reflection
-      #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
+      #+ATTR_HTML: :border 1
       [[file:hist2.png]]
 
       A simple trick that we can play to remove this asymmetry---if we
@@ -194,11 +241,11 @@
       doubling our sample size in the process.  For illustration
       purposes only, we shall again mask out small angle samples.
 
-      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both 
+      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code 
       f = plt.figure()
       y3 = np.append(y2, -y2)
       h = plt.hist(y3,bins=100)
-      s = plt.savefig("hist3.png", format='png')
+      s = plt.savefig("hist3.png", format='png', bbox_inches='tight')
       describe(y3)
       #+END_SRC
 
@@ -206,7 +253,7 @@
       : DescribeResult(nobs=7168, minmax=(-1.0, 1.0), mean=0.0, variance=0.03725725015081123, skewness=0.0, kurtosis=1.1400026599654964)
 
       #+CAPTION: abs(angle)>0.01 - Full Reflection
-      #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
+      #+ATTR_HTML: :border 1
       [[file:hist3.png]]
 
       In one of the least-surprising outcomes of the year, after
@@ -288,7 +335,7 @@
 
       #+RESULTS:
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       CarND([160, 320, 3], ((80,20),(1,1))).summary()
       #+END_SRC
 
@@ -340,7 +387,7 @@
       #+RESULTS:
 
       #+CAPTION: CarND Neural-Net Architecture
-      #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
+      #+ATTR_HTML: :border 1
       [[file:model.png]]
 
 *** Training
@@ -421,7 +468,7 @@
       : Epoch 3/3
       : 0s - loss: 0.4659 - val_loss: 0.3416
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       theta = HyperParameters()
       theta.input_shape = [160, 320, 3]
       theta.crop_shape = ((80,20),(1,1))
