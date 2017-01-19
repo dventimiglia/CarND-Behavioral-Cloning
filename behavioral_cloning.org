@@ -1,11 +1,38 @@
-#+TITLE: CarND Errata
-
-#+DATE: <2016-12-19>
+#+TITLE: CarND Project 3:  Behavioral Cloning
+#+DATE: <2017-01-19>
+#+AUTHOR: David A. Ventimiglia
+#+EMAIL: dventimi@gmail.com
 
 #+INDEX: Machine-Learning!Self-Driving Cars
 #+INDEX: Python!TensorFlow
 #+INDEX: Python!Keras
 #+INDEX: Udacity!Self-Driving Car Nano-Degree Program
+
+#+OPTIONS: ':nil *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline
+#+OPTIONS: author:t c:nil creator:comment d:(not "LOGBOOK") date:t
+#+OPTIONS: e:t email:nil f:t inline:t num:t p:nil pri:nil stat:t
+#+OPTIONS: tags:t tasks:t tex:t timestamp:t toc:nil todo:t |:t
+#+CREATOR: Emacs 24.5.1 (Org mode 8.2.10)
+#+DESCRIPTION:
+#+EXCLUDE_TAGS: noexport
+#+KEYWORDS:
+#+LANGUAGE: en
+#+SELECT_TAGS: export
+
+#+OPTIONS: html-link-use-abs-url:nil html-postamble:auto
+#+OPTIONS: html-preamble:t html-scripts:t html-style:t
+#+OPTIONS: html5-fancy:t tex:t
+#+CREATOR: <a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.5.1 (<a href="http://orgmode.org">Org</a> mode 8.2.10)
+#+HTML_CONTAINER: div
+#+HTML_DOCTYPE: xhtml-strict
+#+HTML_HEAD:  
+#+HTML_HEAD_EXTRA: <style>body {font-size:large; max-width:50em}</style>
+#+HTML_HEAD_EXTRA: <style>pre.src {background-color: #2B2B2B; color: #a9b7c6; margin: 0; overflow-x: scroll;}</style>
+#+HTML_LINK_HOME:
+#+HTML_LINK_UP:
+#+HTML_MATHJAX:
+#+INFOJS_OPT:
+#+LATEX_HEADER:
 
 * What
 
@@ -17,9 +44,7 @@
 
 *** Architecture
 
-***** Imports
-
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports results
       from PIL import Image
       from itertools import groupby, islice, zip_longest, cycle
       from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
@@ -279,6 +304,31 @@
 
 *** Data
 
+***** Collection and Preparation
+
+      #+BEGIN_SRC sh :results output :tangle no :exports code
+      wget -nc "https://d17h27t6h515a5.cloudfront.net/topher/2016/December/584f6edd_data/data.zip"
+      unzip data.zip > /dev/null 2>&1
+      rm -rf __MACOSX
+      #+END_SRC
+
+      #+BEGIN_SRC sh :results output :tangle no :exports code
+      cat data/driving_log.csv | tail -n+2 | shuf > data/driving_log_all.csv
+      cat data/driving_log_all.csv | head -n7000 > data/driving_log_train.csv
+      cat data/driving_log_all.csv | tail -n+7000 > data/driving_log_validation.csv
+      #+END_SRC
+
+      #+BEGIN_SRC sh :results output :tangle no :exports both
+      wc -l data/driving_log.csv
+      wc -l data/driving_log_train.csv
+      wc -l data/driving_log_validation.csv
+      #+END_SRC
+
+      #+RESULTS:
+      : 8037 data/driving_log.csv
+      : 7000 data/driving_log_train.csv
+      : 1037 data/driving_log_validation.csv
+
 ***** Characteristics
 
 ***** Examples
@@ -395,3 +445,4 @@
       4046
       109
 #+end_example
+

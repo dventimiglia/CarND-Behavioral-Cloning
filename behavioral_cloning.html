@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>David A. Ventimiglia : CarND Errata</title>
-<!-- 2017-01-18 Wed 15:31 -->
+<!-- 2017-01-18 Wed 15:50 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="David A. Ventimiglia" />
@@ -88,6 +88,8 @@
     { background-color: #ffff00; color: #000000; font-weight: bold; }
   /*]]>*/-->
 </style>
+<style>body {font-size:large; max-width:50em}</style>
+<style>pre.src {background-color: #2B2B2B; color: #a9b7c6; margin: 0; overflow-x: scroll;}</style>
 <script type="text/javascript">
 /*
 @licstart  The following is the entire license notice for the
@@ -138,41 +140,6 @@ for the JavaScript code in this tag.
 <body>
 <div id="content">
 <h1 class="title">CarND Errata</h1>
-<div id="table-of-contents">
-<h2>Table of Contents</h2>
-<div id="text-table-of-contents">
-<ul>
-<li><a href="#sec-1">1. What</a></li>
-<li><a href="#sec-2">2. Why</a></li>
-<li><a href="#sec-3">3. How</a>
-<ul>
-<li><a href="#sec-3-1">3.1. Approach</a></li>
-<li><a href="#sec-3-2">3.2. Architecture</a>
-<ul>
-<li><a href="#sec-3-2-1">3.2.1. Imports</a></li>
-<li><a href="#sec-3-2-2">3.2.2. Utilities</a></li>
-<li><a href="#sec-3-2-3">3.2.3. Model</a></li>
-</ul>
-</li>
-<li><a href="#sec-3-3">3.3. Data</a>
-<ul>
-<li><a href="#sec-3-3-1">3.3.1. Characteristics</a></li>
-<li><a href="#sec-3-3-2">3.3.2. Examples</a></li>
-</ul>
-</li>
-<li><a href="#sec-3-4">3.4. Training</a>
-<ul>
-<li><a href="#sec-3-4-1">3.4.1. Data Pipeline</a></li>
-<li><a href="#sec-3-4-2">3.4.2. Training</a></li>
-<li><a href="#sec-3-4-3">3.4.3. Data Structures</a></li>
-<li><a href="#sec-3-4-4">3.4.4. Entry-point</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</div>
-</div>
 
 <div id="outline-container-sec-1" class="outline-2">
 <h2 id="sec-1"><span class="section-number-2">1</span> What</h2>
@@ -195,25 +162,6 @@ for the JavaScript code in this tag.
 </div><div id="outline-container-sec-3-2-1" class="outline-4">
 <h4 id="sec-3-2-1"><span class="section-number-4">3.2.1</span> Imports</h4>
 <div class="outline-text-4" id="text-3-2-1">
-<div class="org-src-container">
-
-<pre class="src src-python"><span style="color: #b4fa70;">from</span> PIL <span style="color: #b4fa70;">import</span> Image
-<span style="color: #b4fa70;">from</span> itertools <span style="color: #b4fa70;">import</span> groupby, islice, zip_longest, cycle
-<span style="color: #b4fa70;">from</span> keras.layers <span style="color: #b4fa70;">import</span> Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
-<span style="color: #b4fa70;">from</span> keras.layers.convolutional <span style="color: #b4fa70;">import</span> Cropping2D, Convolution2D
-<span style="color: #b4fa70;">from</span> keras.models <span style="color: #b4fa70;">import</span> Sequential, model_from_json
-<span style="color: #b4fa70;">from</span> keras.utils.visualize_util <span style="color: #b4fa70;">import</span> plot
-<span style="color: #b4fa70;">from</span> scipy.stats <span style="color: #b4fa70;">import</span> kurtosis, skew, describe
-<span style="color: #b4fa70;">import</span> cv2
-<span style="color: #b4fa70;">import</span> gc
-<span style="color: #b4fa70;">import</span> keras.preprocessing.image <span style="color: #b4fa70;">as</span> img
-<span style="color: #b4fa70;">import</span> math
-<span style="color: #b4fa70;">import</span> numpy <span style="color: #b4fa70;">as</span> np
-<span style="color: #b4fa70;">import</span> os
-<span style="color: #b4fa70;">import</span> random
-<span style="color: #b4fa70;">import</span> sys
-</pre>
-</div>
 </div>
 </div>
 
@@ -438,7 +386,7 @@ Return a Keras neural network model.
 ____________________________________________________________________________________________________
 Layer (type)                     Output Shape          Param #     Connected to                     
 ====================================================================================================
-Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_30[0][0]        
+Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_66[0][0]        
 ____________________________________________________________________________________________________
 Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
 ____________________________________________________________________________________________________
@@ -623,11 +571,11 @@ place, for convenience.
 <pre class="example">
 ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
 Epoch 1/3
-2s - loss: 0.6189 - val_loss: 0.5805
+2s - loss: 0.6210 - val_loss: 0.5876
 Epoch 2/3
-1s - loss: 0.5380 - val_loss: 0.4108
+1s - loss: 0.5471 - val_loss: 0.4234
 Epoch 3/3
-1s - loss: 0.3283 - val_loss: 0.1612
+1s - loss: 0.3378 - val_loss: 0.1360
 4046
 4644
 </pre>
@@ -639,8 +587,8 @@ Epoch 3/3
 <div id="postamble" class="status">
 <p class="date">Date: <span class="timestamp-wrapper"><span class="timestamp">&lt;2016-12-19&gt;</span></span></p>
 <p class="author">Author: David A. Ventimiglia</p>
-<p class="date">Created: 2017-01-18 Wed 15:31</p>
-<p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.5.1 (<a href="http://orgmode.org">Org</a> mode 8.2.10)</p>
+<p class="date">Created: 2017-01-18 Wed 15:50</p>
+<p class="creator">Emacs 24.5.1 (Org mode 8.2.10)</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
