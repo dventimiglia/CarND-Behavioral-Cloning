@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>CarND Project 3:  Behavioral Cloning</title>
-<!-- 2017-01-19 Thu 10:54 -->
+<!-- 2017-01-19 Thu 11:34 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="David A. Ventimiglia" />
@@ -142,25 +142,25 @@ for the JavaScript code in this tag.
 <h1 class="title">CarND Project 3:  Behavioral Cloning</h1>
 
 <div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1"><span class="section-number-2">1</span> What</h2>
+<h2 id="sec-1">What</h2>
 </div>
 
 <div id="outline-container-sec-2" class="outline-2">
-<h2 id="sec-2"><span class="section-number-2">2</span> Why</h2>
+<h2 id="sec-2">Why</h2>
 </div>
 
 <div id="outline-container-sec-3" class="outline-2">
-<h2 id="sec-3"><span class="section-number-2">3</span> How</h2>
+<h2 id="sec-3">How</h2>
 <div class="outline-text-2" id="text-3">
 </div><div id="outline-container-sec-3-1" class="outline-3">
-<h3 id="sec-3-1"><span class="section-number-3">3.1</span> Approach</h3>
+<h3 id="sec-3-1">Approach</h3>
 </div>
 
 <div id="outline-container-sec-3-2" class="outline-3">
-<h3 id="sec-3-2"><span class="section-number-3">3.2</span> Data</h3>
+<h3 id="sec-3-2">Data</h3>
 <div class="outline-text-3" id="text-3-2">
 </div><div id="outline-container-sec-3-2-1" class="outline-4">
-<h4 id="sec-3-2-1"><span class="section-number-4">3.2.1</span> Collection and Preparation</h4>
+<h4 id="sec-3-2-1">Collection and Preparation</h4>
 <div class="outline-text-4" id="text-3-2-1">
 <p>
 Get the simulators.
@@ -208,7 +208,7 @@ wc -l data/driving_log_validation.csv
 </div>
 
 <div id="outline-container-sec-3-2-2" class="outline-4">
-<h4 id="sec-3-2-2"><span class="section-number-4">3.2.2</span> Setup</h4>
+<h4 id="sec-3-2-2">Setup</h4>
 <div class="outline-text-4" id="text-3-2-2">
 <p>
 Create the Conda environment.
@@ -223,7 +223,7 @@ Create the Conda environment.
 </div>
 
 <div id="outline-container-sec-3-2-3" class="outline-4">
-<h4 id="sec-3-2-3"><span class="section-number-4">3.2.3</span> Utilities</h4>
+<h4 id="sec-3-2-3">Utilities</h4>
 <div class="outline-text-4" id="text-3-2-3">
 <p>
 Return elements from the iterable.  Shuffle the elements of the
@@ -281,7 +281,7 @@ itertools.islice function can be helpful here.
 </div>
 
 <div id="outline-container-sec-3-2-4" class="outline-4">
-<h4 id="sec-3-2-4"><span class="section-number-4">3.2.4</span> Exploratory Analysis</h4>
+<h4 id="sec-3-2-4">Exploratory Analysis</h4>
 <div class="outline-text-4" id="text-3-2-4">
 <p>
 Get the target labels&#x2014;the steering angles&#x2014;for <i>all</i> of the
@@ -300,7 +300,7 @@ describe(y1)
 </div>
 
 <pre class="example">
-DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332515, variance=0.016599764281272529, skewness=-0.13028924577521922, kurtosis=6.311554102057668)
+DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332506, variance=0.016599764281272529, skewness=-0.1302892457752191, kurtosis=6.311554102057668)
 </pre>
 
 
@@ -350,7 +350,7 @@ describe(y2)
 </div>
 
 <pre class="example">
-DescribeResult(nobs=3584, minmax=(-0.94269539999999996, 1.0), mean=0.0091718659514508933, variance=0.037178302717086116, skewness=-0.16657825969015194, kurtosis=1.1768785967587378)
+DescribeResult(nobs=3584, minmax=(-0.94269539999999996, 1.0), mean=0.0091718659514508933, variance=0.037178302717086116, skewness=-0.1665782596901519, kurtosis=1.1768785967587378)
 </pre>
 
 
@@ -378,7 +378,7 @@ describe(y3)
 </div>
 
 <pre class="example">
-DescribeResult(nobs=7168, minmax=(-1.0, 1.0), mean=0.0, variance=0.03725725015081123, skewness=0.0, kurtosis=1.1400026599654973)
+DescribeResult(nobs=7168, minmax=(-1.0, 1.0), mean=0.0, variance=0.03725725015081123, skewness=0.0, kurtosis=1.1400026599654964)
 </pre>
 
 
@@ -411,15 +411,15 @@ corresponding input images as well.
 </div>
 
 <div id="outline-container-sec-3-2-5" class="outline-4">
-<h4 id="sec-3-2-5"><span class="section-number-4">3.2.5</span> Examples</h4>
+<h4 id="sec-3-2-5">Examples</h4>
 </div>
 </div>
 
 <div id="outline-container-sec-3-3" class="outline-3">
-<h3 id="sec-3-3"><span class="section-number-3">3.3</span> Implementation</h3>
+<h3 id="sec-3-3">Implementation</h3>
 <div class="outline-text-3" id="text-3-3">
 </div><div id="outline-container-sec-3-3-1" class="outline-4">
-<h4 id="sec-3-3-1"><span class="section-number-4">3.3.1</span> Model</h4>
+<h4 id="sec-3-3-1">Model</h4>
 <div class="outline-text-4" id="text-3-3-1">
 <dl class="org-dl">
 <dt> Crop </dt><dd>crop to region (<i>non-trainable</i>)
@@ -453,11 +453,12 @@ Return a Keras neural network model.
 <span style="color: #b4fa70;">from</span> keras.models <span style="color: #b4fa70;">import</span> Sequential, model_from_json
 <span style="color: #b4fa70;">from</span> keras.utils.visualize_util <span style="color: #b4fa70;">import</span> plot
 
-<span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">CarND</span>(input_shape):
+<span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">CarND</span>(input_shape, crop_shape):
     <span style="color: #fcaf3e;">model</span> = Sequential()
 
     <span style="color: #73d216;"># </span><span style="color: #73d216;">Crop</span>
-    model.add(Cropping2D(((80,20),(1,1)), input_shape=input_shape, name=<span style="color: #e9b96e;">"Crop"</span>))
+    <span style="color: #73d216;"># </span><span style="color: #73d216;">model.add(Cropping2D(((80,20),(1,1)), input_shape=input_shape, name="Crop"))</span>
+    model.add(Cropping2D(crop_shape, input_shape=input_shape, name=<span style="color: #e9b96e;">"Crop"</span>))
 
     <span style="color: #73d216;"># </span><span style="color: #73d216;">Resize</span>
     model.add(AveragePooling2D(pool_size=(1,4), name=<span style="color: #e9b96e;">"Resize"</span>, trainable=<span style="color: #e9b2e3;">False</span>))
@@ -496,7 +497,7 @@ Return a Keras neural network model.
 
 <div class="org-src-container">
 
-<pre class="src src-python">CarND([160, 320, 3]).summary()
+<pre class="src src-python">CarND([160, 320, 3], ((80,20),(1,1))).summary()
 </pre>
 </div>
 
@@ -504,7 +505,7 @@ Return a Keras neural network model.
 ____________________________________________________________________________________________________
 Layer (type)                     Output Shape          Param #     Connected to                     
 ====================================================================================================
-Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_5[0][0]         
+Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_20[0][0]        
 ____________________________________________________________________________________________________
 Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
 ____________________________________________________________________________________________________
@@ -542,7 +543,7 @@ ________________________________________________________________________________
 
 <div class="org-src-container">
 
-<pre class="src src-python">plot(CarND([160, 320, 3]), to_file=<span style="color: #e9b96e;">"model.png"</span>, show_shapes=<span style="color: #e9b2e3;">True</span>)
+<pre class="src src-python">plot(CarND([160, 320, 3], ((80,20),(1,1))), to_file=<span style="color: #e9b96e;">"model.png"</span>, show_shapes=<span style="color: #e9b2e3;">True</span>)
 </pre>
 </div>
 
@@ -557,10 +558,10 @@ ________________________________________________________________________________
 </div>
 
 <div id="outline-container-sec-3-4" class="outline-3">
-<h3 id="sec-3-4"><span class="section-number-3">3.4</span> Training</h3>
+<h3 id="sec-3-4">Training</h3>
 <div class="outline-text-3" id="text-3-4">
 </div><div id="outline-container-sec-3-4-1" class="outline-4">
-<h4 id="sec-3-4-1"><span class="section-number-4">3.4.1</span> Data Pipeline</h4>
+<h4 id="sec-3-4-1">Data Pipeline</h4>
 <div class="outline-text-4" id="text-3-4-1">
 <p>
 Create a data-processing pipeline.  The 'trainingfile'
@@ -595,25 +596,17 @@ randomly shifted along their horizontal axis.
 </div>
 
 <div id="outline-container-sec-3-4-2" class="outline-4">
-<h4 id="sec-3-4-2"><span class="section-number-4">3.4.2</span> Training</h4>
+<h4 id="sec-3-4-2">Training</h4>
 <div class="outline-text-4" id="text-3-4-2">
-<p>
-Essentially a struct just to gather hyper-parameters into one
-place, for convenience.
-</p>
-
 <div class="org-src-container">
 
 <pre class="src src-python"><span style="color: #b4fa70;">class</span> <span style="color: #8cc4ff;">HyperParameters</span>:
     <span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">__init__</span>(<span style="color: #b4fa70;">self</span>):
         <span style="color: #b4fa70;">return</span>
-</pre>
-</div>
 
-<div class="org-src-container">
-
-<pre class="src src-python"><span style="color: #fcaf3e;">theta</span> = HyperParameters()
+<span style="color: #fcaf3e;">theta</span> = HyperParameters()
 <span style="color: #fcaf3e;">theta.input_shape</span> = [160, 320, 3]
+<span style="color: #fcaf3e;">theta.crop_shape</span> = ((80,20),(1,1))
 <span style="color: #fcaf3e;">theta.samples_per_epoch</span> = 30
 <span style="color: #fcaf3e;">theta.valid_samples_per_epoch</span> = 30
 <span style="color: #fcaf3e;">theta.epochs</span> = 3
@@ -623,10 +616,13 @@ place, for convenience.
 <span style="color: #fcaf3e;">theta.base_path</span> = <span style="color: #e9b96e;">"data/"</span>
 <span style="color: #fcaf3e;">theta.flip</span> = <span style="color: #e9b2e3;">False</span>
 <span style="color: #fcaf3e;">theta.shift</span> = <span style="color: #e9b2e3;">False</span>
-<span style="color: #fcaf3e;">model</span> = CarND(theta.input_shape)
+
+<span style="color: #fcaf3e;">model</span> = CarND(theta.input_shape, theta.crop_shape)
 model.<span style="color: #e090d7;">compile</span>(loss=<span style="color: #e9b96e;">"mse"</span>, optimizer=<span style="color: #e9b96e;">"adam"</span>)
+
 <span style="color: #fcaf3e;">traingen</span> = pipeline(theta, training=<span style="color: #e9b2e3;">True</span>)
 <span style="color: #fcaf3e;">validgen</span> = pipeline(theta)
+
 <span style="color: #b4fa70;">print</span>(<span style="color: #e9b96e;">""</span>)
 <span style="color: #fcaf3e;">history</span> = model.fit_generator(
     traingen,
@@ -638,55 +634,55 @@ model.<span style="color: #e090d7;">compile</span>(loss=<span style="color: #e9b
 </pre>
 </div>
 
-<pre class="example">
-&gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt;
-... ... ... ... ... ... Epoch 1/3
-1s - loss: 0.6218 - val_loss: 0.5903
-Epoch 2/3
-0s - loss: 0.5571 - val_loss: 0.4627
-Epoch 3/3
-0s - loss: 0.3969 - val_loss: 0.2196
-</pre>
-
 <div class="org-src-container">
 
 <pre class="src src-python"><span style="color: #fcaf3e;">theta</span> = HyperParameters()
 <span style="color: #fcaf3e;">theta.input_shape</span> = [160, 320, 3]
+<span style="color: #fcaf3e;">theta.crop_shape</span> = ((80,20),(1,1))
 <span style="color: #fcaf3e;">theta.trainingfile</span> = <span style="color: #e9b96e;">"data/driving_log_train.csv"</span>
 <span style="color: #fcaf3e;">theta.validationfile</span> = <span style="color: #e9b96e;">"data/driving_log_validation.csv"</span>
 <span style="color: #fcaf3e;">theta.base_path</span> = <span style="color: #e9b96e;">"data/"</span>
 <span style="color: #fcaf3e;">theta.samples_per_epoch</span> = 7000
-<span style="color: #fcaf3e;">theta.valid_samples_per_epoch</span> = 7000
-<span style="color: #fcaf3e;">theta.epochs</span> = 5
+<span style="color: #fcaf3e;">theta.valid_samples_per_epoch</span> = 1037
+<span style="color: #fcaf3e;">theta.epochs</span> = 3
 <span style="color: #fcaf3e;">theta.batch_size</span> = 100
 <span style="color: #fcaf3e;">theta.flip</span> = <span style="color: #e9b2e3;">False</span>
 <span style="color: #fcaf3e;">theta.shift</span> = <span style="color: #e9b2e3;">False</span>
-<span style="color: #fcaf3e;">model</span> = CarND(theta.input_shape)
+
+<span style="color: #fcaf3e;">model</span> = CarND(theta.input_shape, theta.crop_shape)
 model.<span style="color: #e090d7;">compile</span>(loss=<span style="color: #e9b96e;">"mse"</span>, optimizer=<span style="color: #e9b96e;">"adam"</span>)
+
+<span style="color: #fcaf3e;">traingen</span> = pipeline(theta, training=<span style="color: #e9b2e3;">True</span>)
+<span style="color: #fcaf3e;">validgen</span> = pipeline(theta)
+
 <span style="color: #b4fa70;">print</span>(<span style="color: #e9b96e;">""</span>)
-<span style="color: #73d216;"># </span><span style="color: #73d216;">history = model.fit_generator(</span>
-<span style="color: #73d216;">#           </span><span style="color: #73d216;">traingen,</span>
-<span style="color: #73d216;">#           </span><span style="color: #73d216;">theta.samples_per_epoch,</span>
-<span style="color: #73d216;">#           </span><span style="color: #73d216;">theta.epochs,</span>
-<span style="color: #73d216;">#           </span><span style="color: #73d216;">validation_data=validgen,</span>
-<span style="color: #73d216;">#     </span><span style="color: #73d216;">verbose=2,</span>
-<span style="color: #73d216;">#           </span><span style="color: #73d216;">nb_val_samples=theta.valid_samples_per_epoch)</span>
-<span style="color: #73d216;"># </span><span style="color: #73d216;">model.save_weights("model.h5")</span>
-<span style="color: #73d216;"># </span><span style="color: #73d216;">with open("model.json", "w") as f:</span>
-<span style="color: #73d216;">#     </span><span style="color: #73d216;">f.write(model.to_json())</span>
+<span style="color: #fcaf3e;">history</span> = model.fit_generator(
+    traingen,
+    theta.samples_per_epoch,
+    theta.epochs,
+    validation_data=validgen,
+    verbose=2,
+    nb_val_samples=theta.valid_samples_per_epoch)
+model.save_weights(<span style="color: #e9b96e;">"model.h5"</span>)
+<span style="color: #b4fa70;">with</span> <span style="color: #e090d7;">open</span>(<span style="color: #e9b96e;">"model.json"</span>, <span style="color: #e9b96e;">"w"</span>) <span style="color: #b4fa70;">as</span> f:
+    f.write(model.to_json())
+</pre>
+</div>
+
+<pre class="example">
+&gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt;
+... ... ... ... ... ... Epoch 1/3
+69s - loss: 0.0129 - val_loss: 0.0124
+Epoch 2/3
+16s - loss: 0.0103 - val_loss: 0.0084
+Epoch 3/3
+16s - loss: 0.0098 - val_loss: 0.0088
+... ... 4042
 </pre>
 </div>
 </div>
 </div>
 </div>
-</div>
-</div>
-<div id="postamble" class="status">
-<p class="date">Date: <span class="timestamp-wrapper"><span class="timestamp">&lt;2017-01-19&gt;</span></span></p>
-<p class="author">Author: David A. Ventimiglia</p>
-<p class="date">Created: 2017-01-19 Thu 10:54</p>
-<p class="creator">Emacs 24.5.1 (Org mode 8.2.10)</p>
-<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
 </html>

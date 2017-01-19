@@ -10,29 +10,18 @@
 
 #+OPTIONS: ':nil *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline
 #+OPTIONS: author:t c:nil creator:comment d:(not "LOGBOOK") date:t
-#+OPTIONS: e:t email:nil f:t inline:t num:t p:nil pri:nil stat:t
+#+OPTIONS: e:t email:t f:t inline:t num:nil p:nil pri:nil stat:t
 #+OPTIONS: tags:t tasks:t tex:t timestamp:t toc:nil todo:t |:t
-#+CREATOR: Emacs 24.5.1 (Org mode 8.2.10)
-#+DESCRIPTION:
-#+EXCLUDE_TAGS: noexport
-#+KEYWORDS:
 #+LANGUAGE: en
-#+SELECT_TAGS: export
 
-#+OPTIONS: html-link-use-abs-url:nil html-postamble:auto
+#+OPTIONS: html-link-use-abs-url:nil html-postamble:nil
 #+OPTIONS: html-preamble:t html-scripts:t html-style:t
 #+OPTIONS: html5-fancy:t tex:t
 #+CREATOR: <a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.5.1 (<a href="http://orgmode.org">Org</a> mode 8.2.10)
 #+HTML_CONTAINER: div
 #+HTML_DOCTYPE: xhtml-strict
-#+HTML_HEAD:  
 #+HTML_HEAD_EXTRA: <style>body {font-size:large; max-width:50em}</style>
 #+HTML_HEAD_EXTRA: <style>pre.src {background-color: #2B2B2B; color: #a9b7c6; margin: 0; overflow-x: scroll;}</style>
-#+HTML_LINK_HOME:
-#+HTML_LINK_UP:
-#+HTML_MATHJAX:
-#+INFOJS_OPT:
-#+LATEX_HEADER:
 
 * What
 
@@ -256,11 +245,12 @@
       from keras.models import Sequential, model_from_json
       from keras.utils.visualize_util import plot
 
-      def CarND(input_shape):
+      def CarND(input_shape, crop_shape):
 	  model = Sequential()
        
 	  # Crop
-	  model.add(Cropping2D(((80,20),(1,1)), input_shape=input_shape, name="Crop"))
+	  # model.add(Cropping2D(((80,20),(1,1)), input_shape=input_shape, name="Crop"))
+	  model.add(Cropping2D(crop_shape, input_shape=input_shape, name="Crop"))
        
 	  # Resize
 	  model.add(AveragePooling2D(pool_size=(1,4), name="Resize", trainable=False))
@@ -299,7 +289,7 @@
       #+RESULTS:
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
-      CarND([160, 320, 3]).summary()
+      CarND([160, 320, 3], ((80,20),(1,1))).summary()
       #+END_SRC
 
       #+RESULTS:
@@ -307,7 +297,7 @@
       ____________________________________________________________________________________________________
       Layer (type)                     Output Shape          Param #     Connected to                     
       ====================================================================================================
-      Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_10[0][0]        
+      Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_14[0][0]        
       ____________________________________________________________________________________________________
       Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
       ____________________________________________________________________________________________________
@@ -344,7 +334,7 @@
       #+end_example
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
-      plot(CarND([160, 320, 3]), to_file="model.png", show_shapes=True)
+      plot(CarND([160, 320, 3], ((80,20),(1,1))), to_file="model.png", show_shapes=True)
       #+END_SRC
 
       #+RESULTS:
@@ -387,20 +377,14 @@
 
 ***** Training
 
-      Essentially a struct just to gather hyper-parameters into one
-      place, for convenience.
-
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       class HyperParameters:
           def __init__(self):
               return
-      #+END_SRC
 
-      #+RESULTS:
-
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
       theta = HyperParameters()
       theta.input_shape = [160, 320, 3]
+      theta.crop_shape = ((80,20),(1,1))
       theta.samples_per_epoch = 30
       theta.valid_samples_per_epoch = 30
       theta.epochs = 3
@@ -410,10 +394,13 @@
       theta.base_path = "data/"
       theta.flip = False
       theta.shift = False
-      model = CarND(theta.input_shape)
+
+      model = CarND(theta.input_shape, theta.crop_shape)
       model.compile(loss="mse", optimizer="adam")
+
       traingen = pipeline(theta, training=True)
       validgen = pipeline(theta)
+
       print("")
       history = model.fit_generator(
 	  traingen,
@@ -426,42 +413,55 @@
 
       #+RESULTS:
       : 
-      : >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
+      : ... ... >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
       : ... ... ... ... ... ... Epoch 1/3
-      : 1s - loss: 0.6218 - val_loss: 0.5984
+      : 1s - loss: 0.6227 - val_loss: 0.5945
       : Epoch 2/3
-      : 0s - loss: 0.5800 - val_loss: 0.5240
+      : 0s - loss: 0.5743 - val_loss: 0.5038
       : Epoch 3/3
-      : 0s - loss: 0.4866 - val_loss: 0.4129
+      : 0s - loss: 0.4659 - val_loss: 0.3416
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
       theta = HyperParameters()
       theta.input_shape = [160, 320, 3]
+      theta.crop_shape = ((80,20),(1,1))
       theta.trainingfile = "data/driving_log_train.csv"
       theta.validationfile = "data/driving_log_validation.csv"
       theta.base_path = "data/"
       theta.samples_per_epoch = 7000
-      theta.valid_samples_per_epoch = 7000
-      theta.epochs = 5
+      theta.valid_samples_per_epoch = 1037
+      theta.epochs = 3
       theta.batch_size = 100
       theta.flip = False
       theta.shift = False
-      model = CarND(theta.input_shape)
+
+      model = CarND(theta.input_shape, theta.crop_shape)
       model.compile(loss="mse", optimizer="adam")
+
+      traingen = pipeline(theta, training=True)
+      validgen = pipeline(theta)
+
       print("")
-      # history = model.fit_generator(
-      #  	  traingen,
-      #  	  theta.samples_per_epoch,
-      #  	  theta.epochs,
-      #  	  validation_data=validgen,
-      #     verbose=2,
-      #  	  nb_val_samples=theta.valid_samples_per_epoch)
-      # model.save_weights("model.h5")
-      # with open("model.json", "w") as f:
-      #     f.write(model.to_json())
+      history = model.fit_generator(
+	  traingen,
+	  theta.samples_per_epoch,
+	  theta.epochs,
+	  validation_data=validgen,
+	  verbose=2,
+	  nb_val_samples=theta.valid_samples_per_epoch)
+      model.save_weights("model.h5")
+      with open("model.json", "w") as f:
+	  f.write(model.to_json())
       #+END_SRC
 
       #+RESULTS:
       : 
-      : >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
+      : >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
+      : ... ... ... ... ... ... Epoch 1/3
+      : 139s - loss: 0.0132 - val_loss: 0.0126
+      : Epoch 2/3
+      : 31s - loss: 0.0106 - val_loss: 0.0083
+      : Epoch 3/3
+      : 27s - loss: 0.0099 - val_loss: 0.0092
+      : ... ... 4042
 
