@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>CarND Project 3:  Behavioral Cloning</title>
-<!-- 2017-01-18 Wed 19:41 -->
+<!-- 2017-01-18 Wed 19:58 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="David A. Ventimiglia" />
@@ -213,121 +213,17 @@ itertools.islice function can be helpful here.
 </pre>
 </div>
 
-<p>
-Return an iterable over the lines the file with name 'filename'.
-</p>
-
 <div class="org-src-container">
 
-<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">feed</span>(filename):
-    <span style="color: #b4fa70;">return</span> (l <span style="color: #b4fa70;">for</span> l <span style="color: #b4fa70;">in</span> <span style="color: #e090d7;">open</span>(filename))
-</pre>
-</div>
-
-<p>
-Return an iterable over 'lines', splitting each into records
-comprising fields, using 'delimiter'.
-</p>
-
-<div class="org-src-container">
-
-<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">split</span>(lines, delimiter=<span style="color: #e9b96e;">","</span>):
-    <span style="color: #b4fa70;">return</span> (line.split(delimiter) <span style="color: #b4fa70;">for</span> line <span style="color: #b4fa70;">in</span> lines)
-</pre>
-</div>
-
-<p>
-Return an iterable over records of fields, selecting only the
-fields listed in 'indices'.
-</p>
-
-<div class="org-src-container">
-
-<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">select</span>(fields, indices):
-    <span style="color: #b4fa70;">return</span> ([r[i] <span style="color: #b4fa70;">for</span> i <span style="color: #b4fa70;">in</span> indices] <span style="color: #b4fa70;">for</span> r <span style="color: #b4fa70;">in</span> fields)
-</pre>
-</div>
-
-<p>
-Return a NumPy array for the image indicated by 'f'.
-</p>
-
-<div class="org-src-container">
-
-<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">load</span>(f):
-    <span style="color: #b4fa70;">return</span> np.asarray(Image.<span style="color: #e090d7;">open</span>(f))
-</pre>
-</div>
-
-<p>
-Return an iterable over 'records', fetching a sample [X,y] for
-each record.  A sample is a ordered pair with the first element
-X a NumPy array (typically, an image) and the second element y
-floating point number (the label).
-</p>
-
-<div class="org-src-container">
-
-<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">fetch</span>(records, base):
-    <span style="color: #b4fa70;">return</span> ([load(base+f.strip()) <span style="color: #b4fa70;">for</span> f <span style="color: #b4fa70;">in</span> record[:1]]+[<span style="color: #e090d7;">float</span>(v) <span style="color: #b4fa70;">for</span> v <span style="color: #b4fa70;">in</span> record[1:]] <span style="color: #b4fa70;">for</span> record <span style="color: #b4fa70;">in</span> records)
-</pre>
-</div>
-
-<p>
-Randomly shift an image 'x' along its horizontal axis by
-'factor' amount.
-</p>
-
-<div class="org-src-container">
-
-<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">rshift</span>(x, factor=0.1):
-    <span style="color: #b4fa70;">return</span> img.random_shift(x, factor, 0.0, 0, 1, 2, fill_mode=<span style="color: #e9b96e;">'wrap'</span>)
-</pre>
-</div>
-
-<p>
-Iterate over 'items' but return them in groups of size 'n'.  If
-need be, fill the last group with 'fillvalue'.
-</p>
-
-<div class="org-src-container">
-
-<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">group</span>(items, n, fillvalue=<span style="color: #e9b2e3;">None</span>):
-    <span style="color: #b4fa70;">return</span> zip_longest(*([<span style="color: #e090d7;">iter</span>(items)]*n), fillvalue=fillvalue)
-</pre>
-</div>
-
-<p>
-Transpose items in the 'tuples' iterable.  Each item is expected
-to be a tuple and all tuples are expected to have the same
-length.  The transposition is such that for each position 'i'
-within the tuples, all of the elements at that position across
-all the items are themselves grouped together.  Each group is
-realized into a list.  If 'tuples' contains m items and each
-item is itself a tuple of n elements, then what is returned is a
-set of n lists, and each list contains m elements.  The n lists
-are themselves presented as an iterable.
-</p>
-
-<div class="org-src-container">
-
-<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">transpose</span>(tuples):
-    <span style="color: #b4fa70;">return</span> (<span style="color: #e090d7;">list</span>(<span style="color: #e090d7;">map</span>(<span style="color: #e090d7;">list</span>, <span style="color: #e090d7;">zip</span>(*g))) <span style="color: #b4fa70;">for</span> g <span style="color: #b4fa70;">in</span> tuples)
-</pre>
-</div>
-
-<p>
-Iterate over 'groups', each of which is itself an iterable (such
-as a list), and turn the groups selected by 'indices' into a
-NumPy array.  Naturally, the groups are expected to be of items
-that are compatible with NumPy arrays, which would be any of the
-appropriate numeric types.
-</p>
-
-<div class="org-src-container">
-
-<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">batch</span>(groups, indices=[0, 1]):
-    <span style="color: #b4fa70;">return</span> ([np.asarray(t[i]) <span style="color: #b4fa70;">for</span> i <span style="color: #b4fa70;">in</span> indices] <span style="color: #b4fa70;">for</span> t <span style="color: #b4fa70;">in</span> groups)
+<pre class="src src-python"><span style="color: #fcaf3e;">feed</span> = <span style="color: #b4fa70;">lambda</span> filename: (l <span style="color: #b4fa70;">for</span> l <span style="color: #b4fa70;">in</span> <span style="color: #e090d7;">open</span>(filename))
+<span style="color: #fcaf3e;">split</span> = <span style="color: #b4fa70;">lambda</span> <span style="color: #fcaf3e;">lines</span>, <span style="color: #fcaf3e;">delimiter</span>=<span style="color: #e9b96e;">","</span>: (line.split(delimiter) <span style="color: #b4fa70;">for</span> line <span style="color: #b4fa70;">in</span> lines)
+<span style="color: #fcaf3e;">select</span> = <span style="color: #b4fa70;">lambda</span> fields, indices: ([r[i] <span style="color: #b4fa70;">for</span> i <span style="color: #b4fa70;">in</span> indices] <span style="color: #b4fa70;">for</span> r <span style="color: #b4fa70;">in</span> fields)
+<span style="color: #fcaf3e;">load</span> = <span style="color: #b4fa70;">lambda</span> f: np.asarray(Image.<span style="color: #e090d7;">open</span>(f))
+<span style="color: #fcaf3e;">fetch</span> = <span style="color: #b4fa70;">lambda</span> records, base: ([load(base+f.strip()) <span style="color: #b4fa70;">for</span> f <span style="color: #b4fa70;">in</span> record[:1]]+[<span style="color: #e090d7;">float</span>(v) <span style="color: #b4fa70;">for</span> v <span style="color: #b4fa70;">in</span> record[1:]] <span style="color: #b4fa70;">for</span> record <span style="color: #b4fa70;">in</span> records)
+<span style="color: #fcaf3e;">rshift</span> = <span style="color: #b4fa70;">lambda</span> <span style="color: #fcaf3e;">x</span>, <span style="color: #fcaf3e;">factor</span>=0.1: img.random_shift(x, factor, 0.0, 0, 1, 2, fill_mode=<span style="color: #e9b96e;">'wrap'</span>)
+<span style="color: #fcaf3e;">group</span> = <span style="color: #b4fa70;">lambda</span> <span style="color: #fcaf3e;">items</span>, <span style="color: #fcaf3e;">n</span>, <span style="color: #fcaf3e;">fillvalue</span>=<span style="color: #e9b2e3;">None</span>: zip_longest(*([<span style="color: #e090d7;">iter</span>(items)]*n), fillvalue=fillvalue)
+<span style="color: #fcaf3e;">transpose</span> = <span style="color: #b4fa70;">lambda</span> tuples: (<span style="color: #e090d7;">list</span>(<span style="color: #e090d7;">map</span>(<span style="color: #e090d7;">list</span>, <span style="color: #e090d7;">zip</span>(*g))) <span style="color: #b4fa70;">for</span> g <span style="color: #b4fa70;">in</span> tuples)
+<span style="color: #fcaf3e;">batch</span> = <span style="color: #b4fa70;">lambda</span> <span style="color: #fcaf3e;">groups</span>, <span style="color: #fcaf3e;">indices</span>=[0, 1]: ([np.asarray(t[i]) <span style="color: #b4fa70;">for</span> i <span style="color: #b4fa70;">in</span> indices] <span style="color: #b4fa70;">for</span> t <span style="color: #b4fa70;">in</span> groups)
 </pre>
 </div>
 </div>
@@ -414,7 +310,7 @@ Return a Keras neural network model.
 ____________________________________________________________________________________________________
 Layer (type)                     Output Shape          Param #     Connected to                     
 ====================================================================================================
-Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_22[0][0]        
+Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_37[0][0]        
 ____________________________________________________________________________________________________
 Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
 ____________________________________________________________________________________________________
@@ -621,7 +517,6 @@ Train the model.
         theta.samples_per_epoch,
         theta.epochs,
         validation_data=validgen,
-        verbose=2,
         nb_val_samples=theta.valid_samples_per_epoch)
 </pre>
 </div>
@@ -687,11 +582,11 @@ place, for convenience.
 <pre class="example">
 ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
 Epoch 1/3
-1s - loss: 0.6150 - val_loss: 0.5675
+10/30 [=========&gt;....................] - ETA: 9s - loss: 0.674420/30 [===================&gt;..........] - ETA: 2s - loss: 0.618430/30 [==============================] - 4s - loss: 0.6272 - val_loss: 0.5980
 Epoch 2/3
-0s - loss: 0.5247 - val_loss: 0.4003
+10/30 [=========&gt;....................] - ETA: 0s - loss: 0.537720/30 [===================&gt;..........] - ETA: 0s - loss: 0.571130/30 [==============================] - 0s - loss: 0.5675 - val_loss: 0.5216
 Epoch 3/3
-0s - loss: 0.3669 - val_loss: 0.2997
+10/30 [=========&gt;....................] - ETA: 0s - loss: 0.445420/30 [===================&gt;..........] - ETA: 0s - loss: 0.448130/30 [==============================] - 0s - loss: 0.4349 - val_loss: 0.2843
 4046
 4866
 </pre>
@@ -703,7 +598,7 @@ Epoch 3/3
 <div id="postamble" class="status">
 <p class="date">Date: <span class="timestamp-wrapper"><span class="timestamp">&lt;2017-01-19&gt;</span></span></p>
 <p class="author">Author: David A. Ventimiglia</p>
-<p class="date">Created: 2017-01-18 Wed 19:41</p>
+<p class="date">Created: 2017-01-18 Wed 19:58</p>
 <p class="creator">Emacs 24.5.1 (Org mode 8.2.10)</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>

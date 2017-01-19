@@ -40,86 +40,16 @@ def rcycle(iterable):
               yield element
 
 # #+RESULTS:
-                    
-#       Return an iterable over the lines the file with name 'filename'.
 
-def feed(filename):
-    return (l for l in open(filename))
-
-# #+RESULTS:
-                    
-#       Return an iterable over 'lines', splitting each into records
-#       comprising fields, using 'delimiter'.
-
-def split(lines, delimiter=","):
-    return (line.split(delimiter) for line in lines)
-
-# #+RESULTS:
-                    
-#       Return an iterable over records of fields, selecting only the
-#       fields listed in 'indices'.
-
-def select(fields, indices):
-    return ([r[i] for i in indices] for r in fields)
-
-# #+RESULTS:
-                    
-#       Return a NumPy array for the image indicated by 'f'.
-
-def load(f):
-    return np.asarray(Image.open(f))
-
-# #+RESULTS:
-                    
-#       Return an iterable over 'records', fetching a sample [X,y] for
-#       each record.  A sample is a ordered pair with the first element
-#       X a NumPy array (typically, an image) and the second element y
-#       floating point number (the label).
-
-def fetch(records, base):
-    return ([load(base+f.strip()) for f in record[:1]]+[float(v) for v in record[1:]] for record in records)
-
-# #+RESULTS:
-                    
-#       Randomly shift an image 'x' along its horizontal axis by
-#       'factor' amount.
-
-def rshift(x, factor=0.1):
-    return img.random_shift(x, factor, 0.0, 0, 1, 2, fill_mode='wrap')
-
-# #+RESULTS:
-                    
-#       Iterate over 'items' but return them in groups of size 'n'.  If
-#       need be, fill the last group with 'fillvalue'.
-
-def group(items, n, fillvalue=None):
-    return zip_longest(*([iter(items)]*n), fillvalue=fillvalue)
-
-# #+RESULTS:
-                    
-#       Transpose items in the 'tuples' iterable.  Each item is expected
-#       to be a tuple and all tuples are expected to have the same
-#       length.  The transposition is such that for each position 'i'
-#       within the tuples, all of the elements at that position across
-#       all the items are themselves grouped together.  Each group is
-#       realized into a list.  If 'tuples' contains m items and each
-#       item is itself a tuple of n elements, then what is returned is a
-#       set of n lists, and each list contains m elements.  The n lists
-#       are themselves presented as an iterable.
-
-def transpose(tuples):
-    return (list(map(list, zip(*g))) for g in tuples)
-
-# #+RESULTS:
-                    
-#       Iterate over 'groups', each of which is itself an iterable (such
-#       as a list), and turn the groups selected by 'indices' into a
-#       NumPy array.  Naturally, the groups are expected to be of items
-#       that are compatible with NumPy arrays, which would be any of the
-#       appropriate numeric types.
-
-def batch(groups, indices=[0, 1]):
-    return ([np.asarray(t[i]) for i in indices] for t in groups)
+feed = lambda filename: (l for l in open(filename))
+split = lambda lines, delimiter=",": (line.split(delimiter) for line in lines)
+select = lambda fields, indices: ([r[i] for i in indices] for r in fields)
+load = lambda f: np.asarray(Image.open(f))
+fetch = lambda records, base: ([load(base+f.strip()) for f in record[:1]]+[float(v) for v in record[1:]] for record in records)
+rshift = lambda x, factor=0.1: img.random_shift(x, factor, 0.0, 0, 1, 2, fill_mode='wrap')
+group = lambda items, n, fillvalue=None: zip_longest(*([iter(items)]*n), fillvalue=fillvalue)
+transpose = lambda tuples: (list(map(list, zip(*g))) for g in tuples)
+batch = lambda groups, indices=[0, 1]: ([np.asarray(t[i]) for i in indices] for t in groups)
 
 # Model
 
@@ -296,7 +226,6 @@ def train(model):
         theta.samples_per_epoch,
         theta.epochs,
         validation_data=validgen,
-        verbose=2,
         nb_val_samples=theta.valid_samples_per_epoch)
 
 # Data Structures
