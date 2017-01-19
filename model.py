@@ -1,5 +1,5 @@
 
-# Imports
+# Setup
 
 from PIL import Image
 from itertools import groupby, islice, zip_longest, cycle
@@ -8,9 +8,9 @@ from keras.layers.convolutional import Cropping2D, Convolution2D
 from keras.models import Sequential, model_from_json
 from keras.utils.visualize_util import plot
 from scipy.stats import kurtosis, skew, describe
-import cv2
 import gc
 import keras.preprocessing.image as img
+import matplotlib.pyplot as plt
 import math
 import numpy as np
 import os
@@ -39,29 +39,39 @@ def rcycle(iterable):
         for element in saved:
               yield element
 
-# Return an iterable over the lines the file with name 'filename'.
+# #+RESULTS:
+                    
+#       Return an iterable over the lines the file with name 'filename'.
 
 def feed(filename):
     return (l for l in open(filename))
 
-# Return an iterable over 'lines', splitting each into records
+# #+RESULTS:
+                    
+#       Return an iterable over 'lines', splitting each into records
 #       comprising fields, using 'delimiter'.
 
 def split(lines, delimiter=","):
     return (line.split(delimiter) for line in lines)
 
-# Return an iterable over records of fields, selecting only the
+# #+RESULTS:
+                    
+#       Return an iterable over records of fields, selecting only the
 #       fields listed in 'indices'.
 
 def select(fields, indices):
     return ([r[i] for i in indices] for r in fields)
 
-# Return a NumPy array for the image indicated by 'f'.
+# #+RESULTS:
+                    
+#       Return a NumPy array for the image indicated by 'f'.
 
 def load(f):
     return np.asarray(Image.open(f))
 
-# Return an iterable over 'records', fetching a sample [X,y] for
+# #+RESULTS:
+                    
+#       Return an iterable over 'records', fetching a sample [X,y] for
 #       each record.  A sample is a ordered pair with the first element
 #       X a NumPy array (typically, an image) and the second element y
 #       floating point number (the label).
@@ -69,25 +79,33 @@ def load(f):
 def fetch(records, base):
     return ([load(base+f.strip()) for f in record[:1]]+[float(v) for v in record[1:]] for record in records)
 
-# Randomly flip an image 'x' along its horizontal axis 50% of the
+# #+RESULTS:
+                    
+#       Randomly flip an image 'x' along its horizontal axis 50% of the
 #       time.
 
 def rflip(x):
     return x if random.choice([True, False]) else [img.flip_axis(x[0],1), -1*x[1]]
 
-# Randomly shift an image 'x' along its horizontal axis by
+# #+RESULTS:
+                    
+#       Randomly shift an image 'x' along its horizontal axis by
 #       'factor' amount.
 
 def rshift(x, factor=0.1):
     return img.random_shift(x, factor, 0.0, 0, 1, 2, fill_mode='wrap')
 
-# Iterate over 'items' but return them in groups of size 'n'.  If
+# #+RESULTS:
+                    
+#       Iterate over 'items' but return them in groups of size 'n'.  If
 #       need be, fill the last group with 'fillvalue'.
 
 def group(items, n, fillvalue=None):
     return zip_longest(*([iter(items)]*n), fillvalue=fillvalue)
 
-# Transpose items in the 'tuples' iterable.  Each item is expected
+# #+RESULTS:
+                    
+#       Transpose items in the 'tuples' iterable.  Each item is expected
 #       to be a tuple and all tuples are expected to have the same
 #       length.  The transposition is such that for each position 'i'
 #       within the tuples, all of the elements at that position across
@@ -100,7 +118,9 @@ def group(items, n, fillvalue=None):
 def transpose(tuples):
     return (list(map(list, zip(*g))) for g in tuples)
 
-# Iterate over 'groups', each of which is itself an iterable (such
+# #+RESULTS:
+                    
+#       Iterate over 'groups', each of which is itself an iterable (such
 #       as a list), and turn the groups selected by 'indices' into a
 #       NumPy array.  Naturally, the groups are expected to be of items
 #       that are compatible with NumPy arrays, which would be any of the
@@ -110,6 +130,16 @@ def batch(groups, indices=[0, 1]):
     return ([np.asarray(t[i]) for i in indices] for t in groups)
 
 # Model
+
+#       - Crop :: crop to region (/non-trainable/)
+#       - Resize :: reduce scale (/non-trainable/)
+#       - Normalize :: scale values to [-1, 1] (/non-trainable/)
+#       - Convolution :: learn spatial features and compress
+#       - MaxPool :: reduce model size
+#       - Dropout :: add regularization (/non-trainable/)
+#       - Flatten :: stage to fully-connected layers (/non-trainable/)
+#       - FC :: fully-connected layers
+#       - Readout :: single node steering angle (/non-trainable/)
 
 #       Return a Keras neural network model.
 
@@ -152,6 +182,57 @@ def CarND(input_shape):
     model.add(Dense(1, name="Readout", trainable=False))
     return model
 
+# #+RESULTS:
+
+CarND([160, 320, 3]).summary()
+
+# #+RESULTS:
+#       #+begin_example
+#       ____________________________________________________________________________________________________
+#       Layer (type)                     Output Shape          Param #     Connected to                     
+#       ====================================================================================================
+#       Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_8[0][0]         
+#       ____________________________________________________________________________________________________
+#       Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
+#       ____________________________________________________________________________________________________
+#       Normalize (Lambda)               (None, 60, 79, 3)     0           Resize[0][0]                     
+#       ____________________________________________________________________________________________________
+#       Convolution2D1 (Convolution2D)   (None, 29, 39, 24)    672         Normalize[0][0]                  
+#       ____________________________________________________________________________________________________
+#       MaxPool1 (MaxPooling2D)          (None, 14, 19, 24)    0           Convolution2D1[0][0]             
+#       ____________________________________________________________________________________________________
+#       Convolution2D2 (Convolution2D)   (None, 12, 17, 36)    7812        MaxPool1[0][0]                   
+#       ____________________________________________________________________________________________________
+#       MaxPool2 (MaxPooling2D)          (None, 6, 8, 36)      0           Convolution2D2[0][0]             
+#       ____________________________________________________________________________________________________
+#       Convolution2D3 (Convolution2D)   (None, 4, 6, 48)      15600       MaxPool2[0][0]                   
+#       ____________________________________________________________________________________________________
+#       MaxPool3 (MaxPooling2D)          (None, 2, 3, 48)      0           Convolution2D3[0][0]             
+#       ____________________________________________________________________________________________________
+#       Dropout (Dropout)                (None, 2, 3, 48)      0           MaxPool3[0][0]                   
+#       ____________________________________________________________________________________________________
+#       Flatten (Flatten)                (None, 288)           0           Dropout[0][0]                    
+#       ____________________________________________________________________________________________________
+#       FC2 (Dense)                      (None, 100)           28900       Flatten[0][0]                    
+#       ____________________________________________________________________________________________________
+#       FC3 (Dense)                      (None, 50)            5050        FC2[0][0]                        
+#       ____________________________________________________________________________________________________
+#       FC4 (Dense)                      (None, 10)            510         FC3[0][0]                        
+#       ____________________________________________________________________________________________________
+#       Readout (Dense)                  (None, 1)             0           FC4[0][0]                        
+#       ====================================================================================================
+#       Total params: 58,544
+#       Trainable params: 58,544
+#       Non-trainable params: 0
+#       ____________________________________________________________________________________________________
+#       #+end_example
+
+plot(CarND([160, 320, 3]), to_file="model.png", show_shapes=True)
+
+# Characteristics
+
+describe([float(s[1]) for s in select(split(feed("data/driving_log_all.csv")), [0, 3])])
+
 # Data Pipeline
 
 #       Create a data-processing pipeline.  The 'training_index'
@@ -190,6 +271,7 @@ def train(model):
         theta.samples_per_epoch,
         theta.epochs,
         validation_data=validgen,
+        verbose=2,
         nb_val_samples=theta.valid_samples_per_epoch)
 
 # Data Structures
@@ -206,10 +288,10 @@ class HyperParameters:
 if __name__=="__main__":        # In case this module is imported
     theta = HyperParameters()
     theta.input_shape = [160, 320, 3]
-    theta.samples_per_epoch = 300
-    theta.valid_samples_per_epoch = 300
+    theta.samples_per_epoch = 30
+    theta.valid_samples_per_epoch = 30
     theta.epochs = 3
-    theta.batch_size = 100
+    theta.batch_size = 10
     theta.training_index = "data/driving_log_overtrain.csv"
     theta.validation_index = "data/driving_log_overtrain.csv"
     theta.base_path = "data/"
@@ -227,10 +309,7 @@ if __name__=="__main__":        # In case this module is imported
         theta.shift = os.environ['SHIFT']=='yes'
     model = CarND(theta.input_shape)
     model.compile(loss="mse", optimizer="adam")
-    model.theta = theta
-    model.summary()
-    plot(model, to_file="model.png", show_shapes=True)
-    print(theta.__dict__)
+    print("")
     train(model)
     model.save_weights("model.h5")
     with open("model.json", "w") as f:
