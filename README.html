@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>CarND Project 3:  Behavioral Cloning</title>
-<!-- 2017-01-18 Wed 16:37 -->
+<!-- 2017-01-18 Wed 19:41 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="David A. Ventimiglia" />
@@ -165,7 +165,7 @@ for the JavaScript code in this tag.
 <div class="org-src-container">
 
 <pre class="src src-python"><span style="color: #b4fa70;">from</span> PIL <span style="color: #b4fa70;">import</span> Image
-<span style="color: #b4fa70;">from</span> itertools <span style="color: #b4fa70;">import</span> groupby, islice, zip_longest, cycle
+<span style="color: #b4fa70;">from</span> itertools <span style="color: #b4fa70;">import</span> groupby, islice, zip_longest, cycle, filterfalse
 <span style="color: #b4fa70;">from</span> keras.layers <span style="color: #b4fa70;">import</span> Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
 <span style="color: #b4fa70;">from</span> keras.layers.convolutional <span style="color: #b4fa70;">import</span> Cropping2D, Convolution2D
 <span style="color: #b4fa70;">from</span> keras.models <span style="color: #b4fa70;">import</span> Sequential, model_from_json
@@ -270,18 +270,6 @@ floating point number (the label).
 
 <pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">fetch</span>(records, base):
     <span style="color: #b4fa70;">return</span> ([load(base+f.strip()) <span style="color: #b4fa70;">for</span> f <span style="color: #b4fa70;">in</span> record[:1]]+[<span style="color: #e090d7;">float</span>(v) <span style="color: #b4fa70;">for</span> v <span style="color: #b4fa70;">in</span> record[1:]] <span style="color: #b4fa70;">for</span> record <span style="color: #b4fa70;">in</span> records)
-</pre>
-</div>
-
-<p>
-Randomly flip an image 'x' along its horizontal axis 50% of the
-time.
-</p>
-
-<div class="org-src-container">
-
-<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">rflip</span>(x):
-    <span style="color: #b4fa70;">return</span> x <span style="color: #b4fa70;">if</span> random.choice([<span style="color: #e9b2e3;">True</span>, <span style="color: #e9b2e3;">False</span>]) <span style="color: #b4fa70;">else</span> [img.flip_axis(x[0],1), -1*x[1]]
 </pre>
 </div>
 
@@ -426,7 +414,7 @@ Return a Keras neural network model.
 ____________________________________________________________________________________________________
 Layer (type)                     Output Shape          Param #     Connected to                     
 ====================================================================================================
-Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_25[0][0]        
+Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_22[0][0]        
 ____________________________________________________________________________________________________
 Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
 ____________________________________________________________________________________________________
@@ -507,13 +495,69 @@ wc -l data/driving_log_validation.csv
 <div class="outline-text-4" id="text-3-3-2">
 <div class="org-src-container">
 
-<pre class="src src-python">describe([<span style="color: #e090d7;">float</span>(s[1]) <span style="color: #b4fa70;">for</span> s <span style="color: #b4fa70;">in</span> select(split(feed(<span style="color: #e9b96e;">"data/driving_log_all.csv"</span>)), [0, 3])])
+<pre class="src src-python"><span style="color: #fcaf3e;">f</span> = plt.figure()
+<span style="color: #fcaf3e;">y</span> = np.array([<span style="color: #e090d7;">float</span>(s[0]) <span style="color: #b4fa70;">for</span> s <span style="color: #b4fa70;">in</span> select(split(feed(<span style="color: #e9b96e;">"data/driving_log_all.csv"</span>)),[3])])
+<span style="color: #fcaf3e;">h</span> = plt.hist(y,bins=100)
+<span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"hist1.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">'png'</span>)
+describe(y)
 </pre>
 </div>
 
 <pre class="example">
 DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332515, variance=0.016599764281272529, skewness=-0.13028924577521922, kurtosis=6.311554102057668)
 </pre>
+
+
+<div class="figure">
+<p><img src="hist1.png" alt="CarND/Architecture Image" title="Architecture" />
+</p>
+<p><span class="figure-number">Figure 2:</span> All Samples - No Reflection</p>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #fcaf3e;">f</span> = plt.figure()
+<span style="color: #fcaf3e;">p</span> = <span style="color: #b4fa70;">lambda</span> x: <span style="color: #e090d7;">abs</span>(<span style="color: #e090d7;">float</span>(x[0]))&lt;0.01
+<span style="color: #fcaf3e;">y</span> = np.array([<span style="color: #e090d7;">float</span>(s[0]) <span style="color: #b4fa70;">for</span> s <span style="color: #b4fa70;">in</span> filterfalse(p, select(split(feed(<span style="color: #e9b96e;">"data/driving_log_all.csv"</span>)),[3]))])
+<span style="color: #fcaf3e;">h</span> = plt.hist(y,bins=100)
+<span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"hist2.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">'png'</span>)
+describe(y)
+</pre>
+</div>
+
+<pre class="example">
+DescribeResult(nobs=3584, minmax=(-0.94269539999999996, 1.0), mean=0.0091718659514508933, variance=0.037178302717086116, skewness=-0.16657825969015194, kurtosis=1.1768785967587378)
+</pre>
+
+
+<div class="figure">
+<p><img src="hist2.png" alt="CarND/Architecture Image" title="Architecture" />
+</p>
+<p><span class="figure-number">Figure 3:</span> abs(angle)&gt;0.01 - No Reflection</p>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #fcaf3e;">f</span> = plt.figure()
+<span style="color: #fcaf3e;">p</span> = <span style="color: #b4fa70;">lambda</span> x: <span style="color: #e090d7;">abs</span>(<span style="color: #e090d7;">float</span>(x[0]))&lt;0.01
+<span style="color: #fcaf3e;">y</span> = np.array([<span style="color: #e090d7;">float</span>(s[0]) <span style="color: #b4fa70;">for</span> s <span style="color: #b4fa70;">in</span> filterfalse(p, select(split(feed(<span style="color: #e9b96e;">"data/driving_log_all.csv"</span>)),[3]))])
+<span style="color: #fcaf3e;">z</span> = np.append(y, -y)
+<span style="color: #fcaf3e;">h</span> = plt.hist(z,bins=100)
+<span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"hist3.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">'png'</span>)
+describe(z)
+</pre>
+</div>
+
+<pre class="example">
+DescribeResult(nobs=7168, minmax=(-1.0, 1.0), mean=0.0, variance=0.03725725015081123, skewness=0.0, kurtosis=1.1400026599654973)
+</pre>
+
+
+<div class="figure">
+<p><img src="hist3.png" alt="CarND/Architecture Image" title="Architecture" />
+</p>
+<p><span class="figure-number">Figure 4:</span> abs(angle)&gt;0.01 - Full Reflection</p>
+</div>
 </div>
 </div>
 
@@ -551,7 +595,7 @@ randomly shifted along their horizontal axis.
         <span style="color: #b4fa70;">if</span> theta.flip:
             <span style="color: #fcaf3e;">samples</span> = (rflip(x) <span style="color: #b4fa70;">for</span> x <span style="color: #b4fa70;">in</span> samples)
         <span style="color: #b4fa70;">if</span> theta.shift:
-            <span style="color: #fcaf3e;">samples</span> = ((rshift(x[0]),x[1]) <span style="color: #b4fa70;">for</span> x <span style="color: #b4fa70;">in</span> samples)
+            <span style="color: #fcaf3e;">samples</span> = (rflip(x) <span style="color: #b4fa70;">for</span> x <span style="color: #b4fa70;">in</span> samples)
     <span style="color: #fcaf3e;">groups</span> = group(samples, theta.batch_size)
     <span style="color: #fcaf3e;">batches</span> = batch(transpose(groups))
     <span style="color: #b4fa70;">return</span> batches
@@ -643,13 +687,13 @@ place, for convenience.
 <pre class="example">
 ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
 Epoch 1/3
-1s - loss: 0.6281 - val_loss: 0.6173
+1s - loss: 0.6150 - val_loss: 0.5675
 Epoch 2/3
-0s - loss: 0.6082 - val_loss: 0.5757
+0s - loss: 0.5247 - val_loss: 0.4003
 Epoch 3/3
-0s - loss: 0.5534 - val_loss: 0.4798
+0s - loss: 0.3669 - val_loss: 0.2997
 4046
-4644
+4866
 </pre>
 </div>
 </div>
@@ -659,7 +703,7 @@ Epoch 3/3
 <div id="postamble" class="status">
 <p class="date">Date: <span class="timestamp-wrapper"><span class="timestamp">&lt;2017-01-19&gt;</span></span></p>
 <p class="author">Author: David A. Ventimiglia</p>
-<p class="date">Created: 2017-01-18 Wed 16:37</p>
+<p class="date">Created: 2017-01-18 Wed 19:41</p>
 <p class="creator">Emacs 24.5.1 (Org mode 8.2.10)</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>

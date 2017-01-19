@@ -2,7 +2,7 @@
 # Setup
 
 from PIL import Image
-from itertools import groupby, islice, zip_longest, cycle
+from itertools import groupby, islice, zip_longest, cycle, filterfalse
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
 from keras.layers.convolutional import Cropping2D, Convolution2D
 from keras.models import Sequential, model_from_json
@@ -78,14 +78,6 @@ def load(f):
 
 def fetch(records, base):
     return ([load(base+f.strip()) for f in record[:1]]+[float(v) for v in record[1:]] for record in records)
-
-# #+RESULTS:
-                    
-#       Randomly flip an image 'x' along its horizontal axis 50% of the
-#       time.
-
-def rflip(x):
-    return x if random.choice([True, False]) else [img.flip_axis(x[0],1), -1*x[1]]
 
 # #+RESULTS:
                     
@@ -231,7 +223,40 @@ plot(CarND([160, 320, 3]), to_file="model.png", show_shapes=True)
 
 # Characteristics
 
-describe([float(s[1]) for s in select(split(feed("data/driving_log_all.csv")), [0, 3])])
+f = plt.figure()
+y = np.array([float(s[0]) for s in select(split(feed("data/driving_log_all.csv")),[3])])
+h = plt.hist(y,bins=100)
+s = plt.savefig("hist1.png", format='png')
+describe(y)
+
+# #+RESULTS:
+#       : DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332515, variance=0.016599764281272529, skewness=-0.13028924577521922, kurtosis=6.311554102057668)
+
+#       #+CAPTION: All Samples - No Reflection
+#       #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
+#       [[file:hist1.png]]
+
+f = plt.figure()
+p = lambda x: abs(float(x[0]))<0.01
+y = np.array([float(s[0]) for s in filterfalse(p, select(split(feed("data/driving_log_all.csv")),[3]))])
+h = plt.hist(y,bins=100)
+s = plt.savefig("hist2.png", format='png')
+describe(y)
+
+# #+RESULTS:
+#       : DescribeResult(nobs=3584, minmax=(-0.94269539999999996, 1.0), mean=0.0091718659514508933, variance=0.037178302717086116, skewness=-0.16657825969015194, kurtosis=1.1768785967587378)
+
+#       #+CAPTION: abs(angle)>0.01 - No Reflection
+#       #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
+#       [[file:hist2.png]]
+
+f = plt.figure()
+p = lambda x: abs(float(x[0]))<0.01
+y = np.array([float(s[0]) for s in filterfalse(p, select(split(feed("data/driving_log_all.csv")),[3]))])
+z = np.append(y, -y)
+h = plt.hist(z,bins=100)
+s = plt.savefig("hist3.png", format='png')
+describe(z)
 
 # Data Pipeline
 
@@ -254,7 +279,7 @@ def pipeline(theta, training=False):
         if theta.flip:
             samples = (rflip(x) for x in samples)
         if theta.shift:
-            samples = ((rshift(x[0]),x[1]) for x in samples)
+            samples = (rflip(x) for x in samples)
     groups = group(samples, theta.batch_size)
     batches = batch(transpose(groups))
     return batches
