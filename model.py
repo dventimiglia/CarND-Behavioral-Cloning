@@ -1,22 +1,4 @@
 
-# Setup
-
-from PIL import Image
-from itertools import groupby, islice, zip_longest, cycle, filterfalse
-from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
-from keras.layers.convolutional import Cropping2D, Convolution2D
-from keras.models import Sequential, model_from_json
-from keras.utils.visualize_util import plot
-from scipy.stats import kurtosis, skew, describe
-import gc
-import keras.preprocessing.image as img
-import matplotlib.pyplot as plt
-import math
-import numpy as np
-import os
-import random
-import sys
-
 # Utilities
 
 #       Return elements from the iterable.  Shuffle the elements of the
@@ -28,6 +10,17 @@ import sys
 #       which will be the number of elements in the underlying finite
 #       iterable, and you must discard the first batch.  The
 #       itertools.islice function can be helpful here.
+
+from PIL import Image
+from itertools import groupby, islice, zip_longest, cycle, filterfalse
+from scipy.stats import kurtosis, skew, describe
+import keras.preprocessing.image as img
+import matplotlib.pyplot as plt
+import numpy as np
+import random
+import sys
+
+# #+RESULTS:
 
 def rcycle(iterable):
     saved = []
@@ -51,6 +44,68 @@ group = lambda items, n, fillvalue=None: zip_longest(*([iter(items)]*n), fillval
 transpose = lambda tuples: (list(map(list, zip(*g))) for g in tuples)
 batch = lambda groups, indices=[0, 1]: ([np.asarray(t[i]) for i in indices] for t in groups)
 
+# Exploratory Analysis
+
+#       Get the target labels---the steering angles---for /all/ of the
+#       data, from =data/driving_log_all.csv=, plot a histogram, and
+#       generate basic descriptive statistics.
+
+f = plt.figure()
+y1 = np.array([float(s[0]) for s in select(split(feed("data/driving_log_all.csv")),[3])])
+h = plt.hist(y1,bins=100)
+s = plt.savefig("hist1.png", format='png')
+describe(y1)
+
+# #+RESULTS:
+#       : DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332515, variance=0.016599764281272529, skewness=-0.13028924577521922, kurtosis=6.311554102057668)
+
+#       #+CAPTION: All Samples - No Reflection
+#       #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
+#       [[file:hist1.png]]
+
+#       The data have non-zero /mean/ and /skewness/.  perhaps arising
+#       from a bias toward left-hand turns when driving on a closed
+#       track.
+
+#       - mean=0.0040696440648332515
+#       - skewness=-0.13028924577521922
+
+#       The data are dominated by small steering angles because the car
+#       spends most of its time on the track in straightaways.  The
+#       asymmetry in the data is more apparent if we mask out small
+#       angles and repeat the analysis.  Steering angles occupy the
+#       interval [-1, 1], but the "straight" samples appear to be within
+#       the neighborhood [-0.01, 0.01].
+
+#       We might consider masking out small angled samples from the
+#       actual training data as well, a subject we shall return to in a
+#       later section.
+
+f = plt.figure()
+p = lambda x: abs(x)<0.01
+y2 = np.array([s for s in filterfalse(p,y1)])
+h = plt.hist(y2,bins=100)
+s = plt.savefig("hist2.png", format='png')
+describe(y2)
+
+# #+RESULTS:
+#       : DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332515, variance=0.016599764281272529, skewness=-0.13028924577521922, kurtosis=6.311554102057668)
+
+#       #+CAPTION: abs(angle)>0.01 - No Reflection
+#       #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
+#       [[file:hist2.png]]
+
+#       A simple trick that we can play to remove this asymmetry---if we
+#       wish---is to join the data with its reflection, effectively
+#       doubling our sample size in the process.  For illustration
+#       purposes only, we shall again mask out small angle samples.
+
+f = plt.figure()
+y3 = np.append(y2, -y2)
+h = plt.hist(y3,bins=100)
+s = plt.savefig("hist3.png", format='png')
+describe(y3)
+
 # Model
 
 #       - Crop :: crop to region (/non-trainable/)
@@ -64,6 +119,11 @@ batch = lambda groups, indices=[0, 1]: ([np.asarray(t[i]) for i in indices] for 
 #       - Readout :: single node steering angle (/non-trainable/)
 
 #       Return a Keras neural network model.
+
+from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
+from keras.layers.convolutional import Cropping2D, Convolution2D
+from keras.models import Sequential, model_from_json
+from keras.utils.visualize_util import plot
 
 def CarND(input_shape):
     model = Sequential()
@@ -113,7 +173,7 @@ CarND([160, 320, 3]).summary()
 #       ____________________________________________________________________________________________________
 #       Layer (type)                     Output Shape          Param #     Connected to                     
 #       ====================================================================================================
-#       Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_8[0][0]         
+#       Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_10[0][0]        
 #       ____________________________________________________________________________________________________
 #       Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
 #       ____________________________________________________________________________________________________
@@ -151,46 +211,9 @@ CarND([160, 320, 3]).summary()
 
 plot(CarND([160, 320, 3]), to_file="model.png", show_shapes=True)
 
-# Characteristics
-
-f = plt.figure()
-y = np.array([float(s[0]) for s in select(split(feed("data/driving_log_all.csv")),[3])])
-h = plt.hist(y,bins=100)
-s = plt.savefig("hist1.png", format='png')
-describe(y)
-
-# #+RESULTS:
-#       : DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332515, variance=0.016599764281272529, skewness=-0.13028924577521922, kurtosis=6.311554102057668)
-
-#       #+CAPTION: All Samples - No Reflection
-#       #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
-#       [[file:hist1.png]]
-
-f = plt.figure()
-p = lambda x: abs(float(x[0]))<0.01
-y = np.array([float(s[0]) for s in filterfalse(p, select(split(feed("data/driving_log_all.csv")),[3]))])
-h = plt.hist(y,bins=100)
-s = plt.savefig("hist2.png", format='png')
-describe(y)
-
-# #+RESULTS:
-#       : DescribeResult(nobs=3584, minmax=(-0.94269539999999996, 1.0), mean=0.0091718659514508933, variance=0.037178302717086116, skewness=-0.16657825969015194, kurtosis=1.1768785967587378)
-
-#       #+CAPTION: abs(angle)>0.01 - No Reflection
-#       #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
-#       [[file:hist2.png]]
-
-f = plt.figure()
-p = lambda x: abs(float(x[0]))<0.01
-y = np.array([float(s[0]) for s in filterfalse(p, select(split(feed("data/driving_log_all.csv")),[3]))])
-z = np.append(y, -y)
-h = plt.hist(z,bins=100)
-s = plt.savefig("hist3.png", format='png')
-describe(z)
-
 # Data Pipeline
 
-#       Create a data-processing pipeline.  The 'training_index'
+#       Create a data-processing pipeline.  The 'trainingfile'
 #       parameter is the name of a CSV index file specifying samples,
 #       with fields for image filenames and for steering angles.  The
 #       'base_path' parameter is the directory path for the image
@@ -204,7 +227,7 @@ describe(z)
 #       randomly shifted along their horizontal axis.
 
 def pipeline(theta, training=False):
-    samples = select(rcycle(fetch(select(split(feed(theta.training_index)), [0,3]), theta.base_path)), [0,1])
+    samples = select(rcycle(fetch(select(split(feed(theta.trainingfile)), [0,3]), theta.base_path)), [0,1])
     if training:
         if theta.flip:
             samples = (rflip(x) for x in samples)
@@ -216,20 +239,6 @@ def pipeline(theta, training=False):
 
 # Training
 
-#       Train the model.
-
-def train(model):
-    traingen = pipeline(theta, training=True)
-    validgen = pipeline(theta)
-    history = model.fit_generator(
-        traingen,
-        theta.samples_per_epoch,
-        theta.epochs,
-        validation_data=validgen,
-        nb_val_samples=theta.valid_samples_per_epoch)
-
-# Data Structures
-
 #       Essentially a struct just to gather hyper-parameters into one
 #       place, for convenience.
 
@@ -237,35 +246,106 @@ class HyperParameters:
     def __init__(self):
         return
 
-# Entry-point
+# #+RESULTS:
 
-if __name__=="__main__":        # In case this module is imported
-    theta = HyperParameters()
-    theta.input_shape = [160, 320, 3]
-    theta.samples_per_epoch = 30
-    theta.valid_samples_per_epoch = 30
-    theta.epochs = 3
-    theta.batch_size = 10
-    theta.training_index = "data/driving_log_overtrain.csv"
-    theta.validation_index = "data/driving_log_overtrain.csv"
-    theta.base_path = "data/"
-    theta.flip = False
-    theta.shift = False
-    if sys.argv[0]!='':         # Running from the command line
-        theta.training_index = os.environ['TRAINING_INDEX']
-        theta.validation_index = os.environ['VALIDATION_INDEX']
-        theta.base_path = os.environ['BASE_PATH']
-        theta.samples_per_epoch = int(os.environ['SAMPLES_PER_EPOCH'])
-        theta.valid_samples_per_epoch = int(os.environ['VALID_SAMPLES_PER_EPOCH'])
-        theta.epochs = int(os.environ['EPOCHS'])
-        theta.batch_size = int(os.environ['BATCH_SIZE'])
-        theta.flip = os.environ['FLIP']=='yes'
-        theta.shift = os.environ['SHIFT']=='yes'
-    model = CarND(theta.input_shape)
-    model.compile(loss="mse", optimizer="adam")
-    print("")
-    train(model)
-    model.save_weights("model.h5")
-    with open("model.json", "w") as f:
-        f.write(model.to_json())
-    gc.collect()
+theta = HyperParameters()
+theta.input_shape = [160, 320, 3]
+theta.samples_per_epoch = 30
+theta.valid_samples_per_epoch = 30
+theta.epochs = 3
+theta.batch_size = 10
+theta.trainingfile = "data/driving_log_overtrain.csv"
+theta.validationfile = "data/driving_log_overtrain.csv"
+theta.base_path = "data/"
+theta.flip = False
+theta.shift = False
+model = CarND(theta.input_shape)
+model.compile(loss="mse", optimizer="adam")
+traingen = pipeline(theta, training=True)
+validgen = pipeline(theta)
+print("")
+history = model.fit_generator(
+    traingen,
+    theta.samples_per_epoch,
+    theta.epochs,
+    validation_data=validgen,
+    verbose=2,
+    nb_val_samples=theta.valid_samples_per_epoch)
+
+# #+RESULTS:
+#       #+begin_example
+#       Traceback (most recent call last):
+# 	File "<stdin>", line 1, in <module>
+#       NameError: name 'HyperParameters' is not defined
+#       Traceback (most recent call last):
+# 	File "<stdin>", line 1, in <module>
+#       NameError: name 'theta' is not defined
+#       Traceback (most recent call last):
+# 	File "<stdin>", line 1, in <module>
+#       NameError: name 'theta' is not defined
+#       Traceback (most recent call last):
+# 	File "<stdin>", line 1, in <module>
+#       NameError: name 'theta' is not defined
+#       Traceback (most recent call last):
+# 	File "<stdin>", line 1, in <module>
+#       NameError: name 'theta' is not defined
+#       Traceback (most recent call last):
+# 	File "<stdin>", line 1, in <module>
+#       NameError: name 'theta' is not defined
+#       Traceback (most recent call last):
+# 	File "<stdin>", line 1, in <module>
+#       NameError: name 'theta' is not defined
+#       Traceback (most recent call last):
+# 	File "<stdin>", line 1, in <module>
+#       NameError: name 'theta' is not defined
+#       Traceback (most recent call last):
+# 	File "<stdin>", line 1, in <module>
+#       NameError: name 'theta' is not defined
+#       Traceback (most recent call last):
+# 	File "<stdin>", line 1, in <module>
+#       NameError: name 'theta' is not defined
+#       Traceback (most recent call last):
+# 	File "<stdin>", line 1, in <module>
+#       NameError: name 'theta' is not defined
+#       Traceback (most recent call last):
+# 	File "<stdin>", line 1, in <module>
+#       NameError: name 'CarND' is not defined
+#       Traceback (most recent call last):
+# 	File "<stdin>", line 1, in <module>
+#       NameError: name 'model' is not defined
+#       Traceback (most recent call last):
+# 	File "<stdin>", line 1, in <module>
+#       NameError: name 'pipeline' is not defined
+#       Traceback (most recent call last):
+# 	File "<stdin>", line 1, in <module>
+#       NameError: name 'pipeline' is not defined
+
+#       ... ... ... ... ... Traceback (most recent call last):
+# 	File "<stdin>", line 1, in <module>
+#       NameError: name 'model' is not defined
+# #+end_example
+
+theta = HyperParameters()
+theta.input_shape = [160, 320, 3]
+theta.trainingfile = "data/driving_log_train.csv"
+theta.validationfile = "data/driving_log_validation.csv"
+theta.base_path = "data/"
+theta.samples_per_epoch = 7000
+theta.valid_samples_per_epoch = 7000
+theta.epochs = 5
+theta.batch_size = 100
+theta.flip = False
+theta.shift = False
+model = CarND(theta.input_shape)
+model.compile(loss="mse", optimizer="adam")
+print("")
+# history = model.fit_generator(
+#           traingen,
+#           theta.samples_per_epoch,
+#           theta.epochs,
+#           validation_data=validgen,
+#     verbose=2,
+#           nb_val_samples=theta.valid_samples_per_epoch)
+# model.save_weights("model.h5")
+# with open("model.json", "w") as f:
+#     f.write(model.to_json())

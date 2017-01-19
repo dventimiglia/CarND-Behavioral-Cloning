@@ -11,11 +11,17 @@ from PIL import Image
 from PIL import ImageOps
 from flask import Flask, render_template
 from io import BytesIO
-from model import load       # !!! Use model.load and model.process !!!
 
 from keras.models import model_from_json
 
-import cv2
+################################################################################
+# It's absolutely critical that we load the data in drive.py in
+# exactly the same way that we load the data when training the model
+# (such as in model.py).  Not doing this is an easy mistake to make.
+# It's a mistake that I made more than once, even though it's not
+# complicated.
+################################################################################
+load = lambda f: np.asarray(Image.open(f))
 
 # Fix error with Keras and TensorFlow
 import tensorflow as tf
