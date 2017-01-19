@@ -42,9 +42,11 @@
 
 *** Approach
 
-*** Architecture
+*** Implementation
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports results
+***** Setup
+
+      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both
       from PIL import Image
       from itertools import groupby, islice, zip_longest, cycle
       from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
@@ -52,9 +54,9 @@
       from keras.models import Sequential, model_from_json
       from keras.utils.visualize_util import plot
       from scipy.stats import kurtosis, skew, describe
-      import cv2
       import gc
       import keras.preprocessing.image as img
+      import matplotlib.pyplot as plt
       import math
       import numpy as np
       import os
@@ -202,47 +204,57 @@
 
 ***** Model
 
+      - Crop :: crop to region (/non-trainable/)
+      - Resize :: reduce scale (/non-trainable/)
+      - Normalize :: scale values to [-1, 1] (/non-trainable/)
+      - Convolution :: learn spatial features and compress
+      - MaxPool :: reduce model size
+      - Dropout :: add regularization (/non-trainable/)
+      - Flatten :: stage to fully-connected layers (/non-trainable/)
+      - FC :: fully-connected layers
+      - Readout :: single node steering angle (/non-trainable/)
+
       Return a Keras neural network model.
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def CarND(input_shape):
-          model = Sequential()
+	  model = Sequential()
        
-          # Crop
-          model.add(Cropping2D(((80,20),(1,1)), input_shape=input_shape, name="Crop"))
+	  # Crop
+	  model.add(Cropping2D(((80,20),(1,1)), input_shape=input_shape, name="Crop"))
        
-          # Resize
-          model.add(AveragePooling2D(pool_size=(1,4), name="Resize", trainable=False))
+	  # Resize
+	  model.add(AveragePooling2D(pool_size=(1,4), name="Resize", trainable=False))
        
-          # Normalize input.
-          model.add(Lambda(lambda x: x/127.5 - 1., name="Normalize"))
+	  # Normalize input.
+	  model.add(Lambda(lambda x: x/127.5 - 1., name="Normalize"))
        
-          # Reduce dimensions through trainable convolution, activation, and
-          # pooling layers.
-          model.add(Convolution2D(24, 3, 3, subsample=(2,2), name="Convolution2D1", activation="relu"))
-          model.add(MaxPooling2D(name="MaxPool1"))
-          model.add(Convolution2D(36, 3, 3, subsample=(1,1), name="Convolution2D2", activation="relu"))
-          model.add(MaxPooling2D(name="MaxPool2"))
-          model.add(Convolution2D(48, 3, 3, subsample=(1,1), name="Convolution2D3", activation="relu"))
-          model.add(MaxPooling2D(name="MaxPool3"))
+	  # Reduce dimensions through trainable convolution, activation, and
+	  # pooling layers.
+	  model.add(Convolution2D(24, 3, 3, subsample=(2,2), name="Convolution2D1", activation="relu"))
+	  model.add(MaxPooling2D(name="MaxPool1"))
+	  model.add(Convolution2D(36, 3, 3, subsample=(1,1), name="Convolution2D2", activation="relu"))
+	  model.add(MaxPooling2D(name="MaxPool2"))
+	  model.add(Convolution2D(48, 3, 3, subsample=(1,1), name="Convolution2D3", activation="relu"))
+	  model.add(MaxPooling2D(name="MaxPool3"))
        
-          # Dropout for regularization
-          model.add(Dropout(0.1, name="Dropout"))
+	  # Dropout for regularization
+	  model.add(Dropout(0.1, name="Dropout"))
        
-          # Flatten input in a non-trainable layer before feeding into
-          # fully-connected layers.
-          model.add(Flatten(name="Flatten"))
+	  # Flatten input in a non-trainable layer before feeding into
+	  # fully-connected layers.
+	  model.add(Flatten(name="Flatten"))
        
-          # Model steering through trainable layers comprising dense units
-          # as ell as dropout units for regularization.
-          model.add(Dense(100, activation="relu", name="FC2"))
-          model.add(Dense(50, activation="relu", name="FC3"))
-          model.add(Dense(10, activation="relu", name="FC4"))
+	  # Model steering through trainable layers comprising dense units
+	  # as ell as dropout units for regularization.
+	  model.add(Dense(100, activation="relu", name="FC2"))
+	  model.add(Dense(50, activation="relu", name="FC3"))
+	  model.add(Dense(10, activation="relu", name="FC4"))
        
-          # Generate output (steering angles) with a single non-trainable
-          # node.
-          model.add(Dense(1, name="Readout", trainable=False))
-          return model
+	  # Generate output (steering angles) with a single non-trainable
+	  # node.
+	  model.add(Dense(1, name="Readout", trainable=False))
+	  return model
       #+END_SRC
 
       #+RESULTS:
@@ -310,15 +322,11 @@
       wget -nc "https://d17h27t6h515a5.cloudfront.net/topher/2016/December/584f6edd_data/data.zip"
       unzip data.zip > /dev/null 2>&1
       rm -rf __MACOSX
-      #+END_SRC
 
-      #+BEGIN_SRC sh :results output :tangle no :exports code
       cat data/driving_log.csv | tail -n+2 | shuf > data/driving_log_all.csv
       cat data/driving_log_all.csv | head -n7000 > data/driving_log_train.csv
       cat data/driving_log_all.csv | tail -n+7000 > data/driving_log_validation.csv
-      #+END_SRC
 
-      #+BEGIN_SRC sh :results output :tangle no :exports both
       wc -l data/driving_log.csv
       wc -l data/driving_log_train.csv
       wc -l data/driving_log_validation.csv
@@ -330,6 +338,13 @@
       : 1037 data/driving_log_validation.csv
 
 ***** Characteristics
+
+      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both
+      describe([float(s[1]) for s in select(split(feed("data/driving_log_all.csv")), [0, 3])])
+      #+END_SRC
+
+      #+RESULTS:
+      : DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332515, variance=0.016599764281272529, skewness=-0.13028924577521922, kurtosis=6.311554102057668)
 
 ***** Examples
 
@@ -403,10 +418,10 @@
       if __name__=="__main__":        # In case this module is imported
           theta = HyperParameters()
           theta.input_shape = [160, 320, 3]
-          theta.samples_per_epoch = 300
-          theta.valid_samples_per_epoch = 300
+          theta.samples_per_epoch = 30
+          theta.valid_samples_per_epoch = 30
           theta.epochs = 3
-          theta.batch_size = 100
+          theta.batch_size = 10
           theta.training_index = "data/driving_log_overtrain.csv"
           theta.validation_index = "data/driving_log_overtrain.csv"
           theta.base_path = "data/"

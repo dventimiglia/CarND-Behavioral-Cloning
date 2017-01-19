@@ -3,8 +3,8 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<title>David A. Ventimiglia : CarND Errata</title>
-<!-- 2017-01-18 Wed 15:50 -->
+<title>CarND Project 3:  Behavioral Cloning</title>
+<!-- 2017-01-18 Wed 16:37 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="David A. Ventimiglia" />
@@ -139,7 +139,7 @@ for the JavaScript code in this tag.
 </head>
 <body>
 <div id="content">
-<h1 class="title">CarND Errata</h1>
+<h1 class="title">CarND Project 3:  Behavioral Cloning</h1>
 
 <div id="outline-container-sec-1" class="outline-2">
 <h2 id="sec-1"><span class="section-number-2">1</span> What</h2>
@@ -157,11 +157,30 @@ for the JavaScript code in this tag.
 </div>
 
 <div id="outline-container-sec-3-2" class="outline-3">
-<h3 id="sec-3-2"><span class="section-number-3">3.2</span> Architecture</h3>
+<h3 id="sec-3-2"><span class="section-number-3">3.2</span> Implementation</h3>
 <div class="outline-text-3" id="text-3-2">
 </div><div id="outline-container-sec-3-2-1" class="outline-4">
-<h4 id="sec-3-2-1"><span class="section-number-4">3.2.1</span> Imports</h4>
+<h4 id="sec-3-2-1"><span class="section-number-4">3.2.1</span> Setup</h4>
 <div class="outline-text-4" id="text-3-2-1">
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">from</span> PIL <span style="color: #b4fa70;">import</span> Image
+<span style="color: #b4fa70;">from</span> itertools <span style="color: #b4fa70;">import</span> groupby, islice, zip_longest, cycle
+<span style="color: #b4fa70;">from</span> keras.layers <span style="color: #b4fa70;">import</span> Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
+<span style="color: #b4fa70;">from</span> keras.layers.convolutional <span style="color: #b4fa70;">import</span> Cropping2D, Convolution2D
+<span style="color: #b4fa70;">from</span> keras.models <span style="color: #b4fa70;">import</span> Sequential, model_from_json
+<span style="color: #b4fa70;">from</span> keras.utils.visualize_util <span style="color: #b4fa70;">import</span> plot
+<span style="color: #b4fa70;">from</span> scipy.stats <span style="color: #b4fa70;">import</span> kurtosis, skew, describe
+<span style="color: #b4fa70;">import</span> gc
+<span style="color: #b4fa70;">import</span> keras.preprocessing.image <span style="color: #b4fa70;">as</span> img
+<span style="color: #b4fa70;">import</span> matplotlib.pyplot <span style="color: #b4fa70;">as</span> plt
+<span style="color: #b4fa70;">import</span> math
+<span style="color: #b4fa70;">import</span> numpy <span style="color: #b4fa70;">as</span> np
+<span style="color: #b4fa70;">import</span> os
+<span style="color: #b4fa70;">import</span> random
+<span style="color: #b4fa70;">import</span> sys
+</pre>
+</div>
 </div>
 </div>
 
@@ -329,6 +348,27 @@ appropriate numeric types.
 <div id="outline-container-sec-3-2-3" class="outline-4">
 <h4 id="sec-3-2-3"><span class="section-number-4">3.2.3</span> Model</h4>
 <div class="outline-text-4" id="text-3-2-3">
+<dl class="org-dl">
+<dt> Crop </dt><dd>crop to region (<i>non-trainable</i>)
+</dd>
+<dt> Resize </dt><dd>reduce scale (<i>non-trainable</i>)
+</dd>
+<dt> Normalize </dt><dd>scale values to [-1, 1] (<i>non-trainable</i>)
+</dd>
+<dt> Convolution </dt><dd>learn spatial features and compress
+</dd>
+<dt> MaxPool </dt><dd>reduce model size
+</dd>
+<dt> Dropout </dt><dd>add regularization (<i>non-trainable</i>)
+</dd>
+<dt> Flatten </dt><dd>stage to fully-connected layers (<i>non-trainable</i>)
+</dd>
+<dt> FC </dt><dd>fully-connected layers
+</dd>
+<dt> Readout </dt><dd>single node steering angle (<i>non-trainable</i>)
+</dd>
+</dl>
+
 <p>
 Return a Keras neural network model.
 </p>
@@ -386,7 +426,7 @@ Return a Keras neural network model.
 ____________________________________________________________________________________________________
 Layer (type)                     Output Shape          Param #     Connected to                     
 ====================================================================================================
-Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_66[0][0]        
+Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_25[0][0]        
 ____________________________________________________________________________________________________
 Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
 ____________________________________________________________________________________________________
@@ -442,11 +482,43 @@ ________________________________________________________________________________
 <h3 id="sec-3-3"><span class="section-number-3">3.3</span> Data</h3>
 <div class="outline-text-3" id="text-3-3">
 </div><div id="outline-container-sec-3-3-1" class="outline-4">
-<h4 id="sec-3-3-1"><span class="section-number-4">3.3.1</span> Characteristics</h4>
+<h4 id="sec-3-3-1"><span class="section-number-4">3.3.1</span> Collection and Preparation</h4>
+<div class="outline-text-4" id="text-3-3-1">
+<div class="org-src-container">
+
+<pre class="src src-sh">wget -nc <span style="color: #e9b96e;">"https://d17h27t6h515a5.cloudfront.net/topher/2016/December/584f6edd_data/data.zip"</span>
+unzip data.zip &gt; /dev/null 2&gt;&amp;1
+rm -rf __MACOSX
+
+cat data/driving_log.csv | tail -n+2 | shuf &gt; data/driving_log_all.csv
+cat data/driving_log_all.csv | head -n7000 &gt; data/driving_log_train.csv
+cat data/driving_log_all.csv | tail -n+7000 &gt; data/driving_log_validation.csv
+
+wc -l data/driving_log.csv
+wc -l data/driving_log_train.csv
+wc -l data/driving_log_validation.csv
+</pre>
+</div>
+</div>
 </div>
 
 <div id="outline-container-sec-3-3-2" class="outline-4">
-<h4 id="sec-3-3-2"><span class="section-number-4">3.3.2</span> Examples</h4>
+<h4 id="sec-3-3-2"><span class="section-number-4">3.3.2</span> Characteristics</h4>
+<div class="outline-text-4" id="text-3-3-2">
+<div class="org-src-container">
+
+<pre class="src src-python">describe([<span style="color: #e090d7;">float</span>(s[1]) <span style="color: #b4fa70;">for</span> s <span style="color: #b4fa70;">in</span> select(split(feed(<span style="color: #e9b96e;">"data/driving_log_all.csv"</span>)), [0, 3])])
+</pre>
+</div>
+
+<pre class="example">
+DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332515, variance=0.016599764281272529, skewness=-0.13028924577521922, kurtosis=6.311554102057668)
+</pre>
+</div>
+</div>
+
+<div id="outline-container-sec-3-3-3" class="outline-4">
+<h4 id="sec-3-3-3"><span class="section-number-4">3.3.3</span> Examples</h4>
 </div>
 </div>
 
@@ -538,10 +610,10 @@ place, for convenience.
 <pre class="src src-python"><span style="color: #b4fa70;">if</span> <span style="color: #e090d7;">__name__</span>==<span style="color: #e9b96e;">"__main__"</span>:        <span style="color: #73d216;"># </span><span style="color: #73d216;">In case this module is imported</span>
     <span style="color: #fcaf3e;">theta</span> = HyperParameters()
     <span style="color: #fcaf3e;">theta.input_shape</span> = [160, 320, 3]
-    <span style="color: #fcaf3e;">theta.samples_per_epoch</span> = 300
-    <span style="color: #fcaf3e;">theta.valid_samples_per_epoch</span> = 300
+    <span style="color: #fcaf3e;">theta.samples_per_epoch</span> = 30
+    <span style="color: #fcaf3e;">theta.valid_samples_per_epoch</span> = 30
     <span style="color: #fcaf3e;">theta.epochs</span> = 3
-    <span style="color: #fcaf3e;">theta.batch_size</span> = 100
+    <span style="color: #fcaf3e;">theta.batch_size</span> = 10
     <span style="color: #fcaf3e;">theta.training_index</span> = <span style="color: #e9b96e;">"data/driving_log_overtrain.csv"</span>
     <span style="color: #fcaf3e;">theta.validation_index</span> = <span style="color: #e9b96e;">"data/driving_log_overtrain.csv"</span>
     <span style="color: #fcaf3e;">theta.base_path</span> = <span style="color: #e9b96e;">"data/"</span>
@@ -571,11 +643,11 @@ place, for convenience.
 <pre class="example">
 ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... ... 
 Epoch 1/3
-2s - loss: 0.6210 - val_loss: 0.5876
+1s - loss: 0.6281 - val_loss: 0.6173
 Epoch 2/3
-1s - loss: 0.5471 - val_loss: 0.4234
+0s - loss: 0.6082 - val_loss: 0.5757
 Epoch 3/3
-1s - loss: 0.3378 - val_loss: 0.1360
+0s - loss: 0.5534 - val_loss: 0.4798
 4046
 4644
 </pre>
@@ -585,9 +657,9 @@ Epoch 3/3
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Date: <span class="timestamp-wrapper"><span class="timestamp">&lt;2016-12-19&gt;</span></span></p>
+<p class="date">Date: <span class="timestamp-wrapper"><span class="timestamp">&lt;2017-01-19&gt;</span></span></p>
 <p class="author">Author: David A. Ventimiglia</p>
-<p class="date">Created: 2017-01-18 Wed 15:50</p>
+<p class="date">Created: 2017-01-18 Wed 16:37</p>
 <p class="creator">Emacs 24.5.1 (Org mode 8.2.10)</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
