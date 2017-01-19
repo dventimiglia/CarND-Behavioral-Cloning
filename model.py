@@ -57,7 +57,7 @@ s = plt.savefig("hist1.png", format='png')
 describe(y1)
 
 # #+RESULTS:
-#       : DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332515, variance=0.016599764281272529, skewness=-0.13028924577521922, kurtosis=6.311554102057668)
+#       : DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332506, variance=0.016599764281272529, skewness=-0.1302892457752191, kurtosis=6.311554102057668)
 
 #       #+CAPTION: All Samples - No Reflection
 #       #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
@@ -89,7 +89,7 @@ s = plt.savefig("hist2.png", format='png')
 describe(y2)
 
 # #+RESULTS:
-#       : DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332515, variance=0.016599764281272529, skewness=-0.13028924577521922, kurtosis=6.311554102057668)
+#       : DescribeResult(nobs=3584, minmax=(-0.94269539999999996, 1.0), mean=0.0091718659514508933, variance=0.037178302717086116, skewness=-0.1665782596901519, kurtosis=1.1768785967587378)
 
 #       #+CAPTION: abs(angle)>0.01 - No Reflection
 #       #+ATTR_HTML: :alt CarND/Architecture Image :title Architecture
@@ -125,11 +125,12 @@ from keras.layers.convolutional import Cropping2D, Convolution2D
 from keras.models import Sequential, model_from_json
 from keras.utils.visualize_util import plot
 
-def CarND(input_shape):
+def CarND(input_shape, crop_shape):
     model = Sequential()
  
     # Crop
-    model.add(Cropping2D(((80,20),(1,1)), input_shape=input_shape, name="Crop"))
+    # model.add(Cropping2D(((80,20),(1,1)), input_shape=input_shape, name="Crop"))
+    model.add(Cropping2D(crop_shape, input_shape=input_shape, name="Crop"))
  
     # Resize
     model.add(AveragePooling2D(pool_size=(1,4), name="Resize", trainable=False))
@@ -166,14 +167,14 @@ def CarND(input_shape):
 
 # #+RESULTS:
 
-CarND([160, 320, 3]).summary()
+CarND([160, 320, 3], ((80,20),(1,1))).summary()
 
 # #+RESULTS:
 #       #+begin_example
 #       ____________________________________________________________________________________________________
 #       Layer (type)                     Output Shape          Param #     Connected to                     
 #       ====================================================================================================
-#       Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_10[0][0]        
+#       Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_14[0][0]        
 #       ____________________________________________________________________________________________________
 #       Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
 #       ____________________________________________________________________________________________________
@@ -209,7 +210,7 @@ CarND([160, 320, 3]).summary()
 #       ____________________________________________________________________________________________________
 #       #+end_example
 
-plot(CarND([160, 320, 3]), to_file="model.png", show_shapes=True)
+plot(CarND([160, 320, 3], ((80,20),(1,1))), to_file="model.png", show_shapes=True)
 
 # Data Pipeline
 
@@ -239,17 +240,13 @@ def pipeline(theta, training=False):
 
 # Training
 
-#       Essentially a struct just to gather hyper-parameters into one
-#       place, for convenience.
-
 class HyperParameters:
     def __init__(self):
         return
 
-# #+RESULTS:
-
 theta = HyperParameters()
 theta.input_shape = [160, 320, 3]
+theta.crop_shape = ((80,20),(1,1))
 theta.samples_per_epoch = 30
 theta.valid_samples_per_epoch = 30
 theta.epochs = 3
@@ -259,10 +256,13 @@ theta.validationfile = "data/driving_log_overtrain.csv"
 theta.base_path = "data/"
 theta.flip = False
 theta.shift = False
-model = CarND(theta.input_shape)
+
+model = CarND(theta.input_shape, theta.crop_shape)
 model.compile(loss="mse", optimizer="adam")
+
 traingen = pipeline(theta, training=True)
 validgen = pipeline(theta)
+
 print("")
 history = model.fit_generator(
     traingen,
@@ -273,79 +273,42 @@ history = model.fit_generator(
     nb_val_samples=theta.valid_samples_per_epoch)
 
 # #+RESULTS:
-#       #+begin_example
-#       Traceback (most recent call last):
-# 	File "<stdin>", line 1, in <module>
-#       NameError: name 'HyperParameters' is not defined
-#       Traceback (most recent call last):
-# 	File "<stdin>", line 1, in <module>
-#       NameError: name 'theta' is not defined
-#       Traceback (most recent call last):
-# 	File "<stdin>", line 1, in <module>
-#       NameError: name 'theta' is not defined
-#       Traceback (most recent call last):
-# 	File "<stdin>", line 1, in <module>
-#       NameError: name 'theta' is not defined
-#       Traceback (most recent call last):
-# 	File "<stdin>", line 1, in <module>
-#       NameError: name 'theta' is not defined
-#       Traceback (most recent call last):
-# 	File "<stdin>", line 1, in <module>
-#       NameError: name 'theta' is not defined
-#       Traceback (most recent call last):
-# 	File "<stdin>", line 1, in <module>
-#       NameError: name 'theta' is not defined
-#       Traceback (most recent call last):
-# 	File "<stdin>", line 1, in <module>
-#       NameError: name 'theta' is not defined
-#       Traceback (most recent call last):
-# 	File "<stdin>", line 1, in <module>
-#       NameError: name 'theta' is not defined
-#       Traceback (most recent call last):
-# 	File "<stdin>", line 1, in <module>
-#       NameError: name 'theta' is not defined
-#       Traceback (most recent call last):
-# 	File "<stdin>", line 1, in <module>
-#       NameError: name 'theta' is not defined
-#       Traceback (most recent call last):
-# 	File "<stdin>", line 1, in <module>
-#       NameError: name 'CarND' is not defined
-#       Traceback (most recent call last):
-# 	File "<stdin>", line 1, in <module>
-#       NameError: name 'model' is not defined
-#       Traceback (most recent call last):
-# 	File "<stdin>", line 1, in <module>
-#       NameError: name 'pipeline' is not defined
-#       Traceback (most recent call last):
-# 	File "<stdin>", line 1, in <module>
-#       NameError: name 'pipeline' is not defined
-
-#       ... ... ... ... ... Traceback (most recent call last):
-# 	File "<stdin>", line 1, in <module>
-#       NameError: name 'model' is not defined
-# #+end_example
+#       : 
+#       : ... ... >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
+#       : ... ... ... ... ... ... Epoch 1/3
+#       : 1s - loss: 0.6227 - val_loss: 0.5945
+#       : Epoch 2/3
+#       : 0s - loss: 0.5743 - val_loss: 0.5038
+#       : Epoch 3/3
+#       : 0s - loss: 0.4659 - val_loss: 0.3416
 
 theta = HyperParameters()
 theta.input_shape = [160, 320, 3]
+theta.crop_shape = ((80,20),(1,1))
 theta.trainingfile = "data/driving_log_train.csv"
 theta.validationfile = "data/driving_log_validation.csv"
 theta.base_path = "data/"
 theta.samples_per_epoch = 7000
-theta.valid_samples_per_epoch = 7000
-theta.epochs = 5
+theta.valid_samples_per_epoch = 1037
+theta.epochs = 3
 theta.batch_size = 100
 theta.flip = False
 theta.shift = False
-model = CarND(theta.input_shape)
+
+model = CarND(theta.input_shape, theta.crop_shape)
 model.compile(loss="mse", optimizer="adam")
+
+traingen = pipeline(theta, training=True)
+validgen = pipeline(theta)
+
 print("")
-# history = model.fit_generator(
-#           traingen,
-#           theta.samples_per_epoch,
-#           theta.epochs,
-#           validation_data=validgen,
-#     verbose=2,
-#           nb_val_samples=theta.valid_samples_per_epoch)
-# model.save_weights("model.h5")
-# with open("model.json", "w") as f:
-#     f.write(model.to_json())
+history = model.fit_generator(
+    traingen,
+    theta.samples_per_epoch,
+    theta.epochs,
+    validation_data=validgen,
+    verbose=2,
+    nb_val_samples=theta.valid_samples_per_epoch)
+model.save_weights("model.h5")
+with open("model.json", "w") as f:
+    f.write(model.to_json())
