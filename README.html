@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>Robot Car</title>
-<!-- 2017-01-20 Fri 11:41 -->
+<!-- 2017-01-20 Fri 12:52 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="David A. Ventimiglia" />
@@ -1269,8 +1269,7 @@ samples (X,y).  X and y are each NumPy arrays, with X as a batch
 of images and y as a batch of outputs.  Finally, augmentation
 may be performed if a training pipeline is desired, determined
 by the 'training' parameter.  Training pipelines have their
-images randomly flipped along the horizontal axis, and are
-randomly shifted along their horizontal axis.
+images randomly flipped along the horizontal axis.
 </p>
 
 <div class="org-src-container">
@@ -1279,9 +1278,7 @@ randomly shifted along their horizontal axis.
     <span style="color: #fcaf3e;">samples</span> = select(rcycle(fetch(select(split(feed(theta.trainingfile)), [0,3]), theta.base_path)), [0,1])
     <span style="color: #b4fa70;">if</span> training:
         <span style="color: #b4fa70;">if</span> theta.flip:
-            <span style="color: #fcaf3e;">samples</span> = (rflip(x) <span style="color: #b4fa70;">for</span> x <span style="color: #b4fa70;">in</span> samples)
-        <span style="color: #b4fa70;">if</span> theta.shift:
-            <span style="color: #fcaf3e;">samples</span> = (rflip(x) <span style="color: #b4fa70;">for</span> x <span style="color: #b4fa70;">in</span> samples)
+            <span style="color: #fcaf3e;">samples</span> = (sflip(x) <span style="color: #b4fa70;">for</span> x <span style="color: #b4fa70;">in</span> samples)
     <span style="color: #fcaf3e;">groups</span> = group(samples, theta.batch_size)
     <span style="color: #fcaf3e;">batches</span> = batch(transpose(groups))
     <span style="color: #b4fa70;">return</span> batches

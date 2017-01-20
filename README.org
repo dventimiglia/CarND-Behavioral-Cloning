@@ -937,17 +937,14 @@
       of images and y as a batch of outputs.  Finally, augmentation
       may be performed if a training pipeline is desired, determined
       by the 'training' parameter.  Training pipelines have their
-      images randomly flipped along the horizontal axis, and are
-      randomly shifted along their horizontal axis.
+      images randomly flipped along the horizontal axis.
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def pipeline(theta, training=False):
           samples = select(rcycle(fetch(select(split(feed(theta.trainingfile)), [0,3]), theta.base_path)), [0,1])
           if training:
               if theta.flip:
-                  samples = (rflip(x) for x in samples)
-              if theta.shift:
-                  samples = (rflip(x) for x in samples)
+                  samples = (sflip(x) for x in samples)
           groups = group(samples, theta.batch_size)
           batches = batch(transpose(groups))
           return batches
