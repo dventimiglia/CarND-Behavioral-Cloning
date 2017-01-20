@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>Robot Car</title>
-<!-- 2017-01-20 Fri 05:55 -->
+<!-- 2017-01-20 Fri 11:41 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="David A. Ventimiglia" />
@@ -196,7 +196,7 @@ Francisco (shown below)
 
 
 <div class="figure">
-<p><img src="rig.jpg" alt="rig.jpg" border="1" height="50%" width="50%" />
+<p><img src="rig.jpg" alt="rig.jpg" height="50%" width="50%" />
 </p>
 <p><span class="figure-number">Figure 2:</span> Project Lab</p>
 </div>
@@ -214,7 +214,7 @@ it wasn't really necessary.
 
 <p>
 Also, note that <i>everything was done in this one Org-mode file</i>.
-This file does not mearly document the code.  This document <i>is</i> the
+This file does not merely document the code.  This document <i>is</i> the
 code.  Like <a href="http://jupyter.org/">Jupyter</a> notebooks, it is an example of <a href="https://en.wikipedia.org/wiki/Literate_programming">literate
 programming</a>, and the <a href="model.py">model.py</a> file is <i>generated</i> from this
 document.
@@ -478,6 +478,7 @@ sections.
 <span style="color: #b4fa70;">from</span> scipy.stats <span style="color: #b4fa70;">import</span> kurtosis, skew, describe
 <span style="color: #b4fa70;">import</span> matplotlib.pyplot <span style="color: #b4fa70;">as</span> plt
 <span style="color: #b4fa70;">import</span> numpy <span style="color: #b4fa70;">as</span> np
+<span style="color: #b4fa70;">import</span> pprint <span style="color: #b4fa70;">as</span> pp
 <span style="color: #b4fa70;">import</span> random
 </pre>
 </div>
@@ -593,12 +594,12 @@ once using Unix command-line utilities above.
 <div class="org-src-container">
 
 <pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">rcycle</span>(iterable):
-    <span style="color: #fcaf3e;">saved</span> = []
+    <span style="color: #fcaf3e;">saved</span> = []                 <span style="color: #73d216;"># </span><span style="color: #73d216;">In-memory cache</span>
     <span style="color: #b4fa70;">for</span> element <span style="color: #b4fa70;">in</span> iterable:
         <span style="color: #b4fa70;">yield</span> element
         saved.append(element)
     <span style="color: #b4fa70;">while</span> saved:
-        random.shuffle(saved)
+        random.shuffle(saved)  <span style="color: #73d216;"># </span><span style="color: #73d216;">Shuffle every batch</span>
         <span style="color: #b4fa70;">for</span> element <span style="color: #b4fa70;">in</span> saved:
               <span style="color: #b4fa70;">yield</span> element
 </pre>
@@ -636,9 +637,14 @@ straightforward and for brevity are written as "one-liners."
 </dd>
 <dt> load </dt><dd>non-generator that reads an image file into a NumPy array
 </dd>
-<dt> hflip </dt><dd>non-generator that flips a sample along its horizontal axis
+<dt> Xflip </dt><dd>non-generator that flips an input image horizontally
 </dd>
-<dt> rflip </dt><dd>non-generator that flips a sample horizontally 50% of the time
+<dt> yflip </dt><dd>non-generator that flips a target label to its negative
+</dd>
+<dt> rmap </dt><dd>generator that randomly applies or does not apply a
+function with equal probability
+</dd>
+<dt> rflip </dt><dd>generator that flips samples 50% of the time
 </dd>
 <dt> fetch </dt><dd>generator that loads index file entries into samples
 </dd>
@@ -658,8 +664,11 @@ of NumPy array "batches"
 <span style="color: #fcaf3e;">split</span> = <span style="color: #b4fa70;">lambda</span> <span style="color: #fcaf3e;">lines</span>, <span style="color: #fcaf3e;">delimiter</span>=<span style="color: #e9b96e;">","</span>: (line.split(delimiter) <span style="color: #b4fa70;">for</span> line <span style="color: #b4fa70;">in</span> lines)
 <span style="color: #fcaf3e;">select</span> = <span style="color: #b4fa70;">lambda</span> fields, indices: ([r[i] <span style="color: #b4fa70;">for</span> i <span style="color: #b4fa70;">in</span> indices] <span style="color: #b4fa70;">for</span> r <span style="color: #b4fa70;">in</span> fields)
 <span style="color: #fcaf3e;">load</span> = <span style="color: #b4fa70;">lambda</span> f: np.asarray(Image.<span style="color: #e090d7;">open</span>(f))
-<span style="color: #fcaf3e;">hflip</span> = <span style="color: #b4fa70;">lambda</span> x: (x[0][:,::-1,:], -x[1])
-<span style="color: #fcaf3e;">rflip</span> = <span style="color: #b4fa70;">lambda</span> x: x <span style="color: #b4fa70;">if</span> random.choice([<span style="color: #e9b2e3;">True</span>, <span style="color: #e9b2e3;">False</span>]) <span style="color: #b4fa70;">else</span> flip(x)
+<span style="color: #fcaf3e;">Xflip</span> = <span style="color: #b4fa70;">lambda</span> x: x[:,::-1,:]
+<span style="color: #fcaf3e;">yflip</span> = <span style="color: #b4fa70;">lambda</span> x: -x
+<span style="color: #fcaf3e;">sflip</span> = <span style="color: #b4fa70;">lambda</span> s: (Xflip(s[0]), yflip(s[1]))
+<span style="color: #fcaf3e;">rmap</span> = <span style="color: #b4fa70;">lambda</span> f,g: (x <span style="color: #b4fa70;">if</span> random.choice([<span style="color: #e9b2e3;">True</span>, <span style="color: #e9b2e3;">False</span>]) <span style="color: #b4fa70;">else</span> f(x) <span style="color: #b4fa70;">for</span> x <span style="color: #b4fa70;">in</span> g)
+<span style="color: #fcaf3e;">rflip</span> = <span style="color: #b4fa70;">lambda</span> s: rmap(sflip, s)
 <span style="color: #fcaf3e;">fetch</span> = <span style="color: #b4fa70;">lambda</span> records, base: ([load(base+f.strip()) <span style="color: #b4fa70;">for</span> f <span style="color: #b4fa70;">in</span> record[:1]]+[<span style="color: #e090d7;">float</span>(v) <span style="color: #b4fa70;">for</span> v <span style="color: #b4fa70;">in</span> record[1:]] <span style="color: #b4fa70;">for</span> record <span style="color: #b4fa70;">in</span> records)
 <span style="color: #fcaf3e;">group</span> = <span style="color: #b4fa70;">lambda</span> <span style="color: #fcaf3e;">items</span>, <span style="color: #fcaf3e;">n</span>, <span style="color: #fcaf3e;">fillvalue</span>=<span style="color: #e9b2e3;">None</span>: zip_longest(*([<span style="color: #e090d7;">iter</span>(items)]*n), fillvalue=fillvalue)
 <span style="color: #fcaf3e;">transpose</span> = <span style="color: #b4fa70;">lambda</span> tuples: (<span style="color: #e090d7;">list</span>(<span style="color: #e090d7;">map</span>(<span style="color: #e090d7;">list</span>, <span style="color: #e090d7;">zip</span>(*g))) <span style="color: #b4fa70;">for</span> g <span style="color: #b4fa70;">in</span> tuples)
@@ -684,7 +693,7 @@ To that end, first we just want to see what kind of input data
 we are dealing with.  We know that they are RGB images, so let's
 load a few of them for display.  Here, we show the three frames
 taken from the <code>driving_log_overtrain.csv</code> file described
-above&#x2014;center camera only&#x2014;labelled by their corresponding
+above&#x2014;center camera only&#x2014;labeled by their corresponding
 steering angles.  As you can see, the image with a large
 negative angle seems to have the car on the extreme right edge
 of the road.  Perhaps the driver in this situation was executing
@@ -703,9 +712,9 @@ steering.
 <div class="org-src-container">
 
 <pre class="src src-python"><span style="color: #fcaf3e;">X</span> = [x <span style="color: #b4fa70;">for</span> x <span style="color: #b4fa70;">in</span> fetch(select(split(feed(<span style="color: #e9b96e;">"data/driving_log_overtrain.csv"</span>)), [0,3]), <span style="color: #e9b96e;">"data/"</span>)]
-<span style="color: #fcaf3e;">f</span> = plt.figure()
-plt.imshow(X[0][0])
-f.suptitle(<span style="color: #e9b96e;">"Angle: "</span> + <span style="color: #e090d7;">str</span>(X[0][1]))
+<span style="color: #fcaf3e;">f</span> = plt.figure()                        <span style="color: #73d216;"># </span><span style="color: #73d216;">start a figure</span>
+plt.imshow(X[0][0])                     <span style="color: #73d216;"># </span><span style="color: #73d216;">show the image</span>
+f.suptitle(<span style="color: #e9b96e;">"Angle: "</span> + <span style="color: #e090d7;">str</span>(X[0][1]))    <span style="color: #73d216;"># </span><span style="color: #73d216;">add figure title</span>
 <span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"road1.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">"png"</span>, bbox_inches=<span style="color: #e9b96e;">'tight'</span>)
 <span style="color: #fcaf3e;">f</span> = plt.figure()
 plt.imshow(X[1][0])
@@ -720,21 +729,21 @@ f.suptitle(<span style="color: #e9b96e;">"Angle: "</span> + <span style="color: 
 
 
 <div class="figure">
-<p><img src="road1.png" alt="road1.png" border="1" />
+<p><img src="road1.png" alt="road1.png" />
 </p>
 <p><span class="figure-number">Figure 3:</span> Large Negative Steering Angle</p>
 </div>
 
 
 <div class="figure">
-<p><img src="road2.png" alt="road2.png" border="1" />
+<p><img src="road2.png" alt="road2.png" />
 </p>
 <p><span class="figure-number">Figure 4:</span> Large Positive Steering Angle</p>
 </div>
 
 
 <div class="figure">
-<p><img src="road3.png" alt="road3.png" border="1" />
+<p><img src="road3.png" alt="road3.png" />
 </p>
 <p><span class="figure-number">Figure 5:</span> Neutral Steering Angle</p>
 </div>
@@ -748,7 +757,7 @@ channels (the RGB colorspace).
 
 <div class="org-src-container">
 
-<pre class="src src-python"><span style="color: #b4fa70;">print</span>(X[0][0].shape)
+<pre class="src src-python"><span style="color: #b4fa70;">print</span>(X[0][0].shape)  <span style="color: #73d216;"># </span><span style="color: #73d216;">X[0] is an (image,angle) sample. X[0][0] is just the image</span>
 </pre>
 </div>
 
@@ -786,21 +795,21 @@ out on the top by <a href="#coderef-sky60"class="coderef" onmouseover="CodeHighl
 
 
 <div class="figure">
-<p><img src="road4.png" alt="road4.png" border="1" />
+<p><img src="road4.png" alt="road4.png" />
 </p>
 <p><span class="figure-number">Figure 6:</span> Hood Crop: 20, Sky Crop:  60</p>
 </div>
 
 
 <div class="figure">
-<p><img src="road5.png" alt="road5.png" border="1" />
+<p><img src="road5.png" alt="road5.png" />
 </p>
 <p><span class="figure-number">Figure 7:</span> Hood Crop: 20, Sky Crop:  80</p>
 </div>
 
 
 <div class="figure">
-<p><img src="road6.png" alt="road6.png" border="1" />
+<p><img src="road6.png" alt="road6.png" />
 </p>
 <p><span class="figure-number">Figure 8:</span> Hood Crop: 20, Sky Crop:  100</p>
 </div>
@@ -821,7 +830,11 @@ training data.
 
 <p>
 Now, I have observed considerable discussion on the Slack
-channel for this course 
+channel for this course on the subject of using the additional
+camera images (left and right) along with a corresponding shift
+of the steering angles.  Frankly, I am skeptical about the merit
+of this strategy and shall avoid this practice, evaluate the
+outcome, and adopt it only if absolutely necessary.
 </p>
 
 <p>
@@ -829,27 +842,34 @@ We begin by conducting a very simple analysis of the target
 labels, which again are steering angles in the interval [-1,
 1].  In fact, as real-valued outputs it may be a stretch to call
 them "labels" and this is not really a classification problem.
-Neverthless in the interest of time we will adopt the term.  In
+Nevertheless in the interest of time we will adopt the term.  In
 any case,
 </p>
 
 <div class="org-src-container">
 
-<pre class="src src-python"><span style="color: #fcaf3e;">f</span> = plt.figure()
+<pre class="src src-python"><span style="color: #fcaf3e;">f</span> = plt.figure()                   
 <span style="color: #fcaf3e;">y1</span> = np.array([<span style="color: #e090d7;">float</span>(s[0]) <span style="color: #b4fa70;">for</span> s <span style="color: #b4fa70;">in</span> select(split(feed(<span style="color: #e9b96e;">"data/driving_log_all.csv"</span>)),[3])])
-<span style="color: #fcaf3e;">h</span> = plt.hist(y1,bins=100)
+<span style="color: #fcaf3e;">h</span> = plt.hist(y1,bins=100)          <span style="color: #73d216;"># </span><span style="color: #73d216;">plot histogram</span>
 <span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"hist1.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">'png'</span>, bbox_inches=<span style="color: #e9b96e;">'tight'</span>)
-describe(y1)
+<span style="color: #b4fa70;">print</span>(<span style="color: #e9b96e;">""</span>)
+pp.pprint(describe(y1)._asdict())  <span style="color: #73d216;"># </span><span style="color: #73d216;">print descriptive statistics</span>
 </pre>
 </div>
 
 <pre class="example">
-DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332506, variance=0.016599764281272529, skewness=-0.1302892457752191, kurtosis=6.311554102057668)
+&gt;&gt;&gt;
+OrderedDict([('nobs', 8036),
+             ('minmax', (-0.94269539999999996, 1.0)),
+             ('mean', 0.0040696440648332506),
+             ('variance', 0.016599764281272529),
+             ('skewness', -0.1302892457752191),
+             ('kurtosis', 6.311554102057668)])
 </pre>
 
 
 <div class="figure">
-<p><img src="hist1.png" alt="hist1.png" border="1" />
+<p><img src="hist1.png" alt="hist1.png" />
 </p>
 <p><span class="figure-number">Figure 9:</span> All Samples - No Reflection</p>
 </div>
@@ -859,13 +879,6 @@ The data have non-zero <i>mean</i> and <i>skewness</i>.  perhaps arising
 from a bias toward left-hand turns when driving on a closed
 track.
 </p>
-
-<ul class="org-ul">
-<li>mean=0.0040696440648332515
-</li>
-<li>skewness=-0.13028924577521922
-</li>
-</ul>
 
 <p>
 The data are dominated by small steering angles because the car
@@ -889,17 +902,24 @@ later section.
 <span style="color: #fcaf3e;">y2</span> = np.array([s <span style="color: #b4fa70;">for</span> s <span style="color: #b4fa70;">in</span> filterfalse(p,y1)])
 <span style="color: #fcaf3e;">h</span> = plt.hist(y2,bins=100)
 <span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"hist2.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">'png'</span>, bbox_inches=<span style="color: #e9b96e;">'tight'</span>)
-describe(y2)
+<span style="color: #b4fa70;">print</span>(<span style="color: #e9b96e;">""</span>)
+pp.pprint(describe(y2)._asdict())
 </pre>
 </div>
 
 <pre class="example">
-DescribeResult(nobs=3584, minmax=(-0.94269539999999996, 1.0), mean=0.0091718659514508933, variance=0.037178302717086116, skewness=-0.16657825969015194, kurtosis=1.1768785967587378)
+&gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt;
+OrderedDict([('nobs', 3584),
+             ('minmax', (-0.94269539999999996, 1.0)),
+             ('mean', 0.0091718659514508933),
+             ('variance', 0.037178302717086116),
+             ('skewness', -0.16657825969015194),
+             ('kurtosis', 1.1768785967587378)])
 </pre>
 
 
 <div class="figure">
-<p><img src="hist2.png" alt="hist2.png" border="1" />
+<p><img src="hist2.png" alt="hist2.png" />
 </p>
 <p><span class="figure-number">Figure 10:</span> abs(angle)&gt;0.01 - No Reflection</p>
 </div>
@@ -917,17 +937,24 @@ purposes only, I shall again mask out small angle samples.
 <span style="color: #fcaf3e;">y3</span> = np.append(y2, -y2)
 <span style="color: #fcaf3e;">h</span> = plt.hist(y3,bins=100)
 <span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"hist3.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">'png'</span>, bbox_inches=<span style="color: #e9b96e;">'tight'</span>)
-describe(y3)
+<span style="color: #b4fa70;">print</span>(<span style="color: #e9b96e;">""</span>)
+pp.pprint(describe(y3)._asdict())
 </pre>
 </div>
 
 <pre class="example">
-DescribeResult(nobs=7168, minmax=(-1.0, 1.0), mean=0.0, variance=0.03725725015081123, skewness=0.0, kurtosis=1.1400026599654964)
+&gt;&gt;&gt; &gt;&gt;&gt;
+OrderedDict([('nobs', 7168),
+             ('minmax', (-1.0, 1.0)),
+             ('mean', 0.0),
+             ('variance', 0.03725725015081123),
+             ('skewness', 0.0),
+             ('kurtosis', 1.1400026599654964)])
 </pre>
 
 
 <div class="figure">
-<p><img src="hist3.png" alt="hist3.png" border="1" />
+<p><img src="hist3.png" alt="hist3.png" />
 </p>
 <p><span class="figure-number">Figure 11:</span> abs(angle)&gt;0.01 - Full Reflection</p>
 </div>
@@ -935,22 +962,195 @@ DescribeResult(nobs=7168, minmax=(-1.0, 1.0), mean=0.0, variance=0.0372572501508
 <p>
 In one of the least-surprising outcomes of the year, after
 performing the reflection and joining operations, the data now
-are symmetrical.
+are symmetrical, with mean and skewness identically 0.
 </p>
-
-<ul class="org-ul">
-<li>mean=0.0
-</li>
-<li>skewness=0.0
-</li>
-</ul>
 
 <p>
 Of course, in this analysis I have only reflected the target
 labels.  If I apply this strategy to the training data,
 naturally I need to reflect along their horizontal axes the
-corresponding input images as well.
+corresponding input images as well.  In fact, that is the
+purpose of the <code>Xflip</code>, <code>yflip</code>, <code>rmap</code>, and <code>rflip</code> utility
+functions described above.  
 </p>
+
+<p>
+It turns out there is another approach to dealing with the bias
+and asymmetry in the training data.  In lieu of reflecting the
+data, which by definition imposes a 0 mean and 0 skewness, we
+can instead just randomly flip samples 50% of the time.  While
+that will not yield a perfectly balanced and symmetric data
+distribution, given enough samples it should give us a crude
+approximation.  Moreover, it saves us from having to store more
+images in memory, at the cost of some extra computation.
+Essentially, we are making the classic space-time trade-off
+between memory consumption and CPU usage.  
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #fcaf3e;">y4</span> = [y <span style="color: #b4fa70;">for</span> y <span style="color: #b4fa70;">in</span> rmap(yflip, islice(cycle(y2), 2*y1.shape[0]))]  <span style="color: #73d216;"># </span><span style="color: #73d216;">2 batches</span>
+<span style="color: #fcaf3e;">y5</span> = [y <span style="color: #b4fa70;">for</span> y <span style="color: #b4fa70;">in</span> rmap(yflip, islice(cycle(y2), 4*y1.shape[0]))]  <span style="color: #73d216;"># </span><span style="color: #73d216;">4 batches</span>
+<span style="color: #fcaf3e;">y6</span> = [y <span style="color: #b4fa70;">for</span> y <span style="color: #b4fa70;">in</span> rmap(yflip, islice(cycle(y2), 8*y1.shape[0]))]  <span style="color: #73d216;"># </span><span style="color: #73d216;">8 batches</span>
+<span style="color: #fcaf3e;">f</span> = plt.figure()
+<span style="color: #fcaf3e;">h</span> = plt.hist(y4,bins=100)
+<span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"hist5.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">'png'</span>, bbox_inches=<span style="color: #e9b96e;">'tight'</span>)
+<span style="color: #fcaf3e;">f</span> = plt.figure()
+<span style="color: #fcaf3e;">h</span> = plt.hist(y5,bins=100)
+<span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"hist6.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">'png'</span>, bbox_inches=<span style="color: #e9b96e;">'tight'</span>)
+<span style="color: #fcaf3e;">f</span> = plt.figure()
+<span style="color: #fcaf3e;">h</span> = plt.hist(y6,bins=100)
+<span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"hist7.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">'png'</span>, bbox_inches=<span style="color: #e9b96e;">'tight'</span>)
+<span style="color: #b4fa70;">print</span>(<span style="color: #e9b96e;">""</span>)
+pp.pprint(describe(y4)._asdict())
+<span style="color: #b4fa70;">print</span>(<span style="color: #e9b96e;">""</span>)
+pp.pprint(describe(y5)._asdict())
+<span style="color: #b4fa70;">print</span>(<span style="color: #e9b96e;">""</span>)
+pp.pprint(describe(y6)._asdict())
+</pre>
+</div>
+
+<pre class="example">
+&gt;&gt;&gt;
+OrderedDict([('nobs', 16072),
+	     ('minmax', (-1.0, 1.0)),
+	     ('mean', -0.00052772518417122953),
+	     ('variance', 0.037283229390251714),
+	     ('skewness', 0.008520498589019836),
+	     ('kurtosis', 1.1769644267914074)])
+
+OrderedDict([('nobs', 32144),
+	     ('minmax', (-1.0, 1.0)),
+	     ('mean', -0.0022488201157292191),
+	     ('variance', 0.037218482869856698),
+	     ('skewness', -0.050201681486988635),
+	     ('kurtosis', 1.1379036271452696)])
+
+OrderedDict([('nobs', 64288),
+	     ('minmax', (-1.0, 1.0)),
+	     ('mean', -0.00011066913374191124),
+	     ('variance', 0.037250831344353398),
+	     ('skewness', -0.01390556638239454),
+	     ('kurtosis', 1.1406077506908527)])
+</pre>
+
+<p>
+Here, we see that as increase the number of samples we draw from
+the underlying data set, while randomly flipping them, the mean
+tends to diminish.  The skewness does not behave quite so well,
+though a coarser smoothing kernel (larger bin sizes for the
+histograms) may help.  In any case, the following figures do
+suggest that randomly flipping the data and drawing larger
+sample sizes does help balance out the data.
+</p>
+
+
+<div class="figure">
+<p><img src="hist5.png" alt="hist5.png" />
+</p>
+<p><span class="figure-number">Figure 12:</span> abs(angle)&gt;0.01 - Random Flipping, Recycle: 2</p>
+</div>
+
+
+<div class="figure">
+<p><img src="hist6.png" alt="hist6.png" />
+</p>
+<p><span class="figure-number">Figure 13:</span> abs(angle)&gt;0.01 - Random Flipping, Recycle: 4</p>
+</div>
+
+
+<div class="figure">
+<p><img src="hist7.png" alt="hist7.png" />
+</p>
+<p><span class="figure-number">Figure 14:</span> abs(angle)&gt;0.01 - Random Flipping, Recycle: 8</p>
+</div>
+
+<p>
+The <code>sflip</code> utility function defined above flips not only the
+target labels&#x2014;the steering angles&#x2014;but also the images (as it
+must).  We check that by again displaying the 3 samples from
+<code>driving_log_overtrain.csv</code> as above, but this time with each of
+them flipped.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #fcaf3e;">X2</span> = [sflip(x) <span style="color: #b4fa70;">for</span> x <span style="color: #b4fa70;">in</span> X]
+<span style="color: #fcaf3e;">f</span> = plt.figure()                        
+plt.imshow(X2[0][0])                     
+f.suptitle(<span style="color: #e9b96e;">"Angle: "</span> + <span style="color: #e090d7;">str</span>(X2[0][1]))    
+<span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"road7.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">"png"</span>, bbox_inches=<span style="color: #e9b96e;">'tight'</span>)
+<span style="color: #fcaf3e;">f</span> = plt.figure()
+plt.imshow(X2[1][0])
+f.suptitle(<span style="color: #e9b96e;">"Angle: "</span> + <span style="color: #e090d7;">str</span>(X2[1][1]))
+<span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"road8.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">"png"</span>, bbox_inches=<span style="color: #e9b96e;">'tight'</span>)
+<span style="color: #fcaf3e;">f</span> = plt.figure()
+plt.imshow(X2[2][0])
+f.suptitle(<span style="color: #e9b96e;">"Angle: "</span> + <span style="color: #e090d7;">str</span>(X2[2][1]))
+<span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"road9.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">"png"</span>, bbox_inches=<span style="color: #e9b96e;">'tight'</span>)
+</pre>
+</div>
+
+
+<div class="figure">
+<p><img src="road7.png" alt="road7.png" />
+</p>
+<p><span class="figure-number">Figure 15:</span> Large Negative Steering Angle Flipped</p>
+</div>
+
+
+<div class="figure">
+<p><img src="road8.png" alt="road8.png" />
+</p>
+<p><span class="figure-number">Figure 16:</span> Large Positive Steering Angle Flipped</p>
+</div>
+
+
+<div class="figure">
+<p><img src="road9.png" alt="road9.png" />
+</p>
+<p><span class="figure-number">Figure 17:</span> Neutral Steering Angle Flipped</p>
+</div>
+
+<p>
+If we compare these 3 figures depicting the flipped samples from
+the <code>driving_log_overtrain.csv</code> set, with the original unflipped
+samples in the figures above we can confirm the expected
+results.  The images are indeed horizontally-reflected mirror
+images, and the corresponding steering angles indeed have their
+signs flipped (though, trivially for the neutral-steering
+case).  
+</p>
+
+<p>
+After that grueling ordeal, and armed with these results, we now
+can develop a strategy for presenting training data to the
+model.
+</p>
+
+<ol class="org-ol">
+<li>Start with the Udacity data and see how far we can get.
+</li>
+<li>Split the data into training and validation files using
+command-line tools.
+</li>
+<li>Use <code>itertools</code> and custom utilities, leaning heavily on
+generator expressions.
+</li>
+<li>Take advantage of the small data sizes by keeping the
+original data in memory.
+</li>
+<li>But, perform a crude "augmentation" by randomly flipping the
+data horizontally (both images and steering angles) and
+recycling the base data.
+</li>
+<li>Consider cropping the data to reduce the input sizes, reduce
+memory usage, reduce the model size, and hopefully remove
+superfluous information.
+</li>
+<li>Use only the center-camera data and see how far we can get. 
+</li>
+</ol>
 </div>
 </div>
 </div>
@@ -1044,9 +1244,9 @@ Return a Keras neural network model.
 
 
 <div class="figure">
-<p><img src="model.png" alt="model.png" border="1" />
+<p><img src="model.png" alt="model.png" />
 </p>
-<p><span class="figure-number">Figure 12:</span> CarND Neural-Net Architecture</p>
+<p><span class="figure-number">Figure 18:</span> CarND Neural-Net Architecture</p>
 </div>
 </div>
 </div>

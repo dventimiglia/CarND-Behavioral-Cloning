@@ -59,7 +59,7 @@
     Francisco (shown below)
 
   #+CAPTION: Project Lab
-  #+ATTR_HTML: :border 1 :height 50% :width 50%
+  #+ATTR_HTML: :height 50% :width 50%
   [[file:rig.jpg]]
 
   While tools like Keras and TensorFlow (really, TensorFlow) are
@@ -72,7 +72,7 @@
   it wasn't really necessary.
 
   Also, note that /everything was done in this one Org-mode file/.
-  This file does not mearly document the code.  This document /is/ the
+  This file does not merely document the code.  This document /is/ the
   code.  Like [[http://jupyter.org/][Jupyter]] notebooks, it is an example of [[https://en.wikipedia.org/wiki/Literate_programming][literate
   programming]], and the [[file:model.py][model.py]] file is /generated/ from this
   document.
@@ -285,12 +285,11 @@
       from scipy.stats import kurtosis, skew, describe
       import matplotlib.pyplot as plt
       import numpy as np
+      import pprint as pp
       import random
       #+END_SRC
 
       #+RESULTS:
-      : 
-      : >>> Using TensorFlow backend.
 
 ***** Utilities
 
@@ -385,12 +384,12 @@
 
       #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code
       def rcycle(iterable):
-          saved = []
+          saved = []                 # In-memory cache
           for element in iterable:
               yield element
               saved.append(element)
           while saved:
-              random.shuffle(saved)
+              random.shuffle(saved)  # Shuffle every batch
               for element in saved:
                     yield element
       #+END_SRC
@@ -415,8 +414,11 @@
       - split :: generator that splits lines into tuples based on a delimiter
       - select :: generator that selects out elements from tuples
       - load :: non-generator that reads an image file into a NumPy array
-      - hflip :: non-generator that flips a sample along its horizontal axis
-      - rflip :: non-generator that flips a sample horizontally 50% of the time
+      - Xflip :: non-generator that flips an input image horizontally
+      - yflip :: non-generator that flips a target label to its negative
+      - rmap :: generator that randomly applies or does not apply a
+                function with equal probability
+      - rflip :: generator that flips samples 50% of the time
       - fetch :: generator that loads index file entries into samples
       - group :: generator that groups input elements into lists
       - transpose :: generator that takes a generator of lists into a
@@ -429,8 +431,11 @@
       split = lambda lines, delimiter=",": (line.split(delimiter) for line in lines)
       select = lambda fields, indices: ([r[i] for i in indices] for r in fields)
       load = lambda f: np.asarray(Image.open(f))
-      hflip = lambda x: (x[0][:,::-1,:], -x[1])
-      rflip = lambda x: x if random.choice([True, False]) else flip(x)
+      Xflip = lambda x: x[:,::-1,:]
+      yflip = lambda x: -x
+      sflip = lambda s: (Xflip(s[0]), yflip(s[1]))
+      rmap = lambda f,g: (x if random.choice([True, False]) else f(x) for x in g)
+      rflip = lambda s: rmap(sflip, s)
       fetch = lambda records, base: ([load(base+f.strip()) for f in record[:1]]+[float(v) for v in record[1:]] for record in records)
       group = lambda items, n, fillvalue=None: zip_longest(*([iter(items)]*n), fillvalue=fillvalue)
       transpose = lambda tuples: (list(map(list, zip(*g))) for g in tuples)
@@ -450,7 +455,7 @@
       we are dealing with.  We know that they are RGB images, so let's
       load a few of them for display.  Here, we show the three frames
       taken from the =driving_log_overtrain.csv= file described
-      above---center camera only---labelled by their corresponding
+      above---center camera only---labeled by their corresponding
       steering angles.  As you can see, the image with a large
       negative angle seems to have the car on the extreme right edge
       of the road.  Perhaps the driver in this situation was executing
@@ -467,9 +472,9 @@
 
       #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code
       X = [x for x in fetch(select(split(feed("data/driving_log_overtrain.csv")), [0,3]), "data/")]
-      f = plt.figure()
-      plt.imshow(X[0][0])
-      f.suptitle("Angle: " + str(X[0][1]))
+      f = plt.figure()                        # start a figure
+      plt.imshow(X[0][0])                     # show the image
+      f.suptitle("Angle: " + str(X[0][1]))    # add figure title
       s = plt.savefig("road1.png", format="png", bbox_inches='tight')
       f = plt.figure()
       plt.imshow(X[1][0])
@@ -485,15 +490,12 @@
       : Text(0.5,0.98,'Angle: 0.0')
 
       #+CAPTION: Large Negative Steering Angle
-      #+ATTR_HTML: :border 1
       [[file:road1.png]]
 
       #+CAPTION: Large Positive Steering Angle
-      #+ATTR_HTML: :border 1
       [[file:road2.png]]
 
       #+CAPTION: Neutral Steering Angle
-      #+ATTR_HTML: :border 1
       [[file:road3.png]]
 
       Next, we get the shape of an image which, as we said above, is
@@ -502,7 +504,7 @@
       channels (the RGB colorspace).
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
-      print(X[0][0].shape)
+      print(X[0][0].shape)  # X[0] is an (image,angle) sample. X[0][0] is just the image
       #+END_SRC
 
       #+RESULTS:
@@ -534,20 +536,17 @@
 
       #+RESULTS:
       : 
-      : <matplotlib.image.AxesImage object at 0x7f0dcda13be0>
-      : <matplotlib.image.AxesImage object at 0x7f0dcda1a358>
-      : <matplotlib.image.AxesImage object at 0x7f0dcda5f780>
+      : <matplotlib.image.AxesImage object at 0x7f0dc1385588>
+      : <matplotlib.image.AxesImage object at 0x7f0dc15a7470>
+      : <matplotlib.image.AxesImage object at 0x7f0dc1385eb8>
 
       #+CAPTION: Hood Crop: 20, Sky Crop:  60
-      #+ATTR_HTML: :border 1
       [[file:road4.png]]
 
       #+CAPTION: Hood Crop: 20, Sky Crop:  80
-      #+ATTR_HTML: :border 1
       [[file:road5.png]]
 
       #+CAPTION: Hood Crop: 20, Sky Crop:  100
-      #+ATTR_HTML: :border 1
       [[file:road6.png]]
 
       I should pause here to address the issue of why we are only
@@ -563,36 +562,44 @@
       training data.  
 
       Now, I have observed considerable discussion on the Slack
-      channel for this course 
+      channel for this course on the subject of using the additional
+      camera images (left and right) along with a corresponding shift
+      of the steering angles.  Frankly, I am skeptical about the merit
+      of this strategy and shall avoid this practice, evaluate the
+      outcome, and adopt it only if absolutely necessary.
 
       We begin by conducting a very simple analysis of the target
       labels, which again are steering angles in the interval [-1,
       1].  In fact, as real-valued outputs it may be a stretch to call
       them "labels" and this is not really a classification problem.
-      Neverthless in the interest of time we will adopt the term.  In
+      Nevertheless in the interest of time we will adopt the term.  In
       any case,
 
-      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both
-      f = plt.figure()
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
+      f = plt.figure()                   
       y1 = np.array([float(s[0]) for s in select(split(feed("data/driving_log_all.csv")),[3])])
-      h = plt.hist(y1,bins=100)
+      h = plt.hist(y1,bins=100)          # plot histogram
       s = plt.savefig("hist1.png", format='png', bbox_inches='tight')
-      describe(y1)
+      print("")
+      pp.pprint(describe(y1)._asdict())  # print descriptive statistics
       #+END_SRC
 
       #+RESULTS:
-      : DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332506, variance=0.016599764281272529, skewness=-0.1302892457752191, kurtosis=6.311554102057668)
+      : 
+      : >>>
+      : OrderedDict([('nobs', 8036),
+      :              ('minmax', (-0.94269539999999996, 1.0)),
+      :              ('mean', 0.0040696440648332506),
+      :              ('variance', 0.016599764281272529),
+      :              ('skewness', -0.1302892457752191),
+      :              ('kurtosis', 6.311554102057668)])
 
       #+CAPTION: All Samples - No Reflection
-      #+ATTR_HTML: :border 1
       [[file:hist1.png]]
 
       The data have non-zero /mean/ and /skewness/.  perhaps arising
       from a bias toward left-hand turns when driving on a closed
       track.
-
-      - mean=0.0040696440648332515
-      - skewness=-0.13028924577521922
 
       The data are dominated by small steering angles because the car
       spends most of its time on the track in straightaways.  The
@@ -605,20 +612,27 @@
       actual training data as well, a subject we shall return to in a
       later section.
 
-      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
       f = plt.figure()
       p = lambda x: abs(x)<0.01
       y2 = np.array([s for s in filterfalse(p,y1)])
       h = plt.hist(y2,bins=100)
       s = plt.savefig("hist2.png", format='png', bbox_inches='tight')
-      describe(y2)
+      print("")
+      pp.pprint(describe(y2)._asdict())
       #+END_SRC
 
       #+RESULTS:
-      : DescribeResult(nobs=3584, minmax=(-0.94269539999999996, 1.0), mean=0.0091718659514508933, variance=0.037178302717086116, skewness=-0.16657825969015194, kurtosis=1.1768785967587378)
+      : 
+      : >>> >>> >>>
+      : OrderedDict([('nobs', 3584),
+      :              ('minmax', (-0.94269539999999996, 1.0)),
+      :              ('mean', 0.0091718659514508933),
+      :              ('variance', 0.037178302717086116),
+      :              ('skewness', -0.16657825969015194),
+      :              ('kurtosis', 1.1768785967587378)])
 
       #+CAPTION: abs(angle)>0.01 - No Reflection
-      #+ATTR_HTML: :border 1
       [[file:hist2.png]]
 
       A simple trick that I can play to remove this asymmetry---if I
@@ -626,32 +640,174 @@
       doubling our sample size in the process.  For illustration
       purposes only, I shall again mask out small angle samples.
 
-      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
       f = plt.figure()
       y3 = np.append(y2, -y2)
       h = plt.hist(y3,bins=100)
       s = plt.savefig("hist3.png", format='png', bbox_inches='tight')
-      describe(y3)
+      print("")
+      pp.pprint(describe(y3)._asdict())
       #+END_SRC
 
       #+RESULTS:
-      : DescribeResult(nobs=7168, minmax=(-1.0, 1.0), mean=0.0, variance=0.03725725015081123, skewness=0.0, kurtosis=1.1400026599654964)
+      : 
+      : >>> >>>
+      : OrderedDict([('nobs', 7168),
+      :              ('minmax', (-1.0, 1.0)),
+      :              ('mean', 0.0),
+      :              ('variance', 0.03725725015081123),
+      :              ('skewness', 0.0),
+      :              ('kurtosis', 1.1400026599654964)])
 
       #+CAPTION: abs(angle)>0.01 - Full Reflection
-      #+ATTR_HTML: :border 1
       [[file:hist3.png]]
 
       In one of the least-surprising outcomes of the year, after
       performing the reflection and joining operations, the data now
-      are symmetrical.
-
-      - mean=0.0
-      - skewness=0.0
+      are symmetrical, with mean and skewness identically 0.
 
       Of course, in this analysis I have only reflected the target
       labels.  If I apply this strategy to the training data,
       naturally I need to reflect along their horizontal axes the
-      corresponding input images as well.
+      corresponding input images as well.  In fact, that is the
+      purpose of the =Xflip=, =yflip=, =rmap=, and =rflip= utility
+      functions described above.  
+
+      It turns out there is another approach to dealing with the bias
+      and asymmetry in the training data.  In lieu of reflecting the
+      data, which by definition imposes a 0 mean and 0 skewness, we
+      can instead just randomly flip samples 50% of the time.  While
+      that will not yield a perfectly balanced and symmetric data
+      distribution, given enough samples it should give us a crude
+      approximation.  Moreover, it saves us from having to store more
+      images in memory, at the cost of some extra computation.
+      Essentially, we are making the classic space-time trade-off
+      between memory consumption and CPU usage.  
+
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
+      y4 = [y for y in rmap(yflip, islice(cycle(y2), 2*y1.shape[0]))]  # 2 batches
+      y5 = [y for y in rmap(yflip, islice(cycle(y2), 4*y1.shape[0]))]  # 4 batches
+      y6 = [y for y in rmap(yflip, islice(cycle(y2), 8*y1.shape[0]))]  # 8 batches
+      f = plt.figure()
+      h = plt.hist(y4,bins=100)
+      s = plt.savefig("hist5.png", format='png', bbox_inches='tight')
+      f = plt.figure()
+      h = plt.hist(y5,bins=100)
+      s = plt.savefig("hist6.png", format='png', bbox_inches='tight')
+      f = plt.figure()
+      h = plt.hist(y6,bins=100)
+      s = plt.savefig("hist7.png", format='png', bbox_inches='tight')
+      print("")
+      pp.pprint(describe(y4)._asdict())
+      print("")
+      pp.pprint(describe(y5)._asdict())
+      print("")
+      pp.pprint(describe(y6)._asdict())
+      #+END_SRC
+
+      #+RESULTS:
+      #+begin_example
+
+      >>>
+      OrderedDict([('nobs', 16072),
+		   ('minmax', (-1.0, 1.0)),
+		   ('mean', -0.00052772518417122953),
+		   ('variance', 0.037283229390251714),
+		   ('skewness', 0.008520498589019836),
+		   ('kurtosis', 1.1769644267914074)])
+
+      OrderedDict([('nobs', 32144),
+		   ('minmax', (-1.0, 1.0)),
+		   ('mean', -0.0022488201157292191),
+		   ('variance', 0.037218482869856698),
+		   ('skewness', -0.050201681486988635),
+		   ('kurtosis', 1.1379036271452696)])
+
+      OrderedDict([('nobs', 64288),
+		   ('minmax', (-1.0, 1.0)),
+		   ('mean', -0.00011066913374191124),
+		   ('variance', 0.037250831344353398),
+		   ('skewness', -0.01390556638239454),
+		   ('kurtosis', 1.1406077506908527)])
+      #+end_example
+
+      Here, we see that as increase the number of samples we draw from
+      the underlying data set, while randomly flipping them, the mean
+      tends to diminish.  The skewness does not behave quite so well,
+      though a coarser smoothing kernel (larger bin sizes for the
+      histograms) may help.  In any case, the following figures do
+      suggest that randomly flipping the data and drawing larger
+      sample sizes does help balance out the data.
+
+      #+CAPTION: abs(angle)>0.01 - Random Flipping, Recycle: 2
+      [[file:hist5.png]]
+
+      #+CAPTION: abs(angle)>0.01 - Random Flipping, Recycle: 4
+      [[file:hist6.png]]
+
+      #+CAPTION: abs(angle)>0.01 - Random Flipping, Recycle: 8
+      [[file:hist7.png]]
+
+      The =sflip= utility function defined above flips not only the
+      target labels---the steering angles---but also the images (as it
+      must).  We check that by again displaying the 3 samples from
+      =driving_log_overtrain.csv= as above, but this time with each of
+      them flipped.
+
+      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code
+      X2 = [sflip(x) for x in X]
+      f = plt.figure()                        
+      plt.imshow(X2[0][0])                     
+      f.suptitle("Angle: " + str(X2[0][1]))    
+      s = plt.savefig("road7.png", format="png", bbox_inches='tight')
+      f = plt.figure()
+      plt.imshow(X2[1][0])
+      f.suptitle("Angle: " + str(X2[1][1]))
+      s = plt.savefig("road8.png", format="png", bbox_inches='tight')
+      f = plt.figure()
+      plt.imshow(X2[2][0])
+      f.suptitle("Angle: " + str(X2[2][1]))
+      s = plt.savefig("road9.png", format="png", bbox_inches='tight')
+      #+END_SRC
+
+      #+RESULTS:
+      : Text(0.5,0.98,'Angle: -0.0')
+
+      #+CAPTION: Large Negative Steering Angle Flipped
+      [[file:road7.png]]
+
+      #+CAPTION: Large Positive Steering Angle Flipped
+      [[file:road8.png]]
+
+      #+CAPTION: Neutral Steering Angle Flipped
+      [[file:road9.png]]
+
+      If we compare these 3 figures depicting the flipped samples from
+      the =driving_log_overtrain.csv= set, with the original unflipped
+      samples in the figures above we can confirm the expected
+      results.  The images are indeed horizontally-reflected mirror
+      images, and the corresponding steering angles indeed have their
+      signs flipped (though, trivially for the neutral-steering
+      case).  
+
+      After that grueling ordeal, and armed with these results, we now
+      can develop a strategy for presenting training data to the
+      model.
+
+      1. Start with the Udacity data and see how far we can get.
+      2. Split the data into training and validation files using
+         command-line tools.
+      3. Use =itertools= and custom utilities, leaning heavily on
+         generator expressions.
+      4. Take advantage of the small data sizes by keeping the
+         original data in memory.
+      5. But, perform a crude "augmentation" by randomly flipping the
+         data horizontally (both images and steering angles) and
+         recycling the base data.
+      6. Consider cropping the data to reduce the input sizes, reduce
+         memory usage, reduce the model size, and hopefully remove
+         superfluous information.
+      7. Use only the center-camera data and see how far we can get. 
 
 *** Implementation
 
@@ -765,7 +921,6 @@
       #+RESULTS:
 
       #+CAPTION: CarND Neural-Net Architecture
-      #+ATTR_HTML: :border 1
       [[file:model.png]]
 
 *** Training
@@ -903,4 +1058,6 @@
 #  LocalWords:  MaxPool FC keras Conv MaxPooling AveragePooling json
 #  LocalWords:  subsample relu Param params trainingfile rflip init
 #  LocalWords:  HyperParameters validationfile mse adam traingen nb
-#  LocalWords:  validgen
+#  LocalWords:  validgen unpiloted Lenovo IdeaPad GPUs aws Jupyter eb
+#  LocalWords:  pprint Xflip yflip rmap sflip centerline colorspace
+#  LocalWords:  asdict OrderedDict unflipped
