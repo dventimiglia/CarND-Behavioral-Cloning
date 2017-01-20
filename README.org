@@ -28,11 +28,7 @@
 #+ATTR_HTML: :width 100%
 [[file:robotcar.jpg]]
 
-* What
-
-* Why
-
-* How
+* Introduction
 
   The method is quite simple.  We somehow acquire training
   data---perhaps by recording it ourselves---in a computerized driving
@@ -290,6 +286,8 @@
       #+END_SRC
 
       #+RESULTS:
+      : 
+      : >>> Using TensorFlow backend.
 
 ***** Utilities
 
@@ -393,6 +391,8 @@
               for element in saved:
                     yield element
       #+END_SRC
+
+      #+RESULTS:
 
       If we invoke =rcycle= on a sequence drawn from the interval
       [0,5), taken in 3 batches for a total of 15 values we can see
@@ -811,19 +811,145 @@
 
 *** Implementation
 
+    There are many approaches to selecting or developing a model.  The
+    one I took was to assume that there is wisdom and experience
+    already embedded in the Deep Learning models that already have
+    been developed in the autonomous-vehicle community.  I decided to
+    choose one of those models as a starting point, and then build off
+    of it or adapt it as needed.  There are many to choose from, but
+    two well-known and often-used ones are a [[https://github.com/commaai/research/blob/master/train_steering_model.py][model]] from [[http://comma.ai/][comma.ai]] and a
+    [[https://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf][model]] from [[https://www.nvidia.com/en-us/deep-learning-ai/developer/?ncid%3Dpa-pai-cs27dl-4165&gclid%3DCM37n4LQ0dECFUWVfgodzMsIZw][NVIDIA]].  I even considered adapting Yann LeCun's [[http://yann.lecun.com/exdb/mnist/][MNIST
+    model]] for recognizing hand-written digits and even my own
+    TensorFlow model for Traffic-Sign classification.  In the end, I
+    chose the NVIDIA model, since it is relatively simple, it is
+    well-tested, and it reportedly produces good results.  
+
+    In general, I observe several salient facts about the NVIDIA
+    model.
+
+    - It consists of 9 layers, including a normalization layer, 5
+      convolutional layers, and 3 fully-connected layers.
+    - The input image is split into YUV planes.
+    - The normalization layer is non-trainable.
+    - The 5 convolutional layers have 3 with a 2x2 stride and 5x5
+      kernel and 2 non-strided with a 3x3 kernel.
+    - The convolutional layers increase in depth of filters while
+      decreasing the image size.
+    - Following the convolutional layers is non-trainable flattening
+      layer.
+    - The flattening layer feeds into the sequence of 3
+      fully-connected layers.
+    - The fully-connected layers decrease in hidden-units.
+    - The last fully-connected layer feeds into a single non-trainable
+      node to produce real-valued output (steering angles).
+    - This being essentially a regression problem rather than a
+      classification problem, the model does not terminate with a
+      [[https://en.wikipedia.org/wiki/Sigmoid_function][sigmoid]] activation function and/or [[https://en.wikipedia.org/wiki/Softmax_function][softmax]] function and does not
+      employ [[https://en.wikipedia.org/wiki/One-hot][one-hot encoding]].
+    - While presumably they use activation functions within their
+      network, the NVIDIA researches do not seem to specify which
+      activation function(s) they use.
+    - Likewise, they seem not to use [[https://en.wikipedia.org/wiki/Convolutional_neural_network#Pooling_layer][pooling]] layers or [[https://en.wikipedia.org/wiki/Convolutional_neural_network#Dropout][dropout]]
+      layers.
+
+    In addition to their model architecture the NVIDIA researchers
+    also discuss augmentation and training.  
+
+    - They augment their data by adding artificial shifts and
+      rotations.
+    - They transform their training data to account for the human
+      drivers' possible departure from what they call the "ground
+      truth", which is the road's centerline.
+    - They train their model by minimizing the mean squared error
+      ("mse") between the steering command output by the network and
+      the command in the target data.  These correspond to our
+      steering angles.
+
+    Finally, I observe some aspects of the comma.ai model, by way of
+    comparing and contrasting with the NVIDIA model.
+
+    - The model uses the ELU [[https://en.wikipedia.org/wiki/Activation_function][activation function]] in its layers.
+    - The model normalizes the data like the NVIDIA model does, but it
+      is obvious that the data are normalized so that each of the RGB
+      pixel values in [0,255] is scaled to real-valued numbers in
+      [-1.0, 1.0].
+    - The comma.ai researchers use the [[https://keras.io/optimizers/#adam][ADAM]] optimizer, a nice
+      general-purpose optimizer with good performance and which does
+      not require the specification of learning-rate parameters.
+    - They also optimize the mse.
+
+    Synthesizing some of these concepts, I experimented with a family
+    of models that all had these general properties.
+
+    - stacks of scaling, convolutional, flattening, fully-connected,
+      and readout layers
+    - start with a non-trainable normalization layer that scales the
+      input so that each pixel color channel is in [-1.0, 1.0].
+    - no sigmoid, softmax, or one-hot encoding
+    - use either ELU or RELU activation functions
+    - consider adding pooling and dropout layers
+    - optimize mse using the ADAM optimizer so that at least I do not
+      have to worry about learning rate parameters
+
+    Of note, I also have these departures from the aforementioned
+    architectures.
+
+    - experiment with different cropping sizes and strategies
+    - add a layer or layers (non-trainable) to do the cropping right
+      in the model
+    - experiment with adding a layer or layers (non-trainable) to
+      reduce the image size before feeding the data into the trainable
+      convolutional layers
+    - experiment with a non-trainable readout layer using the [[https://en.wikipedia.org/wiki/Activation_function][tanh]]
+      activation function to constrain the output to [-1, 1],
+      appropriate for our steering angles
+    - little or no augmentation, though the cropping and especially
+      the image flipping (if used) might be considered augmentation of
+      a sort
+    - no manual transformation of the training data to a "ground
+      truth" like the NVIDIA researchers did
+    - the images are encoded in RGB planes rather than YUV planes
+      unless it becomes necessary to do so
+
+    With all of these considerations in mind, I conducted many
+    experiments with different combinations of factors, a saga that I
+    will not recount here.  In the end, the model that I settled on
+    had these features.
+
+    - non-trainable cropping, resizing, and normalization layers
+    - alternating convolutional and max-pooling layers
+    - one dropout layer after the convolutional/max-pooling layers and
+      before the flattening layer
+    - fully-connected layers
+    - non-trainable readout layer with no activation
+    - RELU activations rather than ELU activations
+    - center-camera only unless otherwise needed
+
+    Finally, I should add that for image augmentation I briefly
+    considered performing random shifts of the input data, but in the
+    end decided that it was not necessary.
+
 ***** Model
 
-      - Crop :: crop to region (/non-trainable/)
-      - Resize :: reduce scale (/non-trainable/)
-      - Normalize :: scale values to [-1, 1] (/non-trainable/)
-      - Convolution :: learn spatial features and compress
-      - MaxPool :: reduce model size
-      - Dropout :: add regularization (/non-trainable/)
-      - Flatten :: stage to fully-connected layers (/non-trainable/)
-      - FC :: fully-connected layers
-      - Readout :: single node steering angle (/non-trainable/)
+      The actual model is laid out in Keras code below.  It is coded
+      as a function that returns a Keras =model=.  Note that the
+      function does take the =input_shape= and the =crop_shape=.
+      Though I could perform image resizing (such as with
+      =cv2.resize=) and cropping outside of the model, I actually do
+      them inside the model.  This has several advantages.
 
-      Return a Keras neural network model.
+      1. It simplifies the code.
+      2. Whatever cropping/resizing occurs /must/ also be done in the
+         network service.  Performing these operations with the model
+         means that this is handled automatically, for free.
+      3. In principle, we might realize better training performance as
+         the cropping/resizing occur in the GPUs rather than in the
+         CPU.  
+
+      This means that the =input_shape= is not really a
+      hyper-parameter, since it is just the original image size, which
+      as we already have seen is (160, 320, 3).  The =crop_shape=
+      still is a hyper-parameter, of course.
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def CarND(input_shape, crop_shape):
@@ -867,11 +993,8 @@
 	  return model
       #+END_SRC
 
-      #+RESULTS:
-
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
-      CarND([160, 320, 3], ((80,20),(1,1))).summary()
-      #+END_SRC
+      Here is a summary of the actual model, as generated directly by
+      =model.summary= in Keras.
 
       #+RESULTS:
       #+begin_example
@@ -914,6 +1037,9 @@
       ____________________________________________________________________________________________________
       #+end_example
 
+      And, here is a visualization of the model, as provided by the
+      =plot= function in Keras.
+
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       plot(CarND([160, 320, 3], ((80,20),(1,1))), to_file="model.png", show_shapes=True)
       #+END_SRC
@@ -927,26 +1053,30 @@
 
 ***** Data Pipeline
 
-      Create a data-processing pipeline.  The 'trainingfile'
-      parameter is the name of a CSV index file specifying samples,
-      with fields for image filenames and for steering angles.  The
-      'base_path' parameter is the directory path for the image
-      filenames.  The pipeline itself is a generator (which is an
-      iterable), where each item from the generator is a batch of
-      samples (X,y).  X and y are each NumPy arrays, with X as a batch
-      of images and y as a batch of outputs.  Finally, augmentation
-      may be performed if a training pipeline is desired, determined
-      by the 'training' parameter.  Training pipelines have their
-      images randomly flipped along the horizontal axis.
+      The data-processing pipeline is rather simple, given the
+      composeable generator and non-generator utility functions
+      defined above.  The only real wrinkle is that we may want to do
+      random sample flipping (of both the image and its corresponding
+      steering angle) during training but we probably do not need to
+      do so for the validation data.  Since assembling the pipeline is
+      otherwise very similar for both the training and validation
+      data, and both should result in a generator that yields batches
+      consumable by the [[https://keras.io/models/sequential/][=model.fit_generator=]] function of Keras's
+      Sequential model, both pipelines are assembled in a function.
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def pipeline(theta, training=False):
+          # randomly cycle through cached, loaded samples (images + angles)
           samples = select(rcycle(fetch(select(split(feed(theta.trainingfile)), [0,3]), theta.base_path)), [0,1])
+          # for training we might do sample flipping but no need for validation
           if training:
               if theta.flip:
                   samples = (sflip(x) for x in samples)
+          # group the samples
           groups = group(samples, theta.batch_size)
+          # turn the groups into batches (NumPy arrays)
           batches = batch(transpose(groups))
+          # return the batch generator
           return batches
       #+END_SRC
 
@@ -954,14 +1084,62 @@
 
 ***** Training
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
+      With functions for constructing the model architecture and the
+      data pipelines in hand, training is very simple.  One additional
+      item to point out is this.  There can be a proliferation of
+      /literal/ hyper-parameters (crop sizes, epochs, bath sizes,
+      whether or not to do random flipping, etc.) and passing these
+      parameters among all the related and nested functions can be a
+      nuisance.  I find it convenient to collect such parameters into
+      a handy data structure that can be instantiated as a global
+      variable, and then all of the functions can access the
+      parameters that they need.  In Python, two obvious candidates
+      that leap to mind are [[https://docs.python.org/3/tutorial/datastructures.html][dictionaries]] and [[https://docs.python.org/3/tutorial/classes.html][classes]].  Python
+      dictionaries are slightly easier to create, but slightly more of
+      a nuisance to use, whereas the reverse is true for Python
+      classes/objects.  I elected to use an global instance =theta= of
+      a class =HyperParameters=, but this is not considered to be a
+      very important point.
+
+      Another point worth discussing relates to "cropping."  As
+      discussed above in the data analysis and architecture sections
+      and below in the summary, cropping of the data is an option that
+      I took.  The [[(crop_shape)][=theta.crop_shape=]] hyper-parameter that appears
+      below sets the cropping window, and it works as follows.
+
+      The =theta.crop_shape= parameter is dictated by the [[https://keras.io/layers/convolutional/#cropping2d][Cropping2D]]
+      layer to be a tuple of tuples.  The first tuple sets the number
+      of pixels to be cropped from the top and bottom edges along the
+      image height direction, and the second tuple sets the number of
+      pixels to be cropped from the left and right edges of the width
+      direction.  As you can see, the top and bottom are cropped with
+      =(80, 20)= which as in the figure above, removes much of the
+      image above the horizon and some of the image where the car hood
+      is superimposed.  Those values were chosen by experimentation,
+      and the choices are discussed below.  However, the =(1,1)= value
+      for the width croping merits some explanation.  In principle, I
+      saw no reason to crop anything in the width direction.  However,
+      Keras has a bug (fixed but not yet in a stable release) such
+      that Cropping2D fails when any of the four elements in the tuple
+      of tuples is 0.  Hence, the 1 pixel crops on the left and right
+      edges.  
+
+      First, as a sanity check, we conduct a small training (3 epochs,
+      30 samples per epoch, batch size 10) of the data in
+      =driving_log_overtrain.csv=.  This is just to "get our feet wet"
+      and quickly to verify that the code written above even works.
+      Note that we use the same file for the validation set.  This is
+      just a test, so it does not really matter what we use for the
+      validation set.  
+
+      #+BEGIN_SRC python -r :results output :session :tangle model.py :comments org :exports code
       class HyperParameters:
           def __init__(self):
               return
 
       theta = HyperParameters()
       theta.input_shape = [160, 320, 3]
-      theta.crop_shape = ((80,20),(1,1))
+      theta.crop_shape = ((80,20),(1,1))   # (ref:crop_shape)
       theta.samples_per_epoch = 30
       theta.valid_samples_per_epoch = 30
       theta.epochs = 3
@@ -987,6 +1165,13 @@
           verbose=2,
 	  nb_val_samples=theta.valid_samples_per_epoch)
       #+END_SRC
+
+      Next, we perform the actual training on the
+      =driving_log_train.csv= file, validating against the
+      =driving_log_validation.csv= file.  After /this/ training we
+      actually save the model to =model.json= and the model weights to
+      =model.h5=, files suitable for input into the network service in
+      =drive.py=.  
 
       #+RESULTS:
       : 
@@ -1042,6 +1227,7 @@
       : 27s - loss: 0.0099 - val_loss: 0.0092
       : ... ... 4042
 
+* Summary
 
 #  LocalWords:  CarND Keras Udacity Nano num pri timestamp todo url
 #  LocalWords:  DOCTYPE xhtml src ATTR linux wget py MACOSX nc rf CSV
@@ -1057,4 +1243,5 @@
 #  LocalWords:  HyperParameters validationfile mse adam traingen nb
 #  LocalWords:  validgen unpiloted Lenovo IdeaPad GPUs aws Jupyter eb
 #  LocalWords:  pprint Xflip yflip rmap sflip centerline colorspace
-#  LocalWords:  asdict OrderedDict unflipped
+#  LocalWords:  asdict OrderedDict unflipped ai NVIDIA Yann LeCun's
+#  LocalWords:  MNIST YUV strided sigmoid softmax ELU tanh
