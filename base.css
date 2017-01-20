@@ -31,17 +31,17 @@ a:hover {
     color: WhiteSmoke;
 }
 
-ul {
-    list-style-type: none;
-}
+/* ul { */
+/*     list-style-type: none; */
+/* } */
 
-ul.org-ul {
-    font-family: monospace;
-}
+/* ul.org-ul { */
+/*     font-family: monospace; */
+/* } */
 
-ul.org-ul li a {
-    font-family: Quattrocento, Georgia, serif;
-}    
+/* ul.org-ul li a { */
+/*     font-family: Quattrocento, Georgia, serif; */
+/* }     */
 
 pre.src {
     background-color: #2B2B2B;
@@ -70,7 +70,7 @@ ul.navigation {
 }
 
 .title {
-    text-align: left;
+    font-size: 400%;
 }
 
 .abstract {

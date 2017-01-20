@@ -23,9 +23,7 @@
 #+HTML_CONTAINER: div
 #+HTML_DOCTYPE: xhtml-strict
 #+HTML_HEAD_EXTRA: <style>@import 'https://fonts.googleapis.com/css?family=Quattrocento';</style>
-#+HTML_HEAD_EXTRA: <style>body {font-family: Quattrocento, Georgia, serif; background-color: Linen; font-size:large; max-width:50em}</style>
-#+HTML_HEAD_EXTRA: <style>body {margin: auto; padding:0.5em;}
-#+HTML_HEAD_EXTRA: <style>pre.src {background-color: #2B2B2B; color: #a9b7c6; margin: 0; overflow-x: scroll;}</style>
+#+HTML_HEAD_EXTRA: <link rel="stylesheet" type="text/css" href="base.css"/>
 
 #+ATTR_HTML: :width 100%
 [[file:robotcar.jpg]]
