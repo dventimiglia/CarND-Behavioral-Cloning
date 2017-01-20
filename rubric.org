@@ -1,11 +1,11 @@
-* TODO Quality of Code
+* DONE Quality of Code
 *** DONE Is the code functional?
 ***** DONE The model provided can be used to successfully operate the simulation.
-*** TODO Is the code usable and readable?
+*** DONE Is the code usable and readable?
 ***** DONE The code in =model.py= uses a Python generator.
 ***** DONE The =model.py= code is clearly organized.
 ***** DONE The =model.py= code has comments included where needed.
-* TODO Model Architecture and Training Strategy
+* DONE Model Architecture and Training Strategy
 *** DONE Has an appropriate model architecture been employed for the task?
 ***** DONE The data is normalized in the model.
 ***** DONE The neural network uses convolution layers with appropriate filter sizes.
@@ -13,7 +13,7 @@
 *** DONE Has an attempt been made to reduce overfitting of the model?
 ***** DONE Train/validation/test splits have been used.
 ***** DONE The model uses dropout layers or other methods to reduce overfitting.
-*** TODO Have the model parameters been tuned appropriately?
+*** DONE Have the model parameters been tuned appropriately?
 ***** DONE Learning rate parameters are chosen with explanation, or an Adam optimizer is used.
 *** DONE Is the training data chosen appropriately?
 ***** DONE Training data has been chosen to induce the desired behavior in the simulation (i.e. keeping the car on the track).
@@ -21,16 +21,16 @@
 *** TODO Is the solution design documented?
 ***** TODO The README thoroughly discusses the approach taken for deriving and designing a model architecture fit for solving the given problem.
 *** TODO Is the model architecture documented?
-***** TODO The README provides sufficient details of the characteristics and qualities of the architecture:
+***** DONE The README provides sufficient details of the characteristics and qualities of the architecture:
       1. type of model
       2. number of layers
       3. size of each layer
       4. Visualizations emphasizing particular qualities of the architecture
 *** TODO Is the creation of the training dataset and training process documented?
 ***** TODO The README describes how the model was trained.
-***** TODO The README describes what the characteristics of the dataset are.
-***** TODO Include information such as how the dataset was generated and examples of images from the dataset.
-* TODO Simulation
-*** TODO Is the car able to navigate correctly on test data?
-***** TODO No tire may leave the drivable portion of the track surface.
-***** TODO The car may not pop up onto ledges or roll over any surfaces that would otherwise be considered unsafe.
+***** DONE The README describes what the characteristics of the dataset are.
+***** DONE Include information such as how the dataset was generated and examples of images from the dataset.
+* DONE Simulation
+*** DONE Is the car able to navigate correctly on test data?
+***** DONE No tire may leave the drivable portion of the track surface.
+***** DONE The car may not pop up onto ledges or roll over any surfaces that would otherwise be considered unsafe.

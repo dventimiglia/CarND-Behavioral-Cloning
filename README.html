@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>CarND Project 3:  Behavioral Cloning</title>
-<!-- 2017-01-19 Thu 12:33 -->
+<!-- 2017-01-19 Thu 17:39 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="David A. Ventimiglia" />
@@ -153,7 +153,70 @@ for the JavaScript code in this tag.
 <div id="outline-container-sec-3" class="outline-2">
 <h2 id="sec-3">How</h2>
 <div class="outline-text-2" id="text-3">
-</div><div id="outline-container-sec-3-1" class="outline-3">
+<p>
+The method is quite simple.  We somehow acquire training
+data&#x2014;perhaps by recording it ourselves&#x2014;in a computerized driving
+simulator.  The training data comprise images of the road as seen
+through the simulated car, along with corresponding control inputs
+(in this case, just the steering angle).  The training data are used
+to train a <a href="https://en.wikipedia.org/wiki/Deep_learning">Deep Learning</a> <a href="https://en.wikipedia.org/wiki/Artificial_neural_network">neural network</a> model so that it recognizes
+road/car configurations and generates the appropriate steering
+angle.  The model is then used to generate inputs (steering angles)
+in real-time for the simulation, unpiloted by a human driver.
+</p>
+
+<p>
+Here is an incomplete list of the tools that I used in my laboratory
+for this experiment.
+</p>
+
+<ul class="org-ul">
+<li><a href="https://keras.io/">Keras</a> - Deep Learning toolkit for Python
+</li>
+<li><a href="https://www.tensorflow.org/">TensorFlow</a> - High-Performance numerical computation library for
+Python and backend for Keras.
+</li>
+<li>Unix command-line tools - handy for data pre-processing
+</li>
+<li><a href="https://www.gnu.org/software/emacs/">Emacs</a> - indispensable coding and writing environment
+</li>
+<li><a href="http://orgmode.org/">Org mode</a> - indispensable writing and publishing environment for
+Emacs
+</li>
+<li><a href="http://shop.lenovo.com/us/en/laptops/ideapad/u-series/u310/">Lenovo IdeaPad U310</a> - somewhat ancient laptop
+</li>
+<li><a href="https://www.milibrary.org/">The Mechanic's Institute Library</a> - a calm oasis in downtown San
+Francisco (shown below)
+</li>
+</ul>
+
+
+<div class="figure">
+<p><img src="rig.jpg" alt="rig.jpg" border="1" height="50%" width="50%" />
+</p>
+<p><span class="figure-number">Figure 1:</span> Project Lab</p>
+</div>
+
+<p>
+While tools like Keras and TensorFlow (really, TensorFlow) are
+tailor-made for modern high-performance parallel numerical
+computation using <a href="https://en.wikipedia.org/wiki/Graphics_processing_unit">GPUs</a>, environments that are easily-obtained with
+cloud-computing environments like <a href="https://aws.amazon.com/s/dm/optimization/server-side-test/sem-generic/free-b/?sc_channel=PS&sc_campaign=acquisition_US&sc_publisher=google&sc_medium=cloud_computing_hv_b&sc_content=aws_core_e_test_q32016&sc_detail=amazon%2520-%2520aws&sc_category=cloud_computing&sc_segment=102882732282&sc_matchtype=e&sc_country=US&s_kwcid=AL!4422!3!102882732282!e!!g!!amazon%2520-%2520aws&ef_id=WHrLLwAABAl9uhYF:20170120011018:s">Amazon AWS</a>, everything in this
+experiment was conducted just on this one laptop.  While better
+hardware would be almost certainly be essential for real Deep
+Learning applications and autonomous vehicles, in this toy problem
+it wasn't really necessary.
+</p>
+
+<p>
+Also, note that <i>everything was done in this one Org-mode file</i>.
+This file does not mearly document the code.  This document <i>is</i> the
+code.  It is an example of <a href="https://en.wikipedia.org/wiki/Literate_programming">literate programming</a>, and the
+<a href="model.py">model.py</a> file is <i>generated</i> from this document.  
+</p>
+</div>
+
+<div id="outline-container-sec-3-1" class="outline-3">
 <h3 id="sec-3-1">Approach</h3>
 </div>
 
@@ -164,7 +227,39 @@ for the JavaScript code in this tag.
 <h4 id="sec-3-2-1">Collection and Preparation</h4>
 <div class="outline-text-4" id="text-3-2-1">
 <p>
-Get the simulators.
+Behavioral cloning relies on training neural networks with data
+exhibiting the very behavior you wish to clone.  One way to
+achieve that for this project is to use a driving simulator
+provided by Udacity, which in its "training mode" can emit a
+stream of data samples as the user operates the car.  Each
+sample consists of a triplet of images and a single floating
+point number in the interval [-1, 1], recording the view and the
+steering angle for the simulation and car at regular intervals.
+The three images are meant to be from three "cameras" mounted on
+the simulated car's left, center, and right, giving three
+different aspects of the scene and in principle providing
+stereoscopic depth information.
+</p>
+
+<p>
+Moreover, the driving simulator also has an "autonomous mode" in
+which the car interacts with a network server to exchange
+telemetry that guides the car.  The simulator sends the network
+service camera images and the network server is expected to
+reply with steering angles.  So, not only is the driving
+simulator critical for understanding the problem and helpful for
+obtaining training data, it is absolutely essential for
+evaluating the solution.
+</p>
+
+<p>
+Actually, Udacity provides not <a href="https://d17h27t6h515a5.cloudfront.net/topher/2016/November/5831f0f7_simulator-linux/simulator-linux.zip">one</a> but <a href="https://d17h27t6h515a5.cloudfront.net/topher/2017/January/587527cb_udacity-sdc-udacity-self-driving-car-simulator-dominique-development-linux-desktop-64-bit-5/udacity-sdc-udacity-self-driving-car-simulator-dominique-development-linux-desktop-64-bit-5.zip">two</a> simulators.  The
+first is the stock simulator and the second is an enhanced
+simulator, whose ability to use a computer mouse as input is
+very important for acquiring good training data with smoothly
+varying steering angles.  So, why not get both?  Here, I
+download and unzip the Linux versions into sub-directories
+<code>simulator-linux</code> and <code>simulator-beta</code>.
 </p>
 
 <div class="org-src-container">
@@ -177,7 +272,24 @@ unzip -d simulator-beta -u simulator-beta.zip &gt; /dev/null 2&gt;&amp;1
 </div>
 
 <p>
-Get the data, shuffle it, and separate it into training and evaluation sets.
+While we are at it, we might as well get the network server as
+well, which is implemented in the <a href="https://d17h27t6h515a5.cloudfront.net/topher/2017/January/586c4a66_drive/drive.py">drive.py</a> Python file.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-sh">wget https://d17h27t6h515a5.cloudfront.net/topher/2017/January/586c4a66_drive/drive.py
+</pre>
+</div>
+
+<p>
+Now, while we are encouraged to collect our own training data,
+it turns out that Udacity supplies their own training data for
+the first of the two tracks, which is the track on which the
+solution will be validated.  we might as well get that, and see
+how much progress we can make just with the provided samples.
+The data are in a zip file, <a href="https://d17h27t6h515a5.cloudfront.net/topher/2016/December/584f6edd_data/data.zip">data.zip</a>, which we of course unzip.
+we also remove the annoying <code>__MACOSX</code> directory.
 </p>
 
 <div class="org-src-container">
@@ -185,12 +297,75 @@ Get the data, shuffle it, and separate it into training and evaluation sets.
 <pre class="src src-sh">wget -nc <span style="color: #e9b96e;">"https://d17h27t6h515a5.cloudfront.net/topher/2016/December/584f6edd_data/data.zip"</span>
 unzip data.zip &gt; /dev/null 2&gt;&amp;1
 rm -rf __MACOSX
-
-cat data/driving_log.csv | tail -n+2 | shuf &gt; data/driving_log_all.csv
-cat data/driving_log_all.csv | head -n7000 &gt; data/driving_log_train.csv
-cat data/driving_log_all.csv | tail -n+7000 &gt; data/driving_log_validation.csv
 </pre>
 </div>
+
+<p>
+The data&#x2014;whether recorded or downloaded&#x2014;are presented as <a href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV</a>
+"index file", <code>driving_log.csv</code>.  Each line in this file
+correlates images with the steering angle, throttle, brake, and
+speed of the car.  The images are related via filenames in the
+first three fields, which refer to the center, left, and right
+camera images stored in files in the <code>IMG</code> subdirectory.  Let's
+take a look at the beginning of that file and then determine how
+many samples are proved
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-sh">head data/driving_log.csv
+wc -l data/driving_log.csv
+</pre>
+</div>
+
+<pre class="example">
+center,left,right,steering,throttle,brake,speed
+IMG/center_2016_12_01_13_30_48_287.jpg, IMG/left_2016_12_01_13_30_48_287.jpg, IMG/right_2016_12_01_13_30_48_287.jpg, 0, 0, 0, 22.14829
+IMG/center_2016_12_01_13_30_48_404.jpg, IMG/left_2016_12_01_13_30_48_404.jpg, IMG/right_2016_12_01_13_30_48_404.jpg, 0, 0, 0, 21.87963
+IMG/center_2016_12_01_13_31_12_937.jpg, IMG/left_2016_12_01_13_31_12_937.jpg, IMG/right_2016_12_01_13_31_12_937.jpg, 0, 0, 0, 1.453011
+IMG/center_2016_12_01_13_31_13_037.jpg, IMG/left_2016_12_01_13_31_13_037.jpg, IMG/right_2016_12_01_13_31_13_037.jpg, 0, 0, 0, 1.438419
+IMG/center_2016_12_01_13_31_13_177.jpg, IMG/left_2016_12_01_13_31_13_177.jpg, IMG/right_2016_12_01_13_31_13_177.jpg, 0, 0, 0, 1.418236
+IMG/center_2016_12_01_13_31_13_279.jpg, IMG/left_2016_12_01_13_31_13_279.jpg, IMG/right_2016_12_01_13_31_13_279.jpg, 0, 0, 0, 1.403993
+IMG/center_2016_12_01_13_31_13_381.jpg, IMG/left_2016_12_01_13_31_13_381.jpg, IMG/right_2016_12_01_13_31_13_381.jpg, 0, 0, 0, 1.389892
+IMG/center_2016_12_01_13_31_13_482.jpg, IMG/left_2016_12_01_13_31_13_482.jpg, IMG/right_2016_12_01_13_31_13_482.jpg, 0, 0, 0, 1.375934
+IMG/center_2016_12_01_13_31_13_584.jpg, IMG/left_2016_12_01_13_31_13_584.jpg, IMG/right_2016_12_01_13_31_13_584.jpg, 0, 0, 0, 1.362115
+8037 data/driving_log.csv
+</pre>
+
+<p>
+we have 8037 lines, but evidently, descriptive labels are
+provided in the first line of this file.  Let's strip that out.
+Also, Deep Learning lore says that it is often prudent to
+randomize the data when possible and always prudent to split the
+data into training and validation sets.  Here we do all three in
+just a few lines of shell code, taking 1000 samples (about 12%)
+as validation data.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-sh">cat data/driving_log.csv | tail -n+2 | shuf &gt; data/driving_log_all.csv
+cat data/driving_log_all.csv | head -n1000 &gt; data/driving_log_validation.csv
+cat data/driving_log_all.csv | tail -n+1001 &gt; data/driving_log_train.csv
+</pre>
+</div>
+
+<p>
+As a sanity check, we report the number of total samples,
+training samples, and validation samples.  Even if the provided
+Udacity data are insufficient ultimately for delivering a
+solution, they are valuable for establishing a baseline for
+developing that solution.  A project like this has many free
+parameters and the combinatorial explosion among them can
+quickly overwhelm the researcher, and so eliminating some of
+those free parameters by avoiding recording one's own data&#x2014;if
+only in the interim&#x2014;is a real boon.  we do not use the
+<a href="data/driving_log_all.csv"><code>driving_log_all.csv</code></a> file after this point; it served as a
+handy placeholder of the original data, shuffled and with the
+header removed.  However, the <a href="data/driving_log_train.csv"><code>driving_log_train.csv</code></a> and
+<a href="data/driving_log_validation.csv"><code>driving_log_validation.csv</code></a> files play a central role as we
+iteratively develop and refine the model.
+</p>
 
 <div class="org-src-container">
 
@@ -199,6 +374,67 @@ wc -l data/driving_log_train.csv
 wc -l data/driving_log_validation.csv
 </pre>
 </div>
+
+<pre class="example">
+8036 data/driving_log_all.csv
+7036 data/driving_log_train.csv
+1000 data/driving_log_validation.csv
+</pre>
+
+<p>
+Before leaving the land of shell commands for the land of Python
+scripts and neural nets, we create one other useful data file.
+Paul Heraty argues that it can be useful in the early stages of
+developing a solution to "overtrain" it on a small sample
+comprising disparate canonical examples.  As we shall see, we can
+confirm that this was <i>extremely</i> good advice.  
+</p>
+
+<p>
+One of the chief difficulties we encountered as a newcomer to Deep
+Learning and its community of tools was simply "getting it to
+work in the first place," independent of whether the model
+actually was very good.  One of the chief strategies for
+overcoming this difficulty we found is to "try to get a pulse:"
+develop the basic machinery of the model and solution first,
+with little or no regard for its fidelity.  Working through the
+inevitable blizzard of error messages one first encounters is no
+small task.  Once it is cleared and the practitioner has
+confidence his tools are working well, then it becomes possible
+to rapidly iterate and converge to a <i>good</i> solution.  
+</p>
+
+<p>
+Creating an "overtraining sample" is good because overtraining
+is a vivid expectation that can quickly be realized (especially
+with only 3 samples), and if overtraining does not occur you
+know you have deeper problems.
+</p>
+
+<p>
+With a little magic from <a href="https://www.gnu.org/software/bash/manual/">Bash</a>, <a href="https://www.gnu.org/software/gawk/manual/gawk.html">Awk</a>, etc., we can select three
+disparate samples, with neutral steering, extreme left steering,
+and extreme right steering.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-sh">cat &lt;(cat data/driving_log_all.csv | sort -k4 -n -t, | head -n1) &lt;(cat data/driving_log_all.csv | sort -k4 -nr -t, | head -n1) &lt;(cat data/driving_log_all.csv | awk -F, -vOFS=, <span style="color: #e9b96e;">'{print $1, $2, $3, sqrt($4*$4), $5, $6, $7}'</span> | sort -k4 -n -t, | head -n1) &gt; data/driving_log_overtrain.csv
+cat data/driving_log_overtrain.csv
+</pre>
+</div>
+
+<pre class="example">
+IMG/center_2016_12_01_13_39_28_024.jpg, IMG/left_2016_12_01_13_39_28_024.jpg, IMG/right_2016_12_01_13_39_28_024.jpg, -0.9426954, 0, 0, 28.11522
+IMG/center_2016_12_01_13_38_46_752.jpg, IMG/left_2016_12_01_13_38_46_752.jpg, IMG/right_2016_12_01_13_38_46_752.jpg, 1, 0, 0, 13.2427
+IMG/center_2016_12_01_13_30_48_287.jpg, IMG/left_2016_12_01_13_30_48_287.jpg, IMG/right_2016_12_01_13_30_48_287.jpg,0, 0, 0, 22.14829
+</pre>
+
+<p>
+we will be able to see exactly what the images for these samples
+once we set up a suitable Python environment, which we do in the
+next section.
+</p>
 </div>
 </div>
 
@@ -206,12 +442,38 @@ wc -l data/driving_log_validation.csv
 <h4 id="sec-3-2-2">Setup</h4>
 <div class="outline-text-4" id="text-3-2-2">
 <p>
-Create the Conda environment.
+Udacity helpfully provides a <a href="https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/83ec35ee-1e02-48a5-bdb7-d244bd47c2dc/lessons/8c82408b-a217-4d09-b81d-1bda4c6380ef/concepts/4f1870e0-3849-43e4-b670-12e6f2d4b7a7">CarND Starter Kit</a>, which involves
+acquiring the contents of a particular <a href="https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md">GitHub repository</a>.  The
+consequence of this is a <a href="http://conda.pydata.org/docs/">Conda</a> environment for Python, whose
+definition we extracted into the <a href="environment.yml">environment.yml</a> file.  That way,
+if the environment does not already exist it can be created with
+this command.
 </p>
 
 <div class="org-src-container">
 
 <pre class="src src-sh">conda env create --file environment.yml --name CarND-Behavioral-Cloning
+</pre>
+</div>
+
+<p>
+Having set up the Conda environment, and activated it, now we
+can finally load the Python modules that we will need in later
+sections.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">from</span> PIL <span style="color: #b4fa70;">import</span> Image
+<span style="color: #b4fa70;">from</span> itertools <span style="color: #b4fa70;">import</span> groupby, islice, zip_longest, cycle, filterfalse
+<span style="color: #b4fa70;">from</span> keras.layers <span style="color: #b4fa70;">import</span> Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
+<span style="color: #b4fa70;">from</span> keras.layers.convolutional <span style="color: #b4fa70;">import</span> Cropping2D, Convolution2D
+<span style="color: #b4fa70;">from</span> keras.models <span style="color: #b4fa70;">import</span> Sequential, model_from_json
+<span style="color: #b4fa70;">from</span> keras.utils.visualize_util <span style="color: #b4fa70;">import</span> plot
+<span style="color: #b4fa70;">from</span> scipy.stats <span style="color: #b4fa70;">import</span> kurtosis, skew, describe
+<span style="color: #b4fa70;">import</span> matplotlib.pyplot <span style="color: #b4fa70;">as</span> plt
+<span style="color: #b4fa70;">import</span> numpy <span style="color: #b4fa70;">as</span> np
+<span style="color: #b4fa70;">import</span> random
 </pre>
 </div>
 </div>
@@ -221,29 +483,107 @@ Create the Conda environment.
 <h4 id="sec-3-2-3">Utilities</h4>
 <div class="outline-text-4" id="text-3-2-3">
 <p>
-Return elements from the iterable.  Shuffle the elements of the
-iterable when it becomes exhausted, then begin returning them
-again.  Repeat this sequence of operations indefinitely.  Note
+Another piece of advice impressed upon students in the class, to
+the point of it practically being a requirement, was to learn to
+use Python <a href="https://wiki.python.org/moin/Generators">generators</a> and the <a href="https://keras.io/models/sequential/"><code>fit_generator</code></a> function in our
+Deep Learning toolkit, <a href="https://keras.io/">Keras</a>.  Generators allow for a form of
+<a href="https://en.wikipedia.org/wiki/Lazy_loading">lazy loading</a>, which can be useful in Machine Learning settings
+where large data sets that do not fit into main memory are the
+norm.  Keras makes use of that with <code>fit_generator</code>, which
+expects input presented as generators that infinitely recycle
+over the underlying data.
+</p>
+
+<p>
+I took that advice to heart and spent considerable
+time&#x2014;perhaps more than was necessary&#x2014;learning about
+generators and generator expressions.  It did pay off somewhat
+in that I developed a tiny library of reusable, composeable
+generator expressions, which are presented here.
+</p>
+
+<p>
+Before doing that, though, first a detour and a bit of advice.
+Anyone who is working with Python generators is urged to become
+acquainted with <a href="https://docs.python.org/3/library/itertools.html"><code>itertools</code></a>, a standard Python library of
+reusable, composeable generators.  For me the <a href="https://docs.python.org/3/library/itertools.html#itertools.cycle"><code>cycle</code></a> generator
+was a key find.  As mentioned above, <code>fit_generator</code> needs
+infinitely-recycling generators, which is exactly what
+<code>itertools.cycle</code> provides.  One wrinkle is that <code>cycle</code>
+accomplishes this with an internal data cache, so if your data
+do <i>not</i> fit in memory you may have to seek an alternative.
+However, if your data <i>do</i> fit in memory this confers a very
+nice property, for free: after cycling through the data the
+first time all subsequent retrievals are from memory, so that
+performance improves dramatically after the first cycle.
+</p>
+
+<p>
+This turns out to be very beneficial and entirely appropriate
+for our problem.  Suppose we use the Udacity data.  In that
+case, we have 8136 images (training + validation) provided we
+use one camera only (such as the center camera).  As we shall
+see below, each image is a 320x160 pixel array of RGB values,
+for a total of 150k per image.  That means approximately 1 GB of
+RAM is required to store the Udacity data.  My 4 year-old laptop
+has 4 times that.  Now, this rosy picture might quickly dissolve
+if we use much more data, such as by using the other camera
+angles and/or acquiring more training data.  Then again, it may
+not.  With virtual memory, excess pages <i>should</i> be swapped out
+to disk.  That's not ideal, but to first order it's not obvious
+that it's functionally much different from or much worse than
+recycling the data by repeatedly loading the raw image files.
+In fact, it may be better, since at least we only perform the
+actual translation from PNG format to NumPy data arrays once for
+each image.
+</p>
+
+<p>
+If we are really concerned about memory usage we might consider
+reducing the input image size, such as with OpenCV's
+<a href="http://docs.opencv.org/2.4/modules/imgproc/doc/geometric_transformations.html#resize"><code>cv2.resize</code></a> command, and we might consider cropping the image.
+But, I think we should think carefully about this.  These
+operations may have an effect on the performance of the model,
+and so manipulating the images in this way is not something we
+should take lightly.  Nevertheless, it can be beneficial as we
+shall see shortly.  However, if we <i>do</i> decide to crop and
+resize, there is a technical trade-off to be made.  Either we
+can crop and resize as a pre-processing step, or we can do it
+directly within the model, and there are advantages and
+disadvantages to each.  If we crop and resize as a
+pre-processing step, it has direct impact on the aforementioned
+memory considerations.  But, we <i>must take care to perform exactly the same crop and resize operations in the network service!</i>  Since cropping and resizing essentially introduce new
+hyper-parameters, those parameters somehow must be communicated
+to <code>drive.py</code>.  If we crop and resize directly within the model,
+it has no beneficial impact on the aforementioned memory
+considerations.  But, <i>we get those operations and their internal hyper-parameters for free within the network service!</i>  I found
+the latter advantage to be much greater and so the trade-off I
+selected was to crop and resize within the model.
+</p>
+
+<p>
+In any case, my experiments showed that for the Udacity data at
+least, loading the data into an in-memory cache via
+<code>itertools.cycle</code> (or, more precisely, my variation of it) and
+then infinitely recycling over them proved to be a very good
+solution.
+</p>
+
+<p>
+However, there is one problem with <code>itertools.cycle</code> by itself,
+and that is that again, according to Deep Learning lore, it is
+prudent to randomize the data on every epoch.  To do that, we
+need to rewrite <code>itertools.cycle</code> so that it shuffles the data
+upon every recycle.  That is easily done, as shown below.  Note
 that the elements of the iterable are essentially returned in
 batches, and that the first batch is not shuffled.  If you want
 only to return random elements then you must know batch size,
 which will be the number of elements in the underlying finite
 iterable, and you must discard the first batch.  The
-itertools.islice function can be helpful here.
+itertools.islice function can be helpful here.  In our case it
+is not a problem since all of the data were already shuffled
+once using Unix command-line utilities above.
 </p>
-
-<div class="org-src-container">
-
-<pre class="src src-python"><span style="color: #b4fa70;">from</span> PIL <span style="color: #b4fa70;">import</span> Image
-<span style="color: #b4fa70;">from</span> itertools <span style="color: #b4fa70;">import</span> groupby, islice, zip_longest, cycle, filterfalse
-<span style="color: #b4fa70;">from</span> scipy.stats <span style="color: #b4fa70;">import</span> kurtosis, skew, describe
-<span style="color: #b4fa70;">import</span> keras.preprocessing.image <span style="color: #b4fa70;">as</span> img
-<span style="color: #b4fa70;">import</span> matplotlib.pyplot <span style="color: #b4fa70;">as</span> plt
-<span style="color: #b4fa70;">import</span> numpy <span style="color: #b4fa70;">as</span> np
-<span style="color: #b4fa70;">import</span> random
-<span style="color: #b4fa70;">import</span> sys
-</pre>
-</div>
 
 <div class="org-src-container">
 
@@ -259,6 +599,32 @@ itertools.islice function can be helpful here.
 </pre>
 </div>
 
+<p>
+The remaining utility functions that I wrote are quite
+straightforward and for brevity are written as "one-liners."
+</p>
+
+<dl class="org-dl">
+<dt> feed </dt><dd>generator that feeds lines from the file named by 'filename'
+</dd>
+<dt> split </dt><dd>generator that splits lines into tuples based on a delimiter
+</dd>
+<dt> select </dt><dd>generator that selects out elements from tuples
+</dd>
+<dt> load </dt><dd>non-generator that reads an image file into a NumPy array
+</dd>
+<dt> fetch </dt><dd>generator that loads index file entries into samples
+</dd>
+<dt> group </dt><dd>generator that groups input elements into lists
+</dd>
+<dt> transpose </dt><dd>generator that takes a generator of lists into a
+list of generators
+</dd>
+<dt> batch </dt><dd>generator that takes a list of generators into a list
+of NumPy array "batches"
+</dd>
+</dl>
+
 <div class="org-src-container">
 
 <pre class="src src-python"><span style="color: #fcaf3e;">feed</span> = <span style="color: #b4fa70;">lambda</span> filename: (l <span style="color: #b4fa70;">for</span> l <span style="color: #b4fa70;">in</span> <span style="color: #e090d7;">open</span>(filename))
@@ -266,7 +632,6 @@ itertools.islice function can be helpful here.
 <span style="color: #fcaf3e;">select</span> = <span style="color: #b4fa70;">lambda</span> fields, indices: ([r[i] <span style="color: #b4fa70;">for</span> i <span style="color: #b4fa70;">in</span> indices] <span style="color: #b4fa70;">for</span> r <span style="color: #b4fa70;">in</span> fields)
 <span style="color: #fcaf3e;">load</span> = <span style="color: #b4fa70;">lambda</span> f: np.asarray(Image.<span style="color: #e090d7;">open</span>(f))
 <span style="color: #fcaf3e;">fetch</span> = <span style="color: #b4fa70;">lambda</span> records, base: ([load(base+f.strip()) <span style="color: #b4fa70;">for</span> f <span style="color: #b4fa70;">in</span> record[:1]]+[<span style="color: #e090d7;">float</span>(v) <span style="color: #b4fa70;">for</span> v <span style="color: #b4fa70;">in</span> record[1:]] <span style="color: #b4fa70;">for</span> record <span style="color: #b4fa70;">in</span> records)
-<span style="color: #fcaf3e;">rshift</span> = <span style="color: #b4fa70;">lambda</span> <span style="color: #fcaf3e;">x</span>, <span style="color: #fcaf3e;">factor</span>=0.1: img.random_shift(x, factor, 0.0, 0, 1, 2, fill_mode=<span style="color: #e9b96e;">'wrap'</span>)
 <span style="color: #fcaf3e;">group</span> = <span style="color: #b4fa70;">lambda</span> <span style="color: #fcaf3e;">items</span>, <span style="color: #fcaf3e;">n</span>, <span style="color: #fcaf3e;">fillvalue</span>=<span style="color: #e9b2e3;">None</span>: zip_longest(*([<span style="color: #e090d7;">iter</span>(items)]*n), fillvalue=fillvalue)
 <span style="color: #fcaf3e;">transpose</span> = <span style="color: #b4fa70;">lambda</span> tuples: (<span style="color: #e090d7;">list</span>(<span style="color: #e090d7;">map</span>(<span style="color: #e090d7;">list</span>, <span style="color: #e090d7;">zip</span>(*g))) <span style="color: #b4fa70;">for</span> g <span style="color: #b4fa70;">in</span> tuples)
 <span style="color: #fcaf3e;">batch</span> = <span style="color: #b4fa70;">lambda</span> <span style="color: #fcaf3e;">groups</span>, <span style="color: #fcaf3e;">indices</span>=[0, 1]: ([np.asarray(t[i]) <span style="color: #b4fa70;">for</span> i <span style="color: #b4fa70;">in</span> indices] <span style="color: #b4fa70;">for</span> t <span style="color: #b4fa70;">in</span> groups)
@@ -300,28 +665,27 @@ f.suptitle(<span style="color: #e9b96e;">"Angle: "</span> + <span style="color: 
 <div class="figure">
 <p><img src="road1.png" alt="road1.png" border="1" />
 </p>
-<p><span class="figure-number">Figure 1:</span> Road 1</p>
+<p><span class="figure-number">Figure 2:</span> Large Negative Steering Angle</p>
 </div>
 
 
 <div class="figure">
 <p><img src="road2.png" alt="road2.png" border="1" />
 </p>
-<p><span class="figure-number">Figure 2:</span> Road 2</p>
+<p><span class="figure-number">Figure 3:</span> Large Positive Steering Angle</p>
 </div>
 
 
 <div class="figure">
 <p><img src="road3.png" alt="road3.png" border="1" />
 </p>
-<p><span class="figure-number">Figure 3:</span> Road 3</p>
+<p><span class="figure-number">Figure 4:</span> Neutral Steering Angle</p>
 </div>
 
 <div class="org-src-container">
 
-<pre class="src src-python"><span style="color: #fcaf3e;">X</span> = [x[0] <span style="color: #b4fa70;">for</span> x <span style="color: #b4fa70;">in</span> fetch(select(split(feed(<span style="color: #e9b96e;">"data/driving_log_overtrain.csv"</span>)), [0,3]), <span style="color: #e9b96e;">"data/"</span>)]
-<span style="color: #fcaf3e;">f</span> = plt.figure()
-plt.imshow(X[0][80:120])
+<pre class="src src-python"><span style="color: #fcaf3e;">f</span> = plt.figure()
+plt.imshow(X[0][80:140])  <span style="color: #73d216;"># </span><span style="color: #73d216;">Crop top and bottom</span>
 <span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"road4.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">"png"</span>, bbox_inches=<span style="color: #e9b96e;">'tight'</span>)
 </pre>
 </div>
@@ -330,7 +694,7 @@ plt.imshow(X[0][80:120])
 <div class="figure">
 <p><img src="road4.png" alt="road4.png" border="1" />
 </p>
-<p><span class="figure-number">Figure 4:</span> Road 3</p>
+<p><span class="figure-number">Figure 5:</span> Heavily-Cropped Image</p>
 </div>
 
 <p>
@@ -349,11 +713,15 @@ describe(y1)
 </pre>
 </div>
 
+<pre class="example">
+DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.0040696440648332506, variance=0.016599764281272529, skewness=-0.1302892457752191, kurtosis=6.311554102057668)
+</pre>
+
 
 <div class="figure">
 <p><img src="hist1.png" alt="hist1.png" border="1" />
 </p>
-<p><span class="figure-number">Figure 5:</span> All Samples - No Reflection</p>
+<p><span class="figure-number">Figure 6:</span> All Samples - No Reflection</p>
 </div>
 
 <p>
@@ -372,14 +740,14 @@ track.
 <p>
 The data are dominated by small steering angles because the car
 spends most of its time on the track in straightaways.  The
-asymmetry in the data is more apparent if we mask out small
+asymmetry in the data is more apparent if I mask out small
 angles and repeat the analysis.  Steering angles occupy the
 interval [-1, 1], but the "straight" samples appear to be within
 the neighborhood [-0.01, 0.01].
 </p>
 
 <p>
-We might consider masking out small angled samples from the
+I might consider masking out small angled samples from the
 actual training data as well, a subject we shall return to in a
 later section.
 </p>
@@ -395,18 +763,22 @@ describe(y2)
 </pre>
 </div>
 
+<pre class="example">
+DescribeResult(nobs=3584, minmax=(-0.94269539999999996, 1.0), mean=0.0091718659514508933, variance=0.037178302717086116, skewness=-0.16657825969015194, kurtosis=1.1768785967587378)
+</pre>
+
 
 <div class="figure">
 <p><img src="hist2.png" alt="hist2.png" border="1" />
 </p>
-<p><span class="figure-number">Figure 6:</span> abs(angle)&gt;0.01 - No Reflection</p>
+<p><span class="figure-number">Figure 7:</span> abs(angle)&gt;0.01 - No Reflection</p>
 </div>
 
 <p>
-A simple trick that we can play to remove this asymmetry&#x2014;if we
+A simple trick that I can play to remove this asymmetry&#x2014;if I
 wish&#x2014;is to join the data with its reflection, effectively
 doubling our sample size in the process.  For illustration
-purposes only, we shall again mask out small angle samples.
+purposes only, I shall again mask out small angle samples.
 </p>
 
 <div class="org-src-container">
@@ -419,11 +791,15 @@ describe(y3)
 </pre>
 </div>
 
+<pre class="example">
+DescribeResult(nobs=7168, minmax=(-1.0, 1.0), mean=0.0, variance=0.03725725015081123, skewness=0.0, kurtosis=1.1400026599654964)
+</pre>
+
 
 <div class="figure">
 <p><img src="hist3.png" alt="hist3.png" border="1" />
 </p>
-<p><span class="figure-number">Figure 7:</span> abs(angle)&gt;0.01 - Full Reflection</p>
+<p><span class="figure-number">Figure 8:</span> abs(angle)&gt;0.01 - Full Reflection</p>
 </div>
 
 <p>
@@ -440,16 +816,12 @@ are symmetrical.
 </ul>
 
 <p>
-Of course, in this analysis we have only reflected the target
-labels.  If we apply this strategy to the training data,
-naturally we need to reflect along their horizontal axes the
+Of course, in this analysis I have only reflected the target
+labels.  If I apply this strategy to the training data,
+naturally I need to reflect along their horizontal axes the
 corresponding input images as well.
 </p>
 </div>
-</div>
-
-<div id="outline-container-sec-3-2-5" class="outline-4">
-<h4 id="sec-3-2-5">Examples</h4>
 </div>
 </div>
 
@@ -486,12 +858,7 @@ Return a Keras neural network model.
 
 <div class="org-src-container">
 
-<pre class="src src-python"><span style="color: #b4fa70;">from</span> keras.layers <span style="color: #b4fa70;">import</span> Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
-<span style="color: #b4fa70;">from</span> keras.layers.convolutional <span style="color: #b4fa70;">import</span> Cropping2D, Convolution2D
-<span style="color: #b4fa70;">from</span> keras.models <span style="color: #b4fa70;">import</span> Sequential, model_from_json
-<span style="color: #b4fa70;">from</span> keras.utils.visualize_util <span style="color: #b4fa70;">import</span> plot
-
-<span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">CarND</span>(input_shape, crop_shape):
+<pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">CarND</span>(input_shape, crop_shape):
     <span style="color: #fcaf3e;">model</span> = Sequential()
 
     <span style="color: #73d216;"># </span><span style="color: #73d216;">Crop</span>
@@ -549,7 +916,7 @@ Return a Keras neural network model.
 <div class="figure">
 <p><img src="model.png" alt="model.png" border="1" />
 </p>
-<p><span class="figure-number">Figure 8:</span> CarND Neural-Net Architecture</p>
+<p><span class="figure-number">Figure 9:</span> CarND Neural-Net Architecture</p>
 </div>
 </div>
 </div>
@@ -670,6 +1037,12 @@ model.save_weights(<span style="color: #e9b96e;">"model.h5"</span>)
 </div>
 </div>
 </div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: David A. Ventimiglia (<a href="mailto:dventimi@gmail.com">dventimi@gmail.com</a>)</p>
+<p class="date">Date: <span class="timestamp-wrapper"><span class="timestamp">&lt;2017-01-19&gt;</span></span></p>
+<p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.5.1 (<a href="http://orgmode.org">Org</a> mode 8.2.10)</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
 </html>

@@ -1,3 +1,5 @@
+# -*- org-babel-sh-command: "/bin/bash" -*-
+
 #+TITLE: CarND Project 3:  Behavioral Cloning
 #+DATE: <2017-01-19>
 #+AUTHOR: David A. Ventimiglia
@@ -14,7 +16,7 @@
 #+OPTIONS: tags:t tasks:t tex:t timestamp:t toc:nil todo:t |:t
 #+LANGUAGE: en
 
-#+OPTIONS: html-link-use-abs-url:nil html-postamble:nil
+#+OPTIONS: html-link-use-abs-url:nil html-postamble:t
 #+OPTIONS: html-preamble:t html-scripts:t html-style:t
 #+OPTIONS: html5-fancy:t tex:t
 #+CREATOR: <a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.5.1 (<a href="http://orgmode.org">Org</a> mode 8.2.10)
@@ -30,13 +32,83 @@
 
 * How
 
+  The method is quite simple.  We somehow acquire training
+  data---perhaps by recording it ourselves---in a computerized driving
+  simulator.  The training data comprise images of the road as seen
+  through the simulated car, along with corresponding control inputs
+  (in this case, just the steering angle).  The training data are used
+  to train a [[https://en.wikipedia.org/wiki/Deep_learning][Deep Learning]] [[https://en.wikipedia.org/wiki/Artificial_neural_network][neural network]] model so that it recognizes
+  road/car configurations and generates the appropriate steering
+  angle.  The model is then used to generate inputs (steering angles)
+  in real-time for the simulation, unpiloted by a human driver.
+
+  Here is an incomplete list of the tools that I used in my laboratory
+  for this experiment.
+
+  - [[https://keras.io/][Keras]] - Deep Learning toolkit for Python
+  - [[https://www.tensorflow.org/][TensorFlow]] - High-Performance numerical computation library for
+    Python and backend for Keras.
+  - Unix command-line tools - handy for data pre-processing
+  - [[https://www.gnu.org/software/emacs/][Emacs]] - indispensable coding and writing environment
+  - [[http://orgmode.org/][Org mode]] - indispensable writing and publishing environment for
+    Emacs
+  - [[http://shop.lenovo.com/us/en/laptops/ideapad/u-series/u310/][Lenovo IdeaPad U310]] - somewhat ancient laptop
+  - [[https://www.milibrary.org/][The Mechanic's Institute Library]] - a calm oasis in downtown San
+    Francisco (shown below)
+
+  #+CAPTION: Project Lab
+  #+ATTR_HTML: :border 1 :height 50% :width 50%
+  [[file:rig.jpg]]
+
+  While tools like Keras and TensorFlow (really, TensorFlow) are
+  tailor-made for modern high-performance parallel numerical
+  computation using [[https://en.wikipedia.org/wiki/Graphics_processing_unit][GPUs]], environments that are easily-obtained with
+  cloud-computing environments like [[https://aws.amazon.com/s/dm/optimization/server-side-test/sem-generic/free-b/?sc_channel%3DPS&sc_campaign%3Dacquisition_US&sc_publisher%3Dgoogle&sc_medium%3Dcloud_computing_hv_b&sc_content%3Daws_core_e_test_q32016&sc_detail%3Damazon%2520-%2520aws&sc_category%3Dcloud_computing&sc_segment%3D102882732282&sc_matchtype%3De&sc_country%3DUS&s_kwcid%3DAL!4422!3!102882732282!e!!g!!amazon%2520-%2520aws&ef_id%3DWHrLLwAABAl9uhYF:20170120011018:s][Amazon AWS]], everything in this
+  experiment was conducted just on this one laptop.  While better
+  hardware would be almost certainly be essential for real Deep
+  Learning applications and autonomous vehicles, in this toy problem
+  it wasn't really necessary.
+
+  Also, note that /everything was done in this one Org-mode file/.
+  This file does not mearly document the code.  This document /is/ the
+  code.  It is an example of [[https://en.wikipedia.org/wiki/Literate_programming][literate programming]], and the
+  [[file:model.py][model.py]] file is /generated/ from this document.  
+
 *** Approach
 
 *** Data
 
 ***** Collection and Preparation
 
-      Get the simulators.
+      Behavioral cloning relies on training neural networks with data
+      exhibiting the very behavior you wish to clone.  One way to
+      achieve that for this project is to use a driving simulator
+      provided by Udacity, which in its "training mode" can emit a
+      stream of data samples as the user operates the car.  Each
+      sample consists of a triplet of images and a single floating
+      point number in the interval [-1, 1], recording the view and the
+      steering angle for the simulation and car at regular intervals.
+      The three images are meant to be from three "cameras" mounted on
+      the simulated car's left, center, and right, giving three
+      different aspects of the scene and in principle providing
+      stereoscopic depth information.
+
+      Moreover, the driving simulator also has an "autonomous mode" in
+      which the car interacts with a network server to exchange
+      telemetry that guides the car.  The simulator sends the network
+      service camera images and the network server is expected to
+      reply with steering angles.  So, not only is the driving
+      simulator critical for understanding the problem and helpful for
+      obtaining training data, it is absolutely essential for
+      evaluating the solution.
+
+      Actually, Udacity provides not [[https://d17h27t6h515a5.cloudfront.net/topher/2016/November/5831f0f7_simulator-linux/simulator-linux.zip][one]] but [[https://d17h27t6h515a5.cloudfront.net/topher/2017/January/587527cb_udacity-sdc-udacity-self-driving-car-simulator-dominique-development-linux-desktop-64-bit-5/udacity-sdc-udacity-self-driving-car-simulator-dominique-development-linux-desktop-64-bit-5.zip][two]] simulators.  The
+      first is the stock simulator and the second is an enhanced
+      simulator, whose ability to use a computer mouse as input is
+      very important for acquiring good training data with smoothly
+      varying steering angles.  So, why not get both?  Here, I
+      download and unzip the Linux versions into sub-directories
+      =simulator-linux= and =simulator-beta=.
 
       #+BEGIN_SRC sh :results output :tangle no :exports code
       wget -O simulator-linux.zip "https://d17h27t6h515a5.cloudfront.net/topher/2016/November/5831f0f7_simulator-linux/simulator-linux.zip"
@@ -47,21 +119,88 @@
 
       #+RESULTS:
 
-      Get the data, shuffle it, and separate it into training and evaluation sets.
+      While we are at it, we might as well get the network server as
+      well, which is implemented in the [[https://d17h27t6h515a5.cloudfront.net/topher/2017/January/586c4a66_drive/drive.py][drive.py]] Python file.
+
+      #+BEGIN_SRC sh :results output :tangle no :exports code
+      wget https://d17h27t6h515a5.cloudfront.net/topher/2017/January/586c4a66_drive/drive.py
+      #+END_SRC
+
+      Now, while we are encouraged to collect our own training data,
+      it turns out that Udacity supplies their own training data for
+      the first of the two tracks, which is the track on which the
+      solution will be validated.  we might as well get that, and see
+      how much progress we can make just with the provided samples.
+      The data are in a zip file, [[https://d17h27t6h515a5.cloudfront.net/topher/2016/December/584f6edd_data/data.zip][data.zip]], which we of course unzip.
+      we also remove the annoying =__MACOSX= directory.
 
       #+BEGIN_SRC sh :results output :tangle no :exports code
       wget -nc "https://d17h27t6h515a5.cloudfront.net/topher/2016/December/584f6edd_data/data.zip"
       unzip data.zip > /dev/null 2>&1
       rm -rf __MACOSX
+      #+END_SRC
 
+      The data---whether recorded or downloaded---are presented as [[https://en.wikipedia.org/wiki/Comma-separated_values][CSV]]
+      "index file", =driving_log.csv=.  Each line in this file
+      correlates images with the steering angle, throttle, brake, and
+      speed of the car.  The images are related via filenames in the
+      first three fields, which refer to the center, left, and right
+      camera images stored in files in the =IMG= subdirectory.  Let's
+      take a look at the beginning of that file and then determine how
+      many samples are proved
+
+      #+BEGIN_SRC sh :results output :tangle no :exports both
+      head data/driving_log.csv
+      wc -l data/driving_log.csv
+      #+END_SRC
+
+      #+RESULTS:
+      #+begin_example
+      center,left,right,steering,throttle,brake,speed
+      IMG/center_2016_12_01_13_30_48_287.jpg, IMG/left_2016_12_01_13_30_48_287.jpg, IMG/right_2016_12_01_13_30_48_287.jpg, 0, 0, 0, 22.14829
+      IMG/center_2016_12_01_13_30_48_404.jpg, IMG/left_2016_12_01_13_30_48_404.jpg, IMG/right_2016_12_01_13_30_48_404.jpg, 0, 0, 0, 21.87963
+      IMG/center_2016_12_01_13_31_12_937.jpg, IMG/left_2016_12_01_13_31_12_937.jpg, IMG/right_2016_12_01_13_31_12_937.jpg, 0, 0, 0, 1.453011
+      IMG/center_2016_12_01_13_31_13_037.jpg, IMG/left_2016_12_01_13_31_13_037.jpg, IMG/right_2016_12_01_13_31_13_037.jpg, 0, 0, 0, 1.438419
+      IMG/center_2016_12_01_13_31_13_177.jpg, IMG/left_2016_12_01_13_31_13_177.jpg, IMG/right_2016_12_01_13_31_13_177.jpg, 0, 0, 0, 1.418236
+      IMG/center_2016_12_01_13_31_13_279.jpg, IMG/left_2016_12_01_13_31_13_279.jpg, IMG/right_2016_12_01_13_31_13_279.jpg, 0, 0, 0, 1.403993
+      IMG/center_2016_12_01_13_31_13_381.jpg, IMG/left_2016_12_01_13_31_13_381.jpg, IMG/right_2016_12_01_13_31_13_381.jpg, 0, 0, 0, 1.389892
+      IMG/center_2016_12_01_13_31_13_482.jpg, IMG/left_2016_12_01_13_31_13_482.jpg, IMG/right_2016_12_01_13_31_13_482.jpg, 0, 0, 0, 1.375934
+      IMG/center_2016_12_01_13_31_13_584.jpg, IMG/left_2016_12_01_13_31_13_584.jpg, IMG/right_2016_12_01_13_31_13_584.jpg, 0, 0, 0, 1.362115
+      8037 data/driving_log.csv
+      #+end_example
+
+      we have 8037 lines, but evidently, descriptive labels are
+      provided in the first line of this file.  Let's strip that out.
+      Also, Deep Learning lore says that it is often prudent to
+      randomize the data when possible and always prudent to split the
+      data into training and validation sets.  Here we do all three in
+      just a few lines of shell code, taking 1000 samples (about 12%)
+      as validation data.
+
+      #+BEGIN_SRC sh :results output :tangle no :exports both
       cat data/driving_log.csv | tail -n+2 | shuf > data/driving_log_all.csv
-      cat data/driving_log_all.csv | head -n7000 > data/driving_log_train.csv
-      cat data/driving_log_all.csv | tail -n+7000 > data/driving_log_validation.csv
+      cat data/driving_log_all.csv | head -n1000 > data/driving_log_validation.csv
+      cat data/driving_log_all.csv | tail -n+1001 > data/driving_log_train.csv
       #+END_SRC
 
       #+RESULTS:
 
-      #+BEGIN_SRC sh :results output :tangle no :exports code
+      As a sanity check, we report the number of total samples,
+      training samples, and validation samples.  Even if the provided
+      Udacity data are insufficient ultimately for delivering a
+      solution, they are valuable for establishing a baseline for
+      developing that solution.  A project like this has many free
+      parameters and the combinatorial explosion among them can
+      quickly overwhelm the researcher, and so eliminating some of
+      those free parameters by avoiding recording one's own data---if
+      only in the interim---is a real boon.  we do not use the
+      [[file:data/driving_log_all.csv][=driving_log_all.csv=]] file after this point; it served as a
+      handy placeholder of the original data, shuffled and with the
+      header removed.  However, the [[file:data/driving_log_train.csv][=driving_log_train.csv=]] and
+      [[file:data/driving_log_validation.csv][=driving_log_validation.csv=]] files play a central role as we
+      iteratively develop and refine the model.
+
+      #+BEGIN_SRC sh :results output :tangle no :exports both
       wc -l data/driving_log_all.csv
       wc -l data/driving_log_train.csv
       wc -l data/driving_log_validation.csv
@@ -69,12 +208,59 @@
 
       #+RESULTS:
       : 8036 data/driving_log_all.csv
-      : 7000 data/driving_log_train.csv
-      : 1037 data/driving_log_validation.csv
+      : 7036 data/driving_log_train.csv
+      : 1000 data/driving_log_validation.csv
+
+      Before leaving the land of shell commands for the land of Python
+      scripts and neural nets, we create one other useful data file.
+      Paul Heraty argues that it can be useful in the early stages of
+      developing a solution to "overtrain" it on a small sample
+      comprising disparate canonical examples.  As we shall see, we can
+      confirm that this was /extremely/ good advice.  
+
+      One of the chief difficulties we encountered as a newcomer to Deep
+      Learning and its community of tools was simply "getting it to
+      work in the first place," independent of whether the model
+      actually was very good.  One of the chief strategies for
+      overcoming this difficulty we found is to "try to get a pulse:"
+      develop the basic machinery of the model and solution first,
+      with little or no regard for its fidelity.  Working through the
+      inevitable blizzard of error messages one first encounters is no
+      small task.  Once it is cleared and the practitioner has
+      confidence his tools are working well, then it becomes possible
+      to rapidly iterate and converge to a /good/ solution.  
+
+      Creating an "overtraining sample" is good because overtraining
+      is a vivid expectation that can quickly be realized (especially
+      with only 3 samples), and if overtraining does not occur you
+      know you have deeper problems.
+
+      With a little magic from [[https://www.gnu.org/software/bash/manual/][Bash]], [[https://www.gnu.org/software/gawk/manual/gawk.html][Awk]], etc., we can select three
+      disparate samples, with neutral steering, extreme left steering,
+      and extreme right steering.
+
+      #+BEGIN_SRC sh :results output :tangle no :exports both
+      cat <(cat data/driving_log_all.csv | sort -k4 -n -t, | head -n1) <(cat data/driving_log_all.csv | sort -k4 -nr -t, | head -n1) <(cat data/driving_log_all.csv | awk -F, -vOFS=, '{print $1, $2, $3, sqrt($4*$4), $5, $6, $7}' | sort -k4 -n -t, | head -n1) > data/driving_log_overtrain.csv
+      cat data/driving_log_overtrain.csv
+      #+END_SRC
+
+      #+RESULTS:
+      : IMG/center_2016_12_01_13_39_28_024.jpg, IMG/left_2016_12_01_13_39_28_024.jpg, IMG/right_2016_12_01_13_39_28_024.jpg, -0.9426954, 0, 0, 28.11522
+      : IMG/center_2016_12_01_13_38_46_752.jpg, IMG/left_2016_12_01_13_38_46_752.jpg, IMG/right_2016_12_01_13_38_46_752.jpg, 1, 0, 0, 13.2427
+      : IMG/center_2016_12_01_13_30_48_287.jpg, IMG/left_2016_12_01_13_30_48_287.jpg, IMG/right_2016_12_01_13_30_48_287.jpg,0, 0, 0, 22.14829
+
+      we will be able to see exactly what the images for these samples
+      once we set up a suitable Python environment, which we do in the
+      next section.
 
 ***** Setup
 
-      Create the Conda environment.
+      Udacity helpfully provides a [[https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/83ec35ee-1e02-48a5-bdb7-d244bd47c2dc/lessons/8c82408b-a217-4d09-b81d-1bda4c6380ef/concepts/4f1870e0-3849-43e4-b670-12e6f2d4b7a7][CarND Starter Kit]], which involves
+      acquiring the contents of a particular [[https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md][GitHub repository]].  The
+      consequence of this is a [[http://conda.pydata.org/docs/][Conda]] environment for Python, whose
+      definition we extracted into the [[file:environment.yml][environment.yml]] file.  That way,
+      if the environment does not already exist it can be created with
+      this command.
 
       #+BEGIN_SRC sh :results output :tangle no :exports code
       conda env create --file environment.yml --name CarND-Behavioral-Cloning
@@ -82,30 +268,117 @@
 
       #+RESULTS:
 
+      Having set up the Conda environment, and activated it, now we
+      can finally load the Python modules that we will need in later
+      sections.
+
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
+      from PIL import Image
+      from itertools import groupby, islice, zip_longest, cycle, filterfalse
+      from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
+      from keras.layers.convolutional import Cropping2D, Convolution2D
+      from keras.models import Sequential, model_from_json
+      from keras.utils.visualize_util import plot
+      from scipy.stats import kurtosis, skew, describe
+      import matplotlib.pyplot as plt
+      import numpy as np
+      import random
+      #+END_SRC
+
+      #+RESULTS:
+      : 
+      : Using TensorFlow backend.
+
 ***** Utilities
 
-      Return elements from the iterable.  Shuffle the elements of the
-      iterable when it becomes exhausted, then begin returning them
-      again.  Repeat this sequence of operations indefinitely.  Note
+      Another piece of advice impressed upon students in the class, to
+      the point of it practically being a requirement, was to learn to
+      use Python [[https://wiki.python.org/moin/Generators][generators]] and the [[https://keras.io/models/sequential/][=fit_generator=]] function in our
+      Deep Learning toolkit, [[https://keras.io/][Keras]].  Generators allow for a form of
+      [[https://en.wikipedia.org/wiki/Lazy_loading][lazy loading]], which can be useful in Machine Learning settings
+      where large data sets that do not fit into main memory are the
+      norm.  Keras makes use of that with =fit_generator=, which
+      expects input presented as generators that infinitely recycle
+      over the underlying data.
+
+      I took that advice to heart and spent considerable
+      time---perhaps more than was necessary---learning about
+      generators and generator expressions.  It did pay off somewhat
+      in that I developed a tiny library of reusable, composeable
+      generator expressions, which are presented here.
+
+      Before doing that, though, first a detour and a bit of advice.
+      Anyone who is working with Python generators is urged to become
+      acquainted with [[https://docs.python.org/3/library/itertools.html][=itertools=]], a standard Python library of
+      reusable, composeable generators.  For me the [[https://docs.python.org/3/library/itertools.html#itertools.cycle][=cycle=]] generator
+      was a key find.  As mentioned above, =fit_generator= needs
+      infinitely-recycling generators, which is exactly what
+      =itertools.cycle= provides.  One wrinkle is that =cycle=
+      accomplishes this with an internal data cache, so if your data
+      do /not/ fit in memory you may have to seek an alternative.
+      However, if your data /do/ fit in memory this confers a very
+      nice property, for free: after cycling through the data the
+      first time all subsequent retrievals are from memory, so that
+      performance improves dramatically after the first cycle.
+
+      This turns out to be very beneficial and entirely appropriate
+      for our problem.  Suppose we use the Udacity data.  In that
+      case, we have 8136 images (training + validation) provided we
+      use one camera only (such as the center camera).  As we shall
+      see below, each image is a 320x160 pixel array of RGB values,
+      for a total of 150k per image.  That means approximately 1 GB of
+      RAM is required to store the Udacity data.  My 4 year-old laptop
+      has 4 times that.  Now, this rosy picture might quickly dissolve
+      if we use much more data, such as by using the other camera
+      angles and/or acquiring more training data.  Then again, it may
+      not.  With virtual memory, excess pages /should/ be swapped out
+      to disk.  That's not ideal, but to first order it's not obvious
+      that it's functionally much different from or much worse than
+      recycling the data by repeatedly loading the raw image files.
+      In fact, it may be better, since at least we only perform the
+      actual translation from PNG format to NumPy data arrays once for
+      each image.
+
+      If we are really concerned about memory usage we might consider
+      reducing the input image size, such as with OpenCV's
+      [[http://docs.opencv.org/2.4/modules/imgproc/doc/geometric_transformations.html#resize][=cv2.resize=]] command, and we might consider cropping the image.
+      But, I think we should think carefully about this.  These
+      operations may have an effect on the performance of the model,
+      and so manipulating the images in this way is not something we
+      should take lightly.  Nevertheless, it can be beneficial as we
+      shall see shortly.  However, if we /do/ decide to crop and
+      resize, there is a technical trade-off to be made.  Either we
+      can crop and resize as a pre-processing step, or we can do it
+      directly within the model, and there are advantages and
+      disadvantages to each.  If we crop and resize as a
+      pre-processing step, it has direct impact on the aforementioned
+      memory considerations.  But, we /must take care to perform exactly the same crop and resize operations in the network service!/  Since cropping and resizing essentially introduce new
+      hyper-parameters, those parameters somehow must be communicated
+      to =drive.py=.  If we crop and resize directly within the model,
+      it has no beneficial impact on the aforementioned memory
+      considerations.  But, /we get those operations and their internal hyper-parameters for free within the network service!/  I found
+      the latter advantage to be much greater and so the trade-off I
+      selected was to crop and resize within the model.
+
+      In any case, my experiments showed that for the Udacity data at
+      least, loading the data into an in-memory cache via
+      =itertools.cycle= (or, more precisely, my variation of it) and
+      then infinitely recycling over them proved to be a very good
+      solution.
+
+      However, there is one problem with =itertools.cycle= by itself,
+      and that is that again, according to Deep Learning lore, it is
+      prudent to randomize the data on every epoch.  To do that, we
+      need to rewrite =itertools.cycle= so that it shuffles the data
+      upon every recycle.  That is easily done, as shown below.  Note
       that the elements of the iterable are essentially returned in
       batches, and that the first batch is not shuffled.  If you want
       only to return random elements then you must know batch size,
       which will be the number of elements in the underlying finite
       iterable, and you must discard the first batch.  The
-      itertools.islice function can be helpful here.
-
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
-      from PIL import Image
-      from itertools import groupby, islice, zip_longest, cycle, filterfalse
-      from scipy.stats import kurtosis, skew, describe
-      import keras.preprocessing.image as img
-      import matplotlib.pyplot as plt
-      import numpy as np
-      import random
-      import sys
-      #+END_SRC
-
-      #+RESULTS:
+      itertools.islice function can be helpful here.  In our case it
+      is not a problem since all of the data were already shuffled
+      once using Unix command-line utilities above.
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       def rcycle(iterable):
@@ -121,13 +394,26 @@
 
       #+RESULTS:
 
+      The remaining utility functions that I wrote are quite
+      straightforward and for brevity are written as "one-liners."
+
+      - feed :: generator that feeds lines from the file named by 'filename'
+      - split :: generator that splits lines into tuples based on a delimiter
+      - select :: generator that selects out elements from tuples
+      - load :: non-generator that reads an image file into a NumPy array
+      - fetch :: generator that loads index file entries into samples
+      - group :: generator that groups input elements into lists
+      - transpose :: generator that takes a generator of lists into a
+                     list of generators
+      - batch :: generator that takes a list of generators into a list
+                 of NumPy array "batches"
+
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
       feed = lambda filename: (l for l in open(filename))
       split = lambda lines, delimiter=",": (line.split(delimiter) for line in lines)
       select = lambda fields, indices: ([r[i] for i in indices] for r in fields)
       load = lambda f: np.asarray(Image.open(f))
       fetch = lambda records, base: ([load(base+f.strip()) for f in record[:1]]+[float(v) for v in record[1:]] for record in records)
-      rshift = lambda x, factor=0.1: img.random_shift(x, factor, 0.0, 0, 1, 2, fill_mode='wrap')
       group = lambda items, n, fillvalue=None: zip_longest(*([iter(items)]*n), fillvalue=fillvalue)
       transpose = lambda tuples: (list(map(list, zip(*g))) for g in tuples)
       batch = lambda groups, indices=[0, 1]: ([np.asarray(t[i]) for i in indices] for t in groups)
@@ -156,30 +442,29 @@
       #+RESULTS:
       : Text(0.5,0.98,'Angle: 0.0')
 
-      #+CAPTION: Road 1
+      #+CAPTION: Large Negative Steering Angle
       #+ATTR_HTML: :border 1
       [[file:road1.png]]
 
-      #+CAPTION: Road 2
+      #+CAPTION: Large Positive Steering Angle
       #+ATTR_HTML: :border 1
       [[file:road2.png]]
 
-      #+CAPTION: Road 3
+      #+CAPTION: Neutral Steering Angle
       #+ATTR_HTML: :border 1
       [[file:road3.png]]
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code 
-      X = [x[0] for x in fetch(select(split(feed("data/driving_log_overtrain.csv")), [0,3]), "data/")]
       f = plt.figure()
-      plt.imshow(X[0][80:120])
+      plt.imshow(X[0][80:140])  # Crop top and bottom
       s = plt.savefig("road4.png", format="png", bbox_inches='tight')
       #+END_SRC
 
       #+RESULTS:
       : 
-      : >>> <matplotlib.image.AxesImage object at 0x7f1ba613f128>
+      : <matplotlib.image.AxesImage object at 0x7f4c701297b8>
 
-      #+CAPTION: Road 3
+      #+CAPTION: Heavily-Cropped Image
       #+ATTR_HTML: :border 1
       [[file:road4.png]]
 
@@ -187,7 +472,7 @@
       data, from =data/driving_log_all.csv=, plot a histogram, and
       generate basic descriptive statistics.
 
-      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code 
+      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both
       f = plt.figure()
       y1 = np.array([float(s[0]) for s in select(split(feed("data/driving_log_all.csv")),[3])])
       h = plt.hist(y1,bins=100)
@@ -211,16 +496,16 @@
 
       The data are dominated by small steering angles because the car
       spends most of its time on the track in straightaways.  The
-      asymmetry in the data is more apparent if we mask out small
+      asymmetry in the data is more apparent if I mask out small
       angles and repeat the analysis.  Steering angles occupy the
       interval [-1, 1], but the "straight" samples appear to be within
       the neighborhood [-0.01, 0.01].
 
-      We might consider masking out small angled samples from the
+      I might consider masking out small angled samples from the
       actual training data as well, a subject we shall return to in a
       later section.
 
-      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code 
+      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both
       f = plt.figure()
       p = lambda x: abs(x)<0.01
       y2 = np.array([s for s in filterfalse(p,y1)])
@@ -230,18 +515,18 @@
       #+END_SRC
 
       #+RESULTS:
-      : DescribeResult(nobs=3584, minmax=(-0.94269539999999996, 1.0), mean=0.0091718659514508933, variance=0.037178302717086116, skewness=-0.1665782596901519, kurtosis=1.1768785967587378)
+      : DescribeResult(nobs=3584, minmax=(-0.94269539999999996, 1.0), mean=0.0091718659514508933, variance=0.037178302717086116, skewness=-0.16657825969015194, kurtosis=1.1768785967587378)
 
       #+CAPTION: abs(angle)>0.01 - No Reflection
       #+ATTR_HTML: :border 1
       [[file:hist2.png]]
 
-      A simple trick that we can play to remove this asymmetry---if we
+      A simple trick that I can play to remove this asymmetry---if I
       wish---is to join the data with its reflection, effectively
       doubling our sample size in the process.  For illustration
-      purposes only, we shall again mask out small angle samples.
+      purposes only, I shall again mask out small angle samples.
 
-      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code 
+      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both
       f = plt.figure()
       y3 = np.append(y2, -y2)
       h = plt.hist(y3,bins=100)
@@ -263,12 +548,10 @@
       - mean=0.0
       - skewness=0.0
 
-      Of course, in this analysis we have only reflected the target
-      labels.  If we apply this strategy to the training data,
-      naturally we need to reflect along their horizontal axes the
+      Of course, in this analysis I have only reflected the target
+      labels.  If I apply this strategy to the training data,
+      naturally I need to reflect along their horizontal axes the
       corresponding input images as well.
-
-***** Examples
 
 *** Implementation
 
@@ -287,11 +570,6 @@
       Return a Keras neural network model.
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
-      from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
-      from keras.layers.convolutional import Cropping2D, Convolution2D
-      from keras.models import Sequential, model_from_json
-      from keras.utils.visualize_util import plot
-
       def CarND(input_shape, crop_shape):
 	  model = Sequential()
        
@@ -512,3 +790,17 @@
       : 27s - loss: 0.0099 - val_loss: 0.0092
       : ... ... 4042
 
+
+#  LocalWords:  CarND Keras Udacity Nano num pri timestamp todo url
+#  LocalWords:  DOCTYPE xhtml src ATTR linux wget py MACOSX nc rf CSV
+#  LocalWords:  csv filenames IMG subdirectory wc shuf Heraty Awk nr
+#  LocalWords:  overtrain overtraining awk vOFS sqrt Conda yml conda
+#  LocalWords:  env PIL itertools groupby islice filterfalse scipy np
+#  LocalWords:  img matplotlib pyplot plt numpy sys backend RGB PNG
+#  LocalWords:  composeable NumPy OpenCV's resize cv resizing rcycle
+#  LocalWords:  filename rshift fillvalue iter asarray imshow str png
+#  LocalWords:  suptitle savefig bbox DescribeResult minmax skewness
+#  LocalWords:  MaxPool FC keras Conv MaxPooling AveragePooling json
+#  LocalWords:  subsample relu Param params trainingfile rflip init
+#  LocalWords:  HyperParameters validationfile mse adam traingen nb
+#  LocalWords:  validgen
