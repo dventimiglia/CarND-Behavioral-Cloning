@@ -1,6 +1,6 @@
 # -*- org-babel-sh-command: "/bin/bash" -*-
 
-#+TITLE: CarND Project 3:  Behavioral Cloning
+#+TITLE: Robot Car
 #+DATE: <2017-01-19>
 #+AUTHOR: David A. Ventimiglia
 #+EMAIL: dventimi@gmail.com
@@ -24,7 +24,11 @@
 #+HTML_DOCTYPE: xhtml-strict
 #+HTML_HEAD_EXTRA: <style>@import 'https://fonts.googleapis.com/css?family=Quattrocento';</style>
 #+HTML_HEAD_EXTRA: <style>body {font-family: Quattrocento, Georgia, serif; background-color: Linen; font-size:large; max-width:50em}</style>
+#+HTML_HEAD_EXTRA: <style>body {margin: auto; padding:0.5em;}
 #+HTML_HEAD_EXTRA: <style>pre.src {background-color: #2B2B2B; color: #a9b7c6; margin: 0; overflow-x: scroll;}</style>
+
+#+ATTR_HTML: :width 100%
+[[file:robotcar.jpg]]
 
 * What
 
@@ -48,7 +52,7 @@
   - [[https://keras.io/][Keras]] - Deep Learning toolkit for Python
   - [[https://www.tensorflow.org/][TensorFlow]] - High-Performance numerical computation library for
     Python and backend for Keras.
-  - Unix command-line tools - handy for data pre-processing
+  - Unix [[https://en.wikipedia.org/wiki/GNU_Core_Utilities][command-line tools]] - handy for data pre-processing
   - [[https://www.gnu.org/software/emacs/][Emacs]] - indispensable coding and writing environment
   - [[http://orgmode.org/][Org mode]] - indispensable writing and publishing environment for
     Emacs
@@ -71,8 +75,9 @@
 
   Also, note that /everything was done in this one Org-mode file/.
   This file does not mearly document the code.  This document /is/ the
-  code.  It is an example of [[https://en.wikipedia.org/wiki/Literate_programming][literate programming]], and the
-  [[file:model.py][model.py]] file is /generated/ from this document.  
+  code.  Like [[http://jupyter.org/][Jupyter]] notebooks, it is an example of [[https://en.wikipedia.org/wiki/Literate_programming][literate
+  programming]], and the [[file:model.py][model.py]] file is /generated/ from this
+  document.
 
 *** Approach
 
@@ -96,7 +101,7 @@
       Moreover, the driving simulator also has an "autonomous mode" in
       which the car interacts with a network server to exchange
       telemetry that guides the car.  The simulator sends the network
-      service camera images and the network server is expected to
+      server camera images and the network server is expected to
       reply with steering angles.  So, not only is the driving
       simulator critical for understanding the problem and helpful for
       obtaining training data, it is absolutely essential for
@@ -287,7 +292,7 @@
 
       #+RESULTS:
       : 
-      : Using TensorFlow backend.
+      : >>> Using TensorFlow backend.
 
 ***** Utilities
 
@@ -336,7 +341,7 @@
       that it's functionally much different from or much worse than
       recycling the data by repeatedly loading the raw image files.
       In fact, it may be better, since at least we only perform the
-      actual translation from PNG format to NumPy data arrays once for
+      actual translation from PNG format to [[http://www.numpy.org/][NumPy]] data arrays once for
       each image.
 
       If we are really concerned about memory usage we might consider
@@ -352,11 +357,11 @@
       directly within the model, and there are advantages and
       disadvantages to each.  If we crop and resize as a
       pre-processing step, it has direct impact on the aforementioned
-      memory considerations.  But, we /must take care to perform exactly the same crop and resize operations in the network service!/  Since cropping and resizing essentially introduce new
+      memory considerations.  But, we /must take care to perform exactly the same crop and resize operations in the network server!/  Since cropping and resizing essentially introduce new
       hyper-parameters, those parameters somehow must be communicated
       to =drive.py=.  If we crop and resize directly within the model,
       it has no beneficial impact on the aforementioned memory
-      considerations.  But, /we get those operations and their internal hyper-parameters for free within the network service!/  I found
+      considerations.  But, /we get those operations and their internal hyper-parameters for free within the network server!/  I found
       the latter advantage to be much greater and so the trade-off I
       selected was to crop and resize within the model.
 
@@ -423,7 +428,31 @@
 
 ***** Exploratory Analysis
 
-      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code 
+      It often pays to explore your data with relatively few
+      constraints before diving in to build and train the actual
+      model.  One may gain insights that help guide you to better
+      models and strategies, and avoid pitfalls and dead-ends.  
+
+      To that end, first we just want to see what kind of input data
+      we are dealing with.  We know that they are RGB images, so let's
+      load a few of them for display.  Here, we show the three frames
+      taken from the =driving_log_overtrain.csv= file described
+      above---center camera only---labelled by their corresponding
+      steering angles.  As you can see, the image with a large
+      negative angle seems to have the car on the extreme right edge
+      of the road.  Perhaps the driver in this situation was executing
+      a "recovery" maneuver, turning sharply to the left to veer away
+      from the road's right edge and back to the centerline.
+      Likewise, with the next figure that has a large positive angle,
+      we see that the car appears to be on the extreme left edge of
+      the road.  Perhaps the opposite recovery maneuver was in play.
+      Finally, in the third and last image that has a neutral steering
+      angle (0.0), the car appears to be sailing right down the middle
+      of the road, a circumstance that absent extraneous circumstances
+      (other cars, people, rodents) should not require corrective
+      steering.
+
+      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code
       X = [x for x in fetch(select(split(feed("data/driving_log_overtrain.csv")), [0,3]), "data/")]
       f = plt.figure()
       plt.imshow(X[0][0])
@@ -454,23 +483,81 @@
       #+ATTR_HTML: :border 1
       [[file:road3.png]]
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code 
+      Next, we get the shape of an image which, as we said above, is
+      320x160x3.  In NumPy parlance that's =(160, 320, 3)=, for 160
+      rows (the y direction), 320 columns (the x direction), and 3
+      channels (the RGB colorspace).
+
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
+      print(X[0][0].shape)
+      #+END_SRC
+
+      #+RESULTS:
+      : (160, 320, 3)
+
+      We can see that the images naturally divide roughly into "road"
+      below the horizon and "sky" above the horizon, with background
+      scenery (trees, mountains, etc.) superimposed onto the sky.
+      While the sky (really, the scenery) might contain useful
+      navigational information, it is plausible that it contains
+      little or no useful information for the simpler task of
+      maintaining an autonomous vehicle near the centerline of a
+      track, a subject we shall return to later.  Likewise, it is
+      almost certain that the small amount of car "hood" superimposed
+      onto the bottom of the images contains no useful information.
+      Therefore, let us see what the images would look like with the
+      hood cropped out on the bottom by 20 pixels, and the sky cropped
+      out on the top by [[(sky60)][60 pixels]], [[(sky80)][80 pixels]], and [[(sky100)][100 pixels]].  
+
+      #+BEGIN_SRC python -r :results output :session :tangle model.py :comments org :exports code
       f = plt.figure()
-      plt.imshow(X[0][80:140])  # Crop top and bottom
+      plt.imshow(X[0][0][60:140])    # sky:60 (ref:sky60)
       s = plt.savefig("road4.png", format="png", bbox_inches='tight')
+      plt.imshow(X[0][0][80:140])    # sky:80 (ref:sky80)
+      s = plt.savefig("road5.png", format="png", bbox_inches='tight')
+      plt.imshow(X[0][0][100:140])   # sky:100 (ref:sky100)
+      s = plt.savefig("road6.png", format="png", bbox_inches='tight')
       #+END_SRC
 
       #+RESULTS:
       : 
-      : <matplotlib.image.AxesImage object at 0x7f4c701297b8>
+      : <matplotlib.image.AxesImage object at 0x7f0dcda13be0>
+      : <matplotlib.image.AxesImage object at 0x7f0dcda1a358>
+      : <matplotlib.image.AxesImage object at 0x7f0dcda5f780>
 
-      #+CAPTION: Heavily-Cropped Image
+      #+CAPTION: Hood Crop: 20, Sky Crop:  60
       #+ATTR_HTML: :border 1
       [[file:road4.png]]
 
-      Get the target labels---the steering angles---for /all/ of the
-      data, from =data/driving_log_all.csv=, plot a histogram, and
-      generate basic descriptive statistics.
+      #+CAPTION: Hood Crop: 20, Sky Crop:  80
+      #+ATTR_HTML: :border 1
+      [[file:road5.png]]
+
+      #+CAPTION: Hood Crop: 20, Sky Crop:  100
+      #+ATTR_HTML: :border 1
+      [[file:road6.png]]
+
+      I should pause here to address the issue of why we are only
+      using the center camera.  After all, the training data do
+      provide two additional camera images: the left and right
+      cameras.  Surely, those provide additional useful information
+      that the model potentially could make use of.  However, in my
+      opinion there is a serious problem in using these data: the
+      simulator seems only to send to the network server in
+      =drive.py= the center image.  I really do not understand why
+      this is the case, since obviously the simulator is fully-capable
+      of scribbling the extra camera outputs down when recording
+      training data.  
+
+      Now, I have observed considerable discussion on the Slack
+      channel for this course 
+
+      We begin by conducting a very simple analysis of the target
+      labels, which again are steering angles in the interval [-1,
+      1].  In fact, as real-valued outputs it may be a stretch to call
+      them "labels" and this is not really a classification problem.
+      Neverthless in the interest of time we will adopt the term.  In
+      any case,
 
       #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports both
       f = plt.figure()

@@ -3,8 +3,8 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<title>CarND Project 3:  Behavioral Cloning</title>
-<!-- 2017-01-19 Thu 17:39 -->
+<title>Robot Car</title>
+<!-- 2017-01-20 Fri 05:31 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="David A. Ventimiglia" />
@@ -140,7 +140,12 @@ for the JavaScript code in this tag.
 </head>
 <body>
 <div id="content">
-<h1 class="title">CarND Project 3:  Behavioral Cloning</h1>
+<h1 class="title">Robot Car</h1>
+
+<div class="figure">
+<p><img src="robotcar.jpg" alt="robotcar.jpg" width="100%" />
+</p>
+</div>
 
 <div id="outline-container-sec-1" class="outline-2">
 <h2 id="sec-1">What</h2>
@@ -176,7 +181,7 @@ for this experiment.
 <li><a href="https://www.tensorflow.org/">TensorFlow</a> - High-Performance numerical computation library for
 Python and backend for Keras.
 </li>
-<li>Unix command-line tools - handy for data pre-processing
+<li>Unix <a href="https://en.wikipedia.org/wiki/GNU_Core_Utilities">command-line tools</a> - handy for data pre-processing
 </li>
 <li><a href="https://www.gnu.org/software/emacs/">Emacs</a> - indispensable coding and writing environment
 </li>
@@ -194,7 +199,7 @@ Francisco (shown below)
 <div class="figure">
 <p><img src="rig.jpg" alt="rig.jpg" border="1" height="50%" width="50%" />
 </p>
-<p><span class="figure-number">Figure 1:</span> Project Lab</p>
+<p><span class="figure-number">Figure 2:</span> Project Lab</p>
 </div>
 
 <p>
@@ -211,8 +216,9 @@ it wasn't really necessary.
 <p>
 Also, note that <i>everything was done in this one Org-mode file</i>.
 This file does not mearly document the code.  This document <i>is</i> the
-code.  It is an example of <a href="https://en.wikipedia.org/wiki/Literate_programming">literate programming</a>, and the
-<a href="model.py">model.py</a> file is <i>generated</i> from this document.  
+code.  Like <a href="http://jupyter.org/">Jupyter</a> notebooks, it is an example of <a href="https://en.wikipedia.org/wiki/Literate_programming">literate
+programming</a>, and the <a href="model.py">model.py</a> file is <i>generated</i> from this
+document.
 </p>
 </div>
 
@@ -245,7 +251,7 @@ stereoscopic depth information.
 Moreover, the driving simulator also has an "autonomous mode" in
 which the car interacts with a network server to exchange
 telemetry that guides the car.  The simulator sends the network
-service camera images and the network server is expected to
+server camera images and the network server is expected to
 reply with steering angles.  So, not only is the driving
 simulator critical for understanding the problem and helpful for
 obtaining training data, it is absolutely essential for
@@ -534,7 +540,7 @@ to disk.  That's not ideal, but to first order it's not obvious
 that it's functionally much different from or much worse than
 recycling the data by repeatedly loading the raw image files.
 In fact, it may be better, since at least we only perform the
-actual translation from PNG format to NumPy data arrays once for
+actual translation from PNG format to <a href="http://www.numpy.org/">NumPy</a> data arrays once for
 each image.
 </p>
 
@@ -552,11 +558,11 @@ can crop and resize as a pre-processing step, or we can do it
 directly within the model, and there are advantages and
 disadvantages to each.  If we crop and resize as a
 pre-processing step, it has direct impact on the aforementioned
-memory considerations.  But, we <i>must take care to perform exactly the same crop and resize operations in the network service!</i>  Since cropping and resizing essentially introduce new
+memory considerations.  But, we <i>must take care to perform exactly the same crop and resize operations in the network server!</i>  Since cropping and resizing essentially introduce new
 hyper-parameters, those parameters somehow must be communicated
 to <code>drive.py</code>.  If we crop and resize directly within the model,
 it has no beneficial impact on the aforementioned memory
-considerations.  But, <i>we get those operations and their internal hyper-parameters for free within the network service!</i>  I found
+considerations.  But, <i>we get those operations and their internal hyper-parameters for free within the network server!</i>  I found
 the latter advantage to be much greater and so the trade-off I
 selected was to crop and resize within the model.
 </p>
@@ -643,6 +649,34 @@ of NumPy array "batches"
 <div id="outline-container-sec-3-2-4" class="outline-4">
 <h4 id="sec-3-2-4">Exploratory Analysis</h4>
 <div class="outline-text-4" id="text-3-2-4">
+<p>
+It often pays to explore your data with relatively few
+constraints before diving in to build and train the actual
+model.  One may gain insights that help guide you to better
+models and strategies, and avoid pitfalls and dead-ends.  
+</p>
+
+<p>
+To that end, first we just want to see what kind of input data
+we are dealing with.  We know that they are RGB images, so let's
+load a few of them for display.  Here, we show the three frames
+taken from the <code>driving_log_overtrain.csv</code> file described
+above&#x2014;center camera only&#x2014;labelled by their corresponding
+steering angles.  As you can see, the image with a large
+negative angle seems to have the car on the extreme right edge
+of the road.  Perhaps the driver in this situation was executing
+a "recovery" maneuver, turning sharply to the left to veer away
+from the road's right edge and back to the centerline.
+Likewise, with the next figure that has a large positive angle,
+we see that the car appears to be on the extreme left edge of
+the road.  Perhaps the opposite recovery maneuver was in play.
+Finally, in the third and last image that has a neutral steering
+angle (0.0), the car appears to be sailing right down the middle
+of the road, a circumstance that absent extraneous circumstances
+(other cars, people, rodents) should not require corrective
+steering.
+</p>
+
 <div class="org-src-container">
 
 <pre class="src src-python"><span style="color: #fcaf3e;">X</span> = [x <span style="color: #b4fa70;">for</span> x <span style="color: #b4fa70;">in</span> fetch(select(split(feed(<span style="color: #e9b96e;">"data/driving_log_overtrain.csv"</span>)), [0,3]), <span style="color: #e9b96e;">"data/"</span>)]
@@ -665,28 +699,65 @@ f.suptitle(<span style="color: #e9b96e;">"Angle: "</span> + <span style="color: 
 <div class="figure">
 <p><img src="road1.png" alt="road1.png" border="1" />
 </p>
-<p><span class="figure-number">Figure 2:</span> Large Negative Steering Angle</p>
+<p><span class="figure-number">Figure 3:</span> Large Negative Steering Angle</p>
 </div>
 
 
 <div class="figure">
 <p><img src="road2.png" alt="road2.png" border="1" />
 </p>
-<p><span class="figure-number">Figure 3:</span> Large Positive Steering Angle</p>
+<p><span class="figure-number">Figure 4:</span> Large Positive Steering Angle</p>
 </div>
 
 
 <div class="figure">
 <p><img src="road3.png" alt="road3.png" border="1" />
 </p>
-<p><span class="figure-number">Figure 4:</span> Neutral Steering Angle</p>
+<p><span class="figure-number">Figure 5:</span> Neutral Steering Angle</p>
 </div>
+
+<p>
+Next, we get the shape of an image which, as we said above, is
+320x160x3.  In NumPy parlance that's <code>(160, 320, 3)</code>, for 160
+rows (the y direction), 320 columns (the x direction), and 3
+channels (the RGB colorspace).
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python"><span style="color: #b4fa70;">print</span>(X[0][0].shape)
+</pre>
+</div>
+
+<pre class="example">
+(160, 320, 3)
+</pre>
+
+<p>
+We can see that the images naturally divide roughly into "road"
+below the horizon and "sky" above the horizon, with background
+scenery (trees, mountains, etc.) superimposed onto the sky.
+While the sky (really, the scenery) might contain useful
+navigational information, it is plausible that it contains
+little or no useful information for the simpler task of
+maintaining an autonomous vehicle near the centerline of a
+track, a subject we shall return to later.  Likewise, it is
+almost certain that the small amount of car "hood" superimposed
+onto the bottom of the images contains no useful information.
+Therefore, let us see what the images would look like with the
+hood cropped out on the bottom by 20 pixels, and the sky cropped
+out on the top by <a href="#coderef-sky60"class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-sky60');" onmouseout="CodeHighlightOff(this, 'coderef-sky60');">60 pixels</a>, <a href="#coderef-sky80"class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-sky80');" onmouseout="CodeHighlightOff(this, 'coderef-sky80');">80 pixels</a>, and <a href="#coderef-sky100"class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-sky100');" onmouseout="CodeHighlightOff(this, 'coderef-sky100');">100 pixels</a>.  
+</p>
 
 <div class="org-src-container">
 
 <pre class="src src-python"><span style="color: #fcaf3e;">f</span> = plt.figure()
-plt.imshow(X[0][80:140])  <span style="color: #73d216;"># </span><span style="color: #73d216;">Crop top and bottom</span>
+<span id="coderef-sky60" class="coderef-off">plt.imshow(X[0][0][60:140])    <span style="color: #73d216;"># </span><span style="color: #73d216;">sky:60</span></span>
 <span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"road4.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">"png"</span>, bbox_inches=<span style="color: #e9b96e;">'tight'</span>)
+<span id="coderef-sky80" class="coderef-off">plt.imshow(X[0][0][80:140])    <span style="color: #73d216;"># </span><span style="color: #73d216;">sky:80</span></span>
+<span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"road5.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">"png"</span>, bbox_inches=<span style="color: #e9b96e;">'tight'</span>)
+<span id="coderef-sky100" class="coderef-off">plt.imshow(X[0][0][100:140])   <span style="color: #73d216;"># </span><span style="color: #73d216;">sky:100</span></span>
+<span style="color: #fcaf3e;">s</span> = plt.savefig(<span style="color: #e9b96e;">"road6.png"</span>, <span style="color: #e090d7;">format</span>=<span style="color: #e9b96e;">"png"</span>, bbox_inches=<span style="color: #e9b96e;">'tight'</span>)
 </pre>
 </div>
 
@@ -694,13 +765,49 @@ plt.imshow(X[0][80:140])  <span style="color: #73d216;"># </span><span style="co
 <div class="figure">
 <p><img src="road4.png" alt="road4.png" border="1" />
 </p>
-<p><span class="figure-number">Figure 5:</span> Heavily-Cropped Image</p>
+<p><span class="figure-number">Figure 6:</span> Hood Crop: 20, Sky Crop:  60</p>
+</div>
+
+
+<div class="figure">
+<p><img src="road5.png" alt="road5.png" border="1" />
+</p>
+<p><span class="figure-number">Figure 7:</span> Hood Crop: 20, Sky Crop:  80</p>
+</div>
+
+
+<div class="figure">
+<p><img src="road6.png" alt="road6.png" border="1" />
+</p>
+<p><span class="figure-number">Figure 8:</span> Hood Crop: 20, Sky Crop:  100</p>
 </div>
 
 <p>
-Get the target labels&#x2014;the steering angles&#x2014;for <i>all</i> of the
-data, from <code>data/driving_log_all.csv</code>, plot a histogram, and
-generate basic descriptive statistics.
+I should pause here to address the issue of why we are only
+using the center camera.  After all, the training data do
+provide two additional camera images: the left and right
+cameras.  Surely, those provide additional useful information
+that the model potentially could make use of.  However, in my
+opinion there is a serious problem in using these data: the
+simulator seems only to send to the network server in
+<code>drive.py</code> the center image.  I really do not understand why
+this is the case, since obviously the simulator is fully-capable
+of scribbling the extra camera outputs down when recording
+training data.  
+</p>
+
+<p>
+Now, I have observed considerable discussion on the Slack
+channel for this course 
+</p>
+
+<p>
+We begin by conducting a very simple analysis of the target
+labels, which again are steering angles in the interval [-1,
+1].  In fact, as real-valued outputs it may be a stretch to call
+them "labels" and this is not really a classification problem.
+Neverthless in the interest of time we will adopt the term.  In
+any case,
 </p>
 
 <div class="org-src-container">
@@ -721,7 +828,7 @@ DescribeResult(nobs=8036, minmax=(-0.94269539999999996, 1.0), mean=0.00406964406
 <div class="figure">
 <p><img src="hist1.png" alt="hist1.png" border="1" />
 </p>
-<p><span class="figure-number">Figure 6:</span> All Samples - No Reflection</p>
+<p><span class="figure-number">Figure 9:</span> All Samples - No Reflection</p>
 </div>
 
 <p>
@@ -771,7 +878,7 @@ DescribeResult(nobs=3584, minmax=(-0.94269539999999996, 1.0), mean=0.00917186595
 <div class="figure">
 <p><img src="hist2.png" alt="hist2.png" border="1" />
 </p>
-<p><span class="figure-number">Figure 7:</span> abs(angle)&gt;0.01 - No Reflection</p>
+<p><span class="figure-number">Figure 10:</span> abs(angle)&gt;0.01 - No Reflection</p>
 </div>
 
 <p>
@@ -799,7 +906,7 @@ DescribeResult(nobs=7168, minmax=(-1.0, 1.0), mean=0.0, variance=0.0372572501508
 <div class="figure">
 <p><img src="hist3.png" alt="hist3.png" border="1" />
 </p>
-<p><span class="figure-number">Figure 8:</span> abs(angle)&gt;0.01 - Full Reflection</p>
+<p><span class="figure-number">Figure 11:</span> abs(angle)&gt;0.01 - Full Reflection</p>
 </div>
 
 <p>
@@ -916,7 +1023,7 @@ Return a Keras neural network model.
 <div class="figure">
 <p><img src="model.png" alt="model.png" border="1" />
 </p>
-<p><span class="figure-number">Figure 9:</span> CarND Neural-Net Architecture</p>
+<p><span class="figure-number">Figure 12:</span> CarND Neural-Net Architecture</p>
 </div>
 </div>
 </div>
