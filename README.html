@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>Robot Car</title>
-<!-- 2017-01-20 Fri 05:36 -->
+<!-- 2017-01-20 Fri 05:55 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="David A. Ventimiglia" />
@@ -605,6 +605,24 @@ once using Unix command-line utilities above.
 </div>
 
 <p>
+If we invoke <code>rcycle</code> on a sequence drawn from the interval
+[0,5), taken in 3 batches for a total of 15 values we can see
+this behavior.  The first 5 values are drawn in order, but then
+the next 10 are drawn in two batches, each batch shuffled
+independently.  In practice, this is not a problem.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python">[x <span style="color: #b4fa70;">for</span> x <span style="color: #b4fa70;">in</span> islice(rcycle(<span style="color: #e090d7;">range</span>(5)), 15)]
+</pre>
+</div>
+
+<pre class="example">
+[0, 1, 2, 3, 4, 1, 3, 4, 2, 0, 3, 1, 4, 0, 2]
+</pre>
+
+<p>
 The remaining utility functions that I wrote are quite
 straightforward and for brevity are written as "one-liners."
 </p>
@@ -617,6 +635,10 @@ straightforward and for brevity are written as "one-liners."
 <dt> select </dt><dd>generator that selects out elements from tuples
 </dd>
 <dt> load </dt><dd>non-generator that reads an image file into a NumPy array
+</dd>
+<dt> hflip </dt><dd>non-generator that flips a sample along its horizontal axis
+</dd>
+<dt> rflip </dt><dd>non-generator that flips a sample horizontally 50% of the time
 </dd>
 <dt> fetch </dt><dd>generator that loads index file entries into samples
 </dd>
@@ -636,6 +658,8 @@ of NumPy array "batches"
 <span style="color: #fcaf3e;">split</span> = <span style="color: #b4fa70;">lambda</span> <span style="color: #fcaf3e;">lines</span>, <span style="color: #fcaf3e;">delimiter</span>=<span style="color: #e9b96e;">","</span>: (line.split(delimiter) <span style="color: #b4fa70;">for</span> line <span style="color: #b4fa70;">in</span> lines)
 <span style="color: #fcaf3e;">select</span> = <span style="color: #b4fa70;">lambda</span> fields, indices: ([r[i] <span style="color: #b4fa70;">for</span> i <span style="color: #b4fa70;">in</span> indices] <span style="color: #b4fa70;">for</span> r <span style="color: #b4fa70;">in</span> fields)
 <span style="color: #fcaf3e;">load</span> = <span style="color: #b4fa70;">lambda</span> f: np.asarray(Image.<span style="color: #e090d7;">open</span>(f))
+<span style="color: #fcaf3e;">hflip</span> = <span style="color: #b4fa70;">lambda</span> x: (x[0][:,::-1,:], -x[1])
+<span style="color: #fcaf3e;">rflip</span> = <span style="color: #b4fa70;">lambda</span> x: x <span style="color: #b4fa70;">if</span> random.choice([<span style="color: #e9b2e3;">True</span>, <span style="color: #e9b2e3;">False</span>]) <span style="color: #b4fa70;">else</span> flip(x)
 <span style="color: #fcaf3e;">fetch</span> = <span style="color: #b4fa70;">lambda</span> records, base: ([load(base+f.strip()) <span style="color: #b4fa70;">for</span> f <span style="color: #b4fa70;">in</span> record[:1]]+[<span style="color: #e090d7;">float</span>(v) <span style="color: #b4fa70;">for</span> v <span style="color: #b4fa70;">in</span> record[1:]] <span style="color: #b4fa70;">for</span> record <span style="color: #b4fa70;">in</span> records)
 <span style="color: #fcaf3e;">group</span> = <span style="color: #b4fa70;">lambda</span> <span style="color: #fcaf3e;">items</span>, <span style="color: #fcaf3e;">n</span>, <span style="color: #fcaf3e;">fillvalue</span>=<span style="color: #e9b2e3;">None</span>: zip_longest(*([<span style="color: #e090d7;">iter</span>(items)]*n), fillvalue=fillvalue)
 <span style="color: #fcaf3e;">transpose</span> = <span style="color: #b4fa70;">lambda</span> tuples: (<span style="color: #e090d7;">list</span>(<span style="color: #e090d7;">map</span>(<span style="color: #e090d7;">list</span>, <span style="color: #e090d7;">zip</span>(*g))) <span style="color: #b4fa70;">for</span> g <span style="color: #b4fa70;">in</span> tuples)

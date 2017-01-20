@@ -383,7 +383,7 @@
       is not a problem since all of the data were already shuffled
       once using Unix command-line utilities above.
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
+      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code
       def rcycle(iterable):
           saved = []
           for element in iterable:
@@ -395,7 +395,18 @@
                     yield element
       #+END_SRC
 
+      If we invoke =rcycle= on a sequence drawn from the interval
+      [0,5), taken in 3 batches for a total of 15 values we can see
+      this behavior.  The first 5 values are drawn in order, but then
+      the next 10 are drawn in two batches, each batch shuffled
+      independently.  In practice, this is not a problem.
+
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
+      [x for x in islice(rcycle(range(5)), 15)]
+      #+END_SRC
+
       #+RESULTS:
+      : [0, 1, 2, 3, 4, 1, 3, 4, 2, 0, 3, 1, 4, 0, 2]
 
       The remaining utility functions that I wrote are quite
       straightforward and for brevity are written as "one-liners."
@@ -404,6 +415,8 @@
       - split :: generator that splits lines into tuples based on a delimiter
       - select :: generator that selects out elements from tuples
       - load :: non-generator that reads an image file into a NumPy array
+      - hflip :: non-generator that flips a sample along its horizontal axis
+      - rflip :: non-generator that flips a sample horizontally 50% of the time
       - fetch :: generator that loads index file entries into samples
       - group :: generator that groups input elements into lists
       - transpose :: generator that takes a generator of lists into a
@@ -416,6 +429,8 @@
       split = lambda lines, delimiter=",": (line.split(delimiter) for line in lines)
       select = lambda fields, indices: ([r[i] for i in indices] for r in fields)
       load = lambda f: np.asarray(Image.open(f))
+      hflip = lambda x: (x[0][:,::-1,:], -x[1])
+      rflip = lambda x: x if random.choice([True, False]) else flip(x)
       fetch = lambda records, base: ([load(base+f.strip()) for f in record[:1]]+[float(v) for v in record[1:]] for record in records)
       group = lambda items, n, fillvalue=None: zip_longest(*([iter(items)]*n), fillvalue=fillvalue)
       transpose = lambda tuples: (list(map(list, zip(*g))) for g in tuples)
