@@ -30,18 +30,24 @@
 
 * Introduction
 
+  In this document we report the results of a project for the [[https://www.udacity.com/][Udacity]]
+  [[https://www.udacity.com/drive?utm_source%3Dgoogle&utm_medium%3Dcpc&utm_campaign%3Dbrand&gclid%3DCOuc4pLi0dECFUtNfgodvSAPcg][Self-Driving Car Engineer]] Nanodegree program's first semester.  The
+  objective of the project is to build and train a model capable of
+  driving a simulated car.
+
   The method is quite simple.  We somehow acquire training
   data---perhaps by recording it ourselves---in a computerized driving
   simulator.  The training data comprise images of the road as seen
-  through the simulated car, along with corresponding control inputs
-  (in this case, just the steering angle).  The training data are used
-  to train a [[https://en.wikipedia.org/wiki/Deep_learning][Deep Learning]] [[https://en.wikipedia.org/wiki/Artificial_neural_network][neural network]] model so that it recognizes
-  road/car configurations and generates the appropriate steering
-  angle.  The model is then used to generate inputs (steering angles)
-  in real-time for the simulation, unpiloted by a human driver.
+  from cameras mounted on the simulated car, along with corresponding
+  control inputs (in this case, just the steering angle).  The
+  training data are used to train a [[https://en.wikipedia.org/wiki/Deep_learning][Deep Learning]] [[https://en.wikipedia.org/wiki/Artificial_neural_network][neural network]] model
+  so that it recognizes road/car configurations and generates the
+  appropriate steering angle.  The model is then used to generate
+  inputs (steering angles) in real-time for the simulation, unpiloted
+  by a human driver.
 
-  Here is an incomplete list of the tools that I used in my laboratory
-  for this experiment.
+  Here is a brief enumeration of the elements of my project
+  laboratory.
 
   - [[https://keras.io/][Keras]] - Deep Learning toolkit for Python
   - [[https://www.tensorflow.org/][TensorFlow]] - High-Performance numerical computation library for
@@ -67,13 +73,15 @@
   Learning applications and autonomous vehicles, in this toy problem
   it wasn't really necessary.
 
-  Also, note that /everything was done in this one Org-mode file/.
-  This file does not merely document the code.  This document /is/ the
-  code.  Like [[http://jupyter.org/][Jupyter]] notebooks, it is an example of [[https://en.wikipedia.org/wiki/Literate_programming][literate
+  Also, note that everything in this project was done in this
+  document's corresponding [[file:README.org][README.org]] Org-Mode file in Emacs.  This
+  file does not merely document the code.  This document /is/ the
+  code.  Like [[http://jupyter.org/][Jupyter]] notebooks, it is an example of
+  [[https://en.wikipedia.org/wiki/Literate_programming][literate
   programming]], and the [[file:model.py][model.py]] file is /generated/ from this
   document.
 
-*** Approach
+* Methods
 
 *** Data
 
@@ -92,20 +100,19 @@
       different aspects of the scene and in principle providing
       stereoscopic depth information.
 
-      Moreover, the driving simulator also has an "autonomous mode" in
-      which the car interacts with a network server to exchange
-      telemetry that guides the car.  The simulator sends the network
-      server camera images and the network server is expected to
-      reply with steering angles.  So, not only is the driving
-      simulator critical for understanding the problem and helpful for
-      obtaining training data, it is absolutely essential for
-      evaluating the solution.
+      The driving simulator also has an "autonomous mode" in which the
+      car interacts with a network server to exchange telemetry that
+      guides the car.  The simulator sends the network server camera
+      images and the network server is expected to reply with steering
+      angles.  So, not only is the driving simulator critical for
+      understanding the problem and helpful for obtaining training
+      data, it is absolutely essential for evaluating the solution.
 
       Actually, Udacity provides not [[https://d17h27t6h515a5.cloudfront.net/topher/2016/November/5831f0f7_simulator-linux/simulator-linux.zip][one]] but [[https://d17h27t6h515a5.cloudfront.net/topher/2017/January/587527cb_udacity-sdc-udacity-self-driving-car-simulator-dominique-development-linux-desktop-64-bit-5/udacity-sdc-udacity-self-driving-car-simulator-dominique-development-linux-desktop-64-bit-5.zip][two]] simulators.  The
       first is the stock simulator and the second is an enhanced
       simulator, whose ability to use a computer mouse as input is
       very important for acquiring good training data with smoothly
-      varying steering angles.  So, why not get both?  Here, I
+      varying steering angles.  So, why not get both?  Here, we
       download and unzip the Linux versions into sub-directories
       =simulator-linux= and =simulator-beta=.
 
@@ -128,10 +135,11 @@
       Now, while we are encouraged to collect our own training data,
       it turns out that Udacity supplies their own training data for
       the first of the two tracks, which is the track on which the
-      solution will be validated.  we might as well get that, and see
-      how much progress we can make just with the provided samples.
-      The data are in a zip file, [[https://d17h27t6h515a5.cloudfront.net/topher/2016/December/584f6edd_data/data.zip][data.zip]], which we of course unzip.
-      we also remove the annoying =__MACOSX= directory.
+      solution will be validated.  We might as well get that as well,
+      and see how much progress we can make just with the provided
+      samples.  The data are in a zip file, [[https://d17h27t6h515a5.cloudfront.net/topher/2016/December/584f6edd_data/data.zip][data.zip]], which we of
+      course unzip, taking care to remove the annoying =__MACOSX=
+      directory.
 
       #+BEGIN_SRC sh :results output :tangle no :exports code
       wget -nc "https://d17h27t6h515a5.cloudfront.net/topher/2016/December/584f6edd_data/data.zip"
@@ -139,14 +147,14 @@
       rm -rf __MACOSX
       #+END_SRC
 
-      The data---whether recorded or downloaded---are presented as [[https://en.wikipedia.org/wiki/Comma-separated_values][CSV]]
-      "index file", =driving_log.csv=.  Each line in this file
+      The data---whether recorded or downloaded---are presented as a
+      [[https://en.wikipedia.org/wiki/Comma-separated_values][CSV]] "index file", =driving_log.csv=.  Each line in this file
       correlates images with the steering angle, throttle, brake, and
       speed of the car.  The images are related via filenames in the
       first three fields, which refer to the center, left, and right
-      camera images stored in files in the =IMG= subdirectory.  Let's
+      camera images stored in files in the =IMG= subdirectory.  We can
       take a look at the beginning of that file and then determine how
-      many samples are proved
+      many samples are provided.
 
       #+BEGIN_SRC sh :results output :tangle no :exports both
       head data/driving_log.csv
@@ -168,13 +176,13 @@
       8037 data/driving_log.csv
       #+end_example
 
-      we have 8037 lines, but evidently, descriptive labels are
-      provided in the first line of this file.  Let's strip that out.
-      Also, Deep Learning lore says that it is often prudent to
-      randomize the data when possible and always prudent to split the
-      data into training and validation sets.  Here we do all three in
-      just a few lines of shell code, taking 1000 samples (about 12%)
-      as validation data.
+      We have 8037 lines, but descriptive labels are provided in the
+      first line of this file.  We strip that line out.  Also, Deep
+      Learning lore says that it is often prudent to randomize the
+      data when possible and always prudent to split the data into
+      training and validation sets.  Here we do all three in just a
+      few lines of shell code, taking 1000 samples (about 12%) as
+      validation data.
 
       #+BEGIN_SRC sh :results output :tangle no :exports both
       cat data/driving_log.csv | tail -n+2 | shuf > data/driving_log_all.csv
@@ -192,7 +200,7 @@
       parameters and the combinatorial explosion among them can
       quickly overwhelm the researcher, and so eliminating some of
       those free parameters by avoiding recording one's own data---if
-      only in the interim---is a real boon.  we do not use the
+      only in the interim---is a real boon.  We do not use the
       [[file:data/driving_log_all.csv][=driving_log_all.csv=]] file after this point; it served as a
       handy placeholder of the original data, shuffled and with the
       header removed.  However, the [[file:data/driving_log_train.csv][=driving_log_train.csv=]] and
@@ -212,10 +220,10 @@
 
       Before leaving the land of shell commands for the land of Python
       scripts and neural nets, we create one other useful data file.
-      Paul Heraty argues that it can be useful in the early stages of
+      Paul Heraty [[https://carnd-forums.udacity.com/questions/26214464/behavioral-cloning-cheatsheet][argues]] that it can be useful in the early stages of
       developing a solution to "overtrain" it on a small sample
-      comprising disparate canonical examples.  As we shall see, we can
-      confirm that this was /extremely/ good advice.  
+      comprising disparate canonical examples.  As we shall see, we
+      can confirm that this was /extremely/ good advice.
 
       One of the chief difficulties we encountered as a newcomer to Deep
       Learning and its community of tools was simply "getting it to
@@ -248,21 +256,22 @@
       : IMG/center_2016_12_01_13_38_46_752.jpg, IMG/left_2016_12_01_13_38_46_752.jpg, IMG/right_2016_12_01_13_38_46_752.jpg, 1, 0, 0, 13.2427
       : IMG/center_2016_12_01_13_30_48_287.jpg, IMG/left_2016_12_01_13_30_48_287.jpg, IMG/right_2016_12_01_13_30_48_287.jpg,0, 0, 0, 22.14829
 
-      we will be able to see exactly what the images for these samples
+      We will be able to see exactly what the images for these samples
       once we set up a suitable Python environment, which we do in the
       next section.
 
 ***** Setup
 
-      Udacity helpfully provides a [[https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/83ec35ee-1e02-48a5-bdb7-d244bd47c2dc/lessons/8c82408b-a217-4d09-b81d-1bda4c6380ef/concepts/4f1870e0-3849-43e4-b670-12e6f2d4b7a7][CarND Starter Kit]], which involves
-      acquiring the contents of a particular [[https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md][GitHub repository]].  The
-      consequence of this is a [[http://conda.pydata.org/docs/][Conda]] environment for Python, whose
-      definition we extracted into the [[file:environment.yml][environment.yml]] file.  That way,
-      if the environment does not already exist it can be created with
-      this command.
+      Udacity helpfully provides a [[https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/83ec35ee-1e02-48a5-bdb7-d244bd47c2dc/lessons/8c82408b-a217-4d09-b81d-1bda4c6380ef/concepts/4f1870e0-3849-43e4-b670-12e6f2d4b7a7][CarND Starter Kit]] in the contents
+      of a particular [[https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md][GitHub repository]].  The instructions there lead
+      one to create a [[http://conda.pydata.org/docs/][Conda]] environment for Python.  We did that and
+      extracted its definition into the [[file:environment.yml][environment.yml]] file.  That
+      way, if the environment does not already exist it can be created
+      and activated with these commands.
 
       #+BEGIN_SRC sh :results output :tangle no :exports code
       conda env create --file environment.yml --name CarND-Behavioral-Cloning
+      source activate CarND-Behavioral-Cloning
       #+END_SRC
 
       #+RESULTS:
@@ -572,8 +581,7 @@
       labels, which again are steering angles in the interval [-1,
       1].  In fact, as real-valued outputs it may be a stretch to call
       them "labels" and this is not really a classification problem.
-      Nevertheless in the interest of time we will adopt the term.  In
-      any case,
+      Nevertheless in the interest of time we will adopt the term.
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
       f = plt.figure()                   
@@ -597,7 +605,7 @@
       #+CAPTION: All Samples - No Reflection
       [[file:hist1.png]]
 
-      The data have non-zero /mean/ and /skewness/.  perhaps arising
+      The data have non-zero /mean/ and /skewness/, perhaps arising
       from a bias toward left-hand turns when driving on a closed
       track.
 
@@ -608,9 +616,9 @@
       interval [-1, 1], but the "straight" samples appear to be within
       the neighborhood [-0.01, 0.01].
 
-      I might consider masking out small angled samples from the
-      actual training data as well, a subject we shall return to in a
-      later section.
+      We might consider masking out small angled samples from the
+      actual training data as well, a subject we shall return to in
+      the summary.
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
       f = plt.figure()
@@ -635,10 +643,10 @@
       #+CAPTION: abs(angle)>0.01 - No Reflection
       [[file:hist2.png]]
 
-      A simple trick that I can play to remove this asymmetry---if I
+      A simple trick we can play to remove this asymmetry---if we
       wish---is to join the data with its reflection, effectively
       doubling our sample size in the process.  For illustration
-      purposes only, I shall again mask out small angle samples.
+      purposes only, we shall again mask out small angle samples.
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
       f = plt.figure()
@@ -670,8 +678,8 @@
       labels.  If I apply this strategy to the training data,
       naturally I need to reflect along their horizontal axes the
       corresponding input images as well.  In fact, that is the
-      purpose of the =Xflip=, =yflip=, =rmap=, and =rflip= utility
-      functions described above.  
+      purpose of the =Xflip=, =yflip=, =rmap=, =rflip=, and =sflip=
+      utility functions described above.
 
       It turns out there is another approach to dealing with the bias
       and asymmetry in the training data.  In lieu of reflecting the
@@ -731,11 +739,11 @@
 		   ('kurtosis', 1.1406077506908527)])
       #+end_example
 
-      Here, we see that as increase the number of samples we draw from
-      the underlying data set, while randomly flipping them, the mean
-      tends to diminish.  The skewness does not behave quite so well,
-      though a coarser smoothing kernel (larger bin sizes for the
-      histograms) may help.  In any case, the following figures do
+      Here, we see that as we increase the number of samples we draw
+      from the underlying data set, while randomly flipping them, the
+      mean tends to diminish.  The skewness does not behave quite so
+      well, though a coarser smoothing kernel (larger bin sizes for
+      the histograms) may help.  In any case, the following figures do
       suggest that randomly flipping the data and drawing larger
       sample sizes does help balance out the data.
 
@@ -910,6 +918,8 @@
       truth" like the NVIDIA researchers did
     - the images are encoded in RGB planes rather than YUV planes
       unless it becomes necessary to do so
+    - we add a non-trainable [[https://keras.io/layers/pooling/][AveragePooling2D]] layer to act as an image
+      resizer. 
 
     With all of these considerations in mind, I conducted many
     experiments with different combinations of factors, a saga that I
@@ -923,7 +933,6 @@
     - fully-connected layers
     - non-trainable readout layer with no activation
     - RELU activations rather than ELU activations
-    - center-camera only unless otherwise needed
 
     Finally, I should add that for image augmentation I briefly
     considered performing random shifts of the input data, but in the
@@ -942,9 +951,10 @@
       2. Whatever cropping/resizing occurs /must/ also be done in the
          network service.  Performing these operations with the model
          means that this is handled automatically, for free.
-      3. In principle, we might realize better training performance as
+      3. In general, we might realize better training performance as
          the cropping/resizing occur in the GPUs rather than in the
-         CPU.  
+         CPU.  In my particular case this did not occur because I
+         trained only on a laptop without a GPU.
 
       This means that the =input_shape= is not really a
       hyper-parameter, since it is just the original image size, which
@@ -1087,7 +1097,7 @@
       With functions for constructing the model architecture and the
       data pipelines in hand, training is very simple.  One additional
       item to point out is this.  There can be a proliferation of
-      /literal/ hyper-parameters (crop sizes, epochs, bath sizes,
+      /literal/ hyper-parameters (crop sizes, epochs, batch sizes,
       whether or not to do random flipping, etc.) and passing these
       parameters among all the related and nested functions can be a
       nuisance.  I find it convenient to collect such parameters into
@@ -1117,20 +1127,20 @@
       image above the horizon and some of the image where the car hood
       is superimposed.  Those values were chosen by experimentation,
       and the choices are discussed below.  However, the =(1,1)= value
-      for the width croping merits some explanation.  In principle, I
+      for the width cropping merits some explanation.  In principle, I
       saw no reason to crop anything in the width direction.  However,
       Keras has a bug (fixed but not yet in a stable release) such
       that Cropping2D fails when any of the four elements in the tuple
-      of tuples is 0.  Hence, the 1 pixel crops on the left and right
-      edges.  
+      of tuples is 0.  This is the reason for the 1 pixel crops on the
+      left and right edges.
 
-      First, as a sanity check, we conduct a small training (3 epochs,
+      Now, as a sanity check, we conduct a small training (3 epochs,
       30 samples per epoch, batch size 10) of the data in
       =driving_log_overtrain.csv=.  This is just to "get our feet wet"
       and quickly to verify that the code written above even works.
       Note that we use the same file for the validation set.  This is
       just a test, so it does not really matter what we use for the
-      validation set.  
+      validation set.
 
       #+BEGIN_SRC python -r :results output :session :tangle model.py :comments org :exports code
       class HyperParameters:
@@ -1139,7 +1149,7 @@
 
       theta = HyperParameters()
       theta.input_shape = [160, 320, 3]
-      theta.crop_shape = ((80,20),(1,1))   # (ref:crop_shape)
+      theta.crop_shape = ((80,20),(1,1))   # crop size (ref:crop_shape)
       theta.samples_per_epoch = 30
       theta.valid_samples_per_epoch = 30
       theta.epochs = 3
@@ -1148,7 +1158,6 @@
       theta.validationfile = "data/driving_log_overtrain.csv"
       theta.base_path = "data/"
       theta.flip = False
-      theta.shift = False
 
       model = CarND(theta.input_shape, theta.crop_shape)
       model.compile(loss="mse", optimizer="adam")
@@ -1166,13 +1175,6 @@
 	  nb_val_samples=theta.valid_samples_per_epoch)
       #+END_SRC
 
-      Next, we perform the actual training on the
-      =driving_log_train.csv= file, validating against the
-      =driving_log_validation.csv= file.  After /this/ training we
-      actually save the model to =model.json= and the model weights to
-      =model.h5=, files suitable for input into the network service in
-      =drive.py=.  
-
       #+RESULTS:
       : 
       : ... ... >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
@@ -1183,19 +1185,25 @@
       : Epoch 3/3
       : 0s - loss: 0.4659 - val_loss: 0.3416
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
+      Next, we perform the actual training on the
+      =driving_log_train.csv= file, validating against the
+      =driving_log_validation.csv= file.  After /this/ training we
+      actually save the model to =model.json= and the model weights to
+      =model.h5=, files suitable for input into the network service in
+      =drive.py=.  
+
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
       theta = HyperParameters()
       theta.input_shape = [160, 320, 3]
       theta.crop_shape = ((80,20),(1,1))
       theta.trainingfile = "data/driving_log_train.csv"
       theta.validationfile = "data/driving_log_validation.csv"
       theta.base_path = "data/"
-      theta.samples_per_epoch = 7000
-      theta.valid_samples_per_epoch = 1037
+      theta.samples_per_epoch = 7036
+      theta.valid_samples_per_epoch = 1000
       theta.epochs = 3
       theta.batch_size = 100
       theta.flip = False
-      theta.shift = False
 
       model = CarND(theta.input_shape, theta.crop_shape)
       model.compile(loss="mse", optimizer="adam")
@@ -1227,7 +1235,146 @@
       : 27s - loss: 0.0099 - val_loss: 0.0092
       : ... ... 4042
 
+      Ta-da!  We now have a trained model in =model.json= and
+      =model.h5= that we can run in the simulator with this command.
+
+      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
+      python drive.py model.json
+      #+END_SRC
+
 * Summary
+
+  This was an enjoyable and illuminating, albeit challenging project.
+  Ultimately, we believe we achieved the primary objectives of the
+  project.
+
+  - The code is functional and successfully operates the simulator (on
+    Track 1, at least).
+  - The code is factored, organized, commented, and documented.
+  - The code uses Python generators and the =model.fit_generator=
+    function in Keras.
+  - The training data are normalized.
+  - The code uses a neural network that has convolutional layers.
+  - There are activation layers (RELU) to introduce non-linearity into
+    the model.
+  - The data have been split into training and validation sets.  Note
+    that no test data split was applied, since testing ultimately is
+    done by successfully operating the car in the simulator.
+  - The model has a dropout layer to help reduce overfitting.
+  - No =tanh= activation function was needed in the final readout
+    layer.
+  - Training is done with the ADAM optimizer so that learning-rate
+    parameters need not be fiddled with.
+  - While we were prepared to record training data ourselves if
+    necessary, in the end we succeeded using only the Udacity data.
+
+  Finally, we make the following observations.
+
+  - After much experimentation, it turns out that cropping the image
+    was the single most important factor in achieving good results.
+  - From this observation we make the following inferences.
+  - The "sky" portion of the image is largely irrelevant for
+    generating appropriate steering angles.
+  - In principle, the neural network could have learned that on its
+    own, but helping it out by manually cropping out the sky was
+    enormously helpful.
+  - In fact, we actually cropped out more than just the sky, removing
+    some of the road near the horizon.
+  - When the road is curved, the portion of the road nearer to the
+    horizon naturally has the greatest apparent curvature when
+    projected onto the 2-D image plane.  Conversely, the curvature of
+    the road near the car is barely apparent.
+  - The portion of the road nearer to the horizon essentially provides
+    information /about the future/.  That is, it establishes road
+    conditions that the car /will/ encounter.
+  - The portion of the road nearer to the bottom essentially provides
+    information /about the present/.  That is, it registers the
+    position of the car left to right, with respect to the edges and
+    centerline of the road.
+  - This is a very simple neural network model, and we have
+    made no effort whatsoever to introduce anything like "memory" or
+    "anticipatory" behavior.
+  - Our primary goal is /safely/ to navigate the road by staying away
+    from its edges.
+  - Navigation (e.g., route planning) and choosing the best line
+    (e.g., cutting the corners for racing purposes) are non-goals.
+  - Consequently, it may very well be that the bottom 1/3 to 1/4 of
+    the road really has the most relevance for the task at hand.
+  - Cropping the image, and also resizing the image helped
+    dramatically reduce the size of the model in terms of the number
+    of parameters, which greatly helped training time.
+  - Cropping and resizing right in the model, rather than as a
+    pre-processing step, simplified the code and adapted it perfectly
+    for the network service in =drive.py=.
+  - Cropping the images ironically may have ameliorated the left-turn
+    bias in the training data.
+  - In earlier experiments, before cropping, there always was a
+    pronounced leftward drift of the car unless image reflection or
+    flipping was applied.
+  - In those early experiments, image flipping thoroughly removed the
+    leftward drift.
+  - However, the car still had significant problems on sharp turns and
+    /especially/ with the "pit stop" after the bridge.
+  - After adding the cropping of =(80,120)= for the top and bottom,
+    the car was able to negotiate the sharp turns and avoid the pit
+    stop.
+  - Moreover, after adding the cropping the leftward drift largely
+    disappeared /even without image flipping/.
+  - We speculate that the influence of the left-turn bias is greatest
+    within the upper portions of the image, but the model has no way
+    of knowing that.
+  - By cropping out much of the upper portions of the image we seem to
+    have removed that bias.
+  - Incidentally, the number of epochs was chosen largely by
+    trial-and-error.  We ran experiments training with a large number
+    of epochs, hoping to see the accuracy on the validation set turn
+    around and start to diverge.  Unfortunately, we never saw that and
+    the validation error continued to decline.
+  - In principle, that should be good.  However, in practice, we
+    noticed that models trained for many epochs, with very low
+    validation accuracy, drove somewhat poorly.
+  - We may not actually have needed the droput layer.  In fact, in
+    some experiments we seem to have converged to a better-performing
+    model more quickly /without/ dropout.
+  - It may be that without dropout, the model overtrains on Track 1,
+    but that since we are validating on Track 1 it does not produce a
+    problem.  If true then it is likely such an overtrained model
+    without dropout would perform /more/ poorly on other tracks.
+  - For that reason, we kept the dropout layer.  We plan to perform
+    more experiments and strive to achieve satisfactory performance on
+    Track 2 after /only/ training on Udacity's data for Track 1.
+  - As discussed earlier, I had considered masking out small-angle
+    samples.  However, I achieved satisfactory results without doing
+    this.  It occurs to us that in fact these may be crucial data for
+    stabilizing the car within the center of the track.
+
+    One final thought is this.  In the end, the particular network
+    architecture that I chose may be overkill.  It may be that a much
+    simpler model would suffice.  As described earlier, I began with
+    the NVIDIA model, which while simple still may be more than is
+    needed here.  After all, that model drove a real car in real-world
+    conditions, trained with real-world data.  Our problem confronts
+    only a simulator.  Further work may involve drastically reducing
+    the size and complexity of the model to see where it finally
+    breaks down.
+
+    #+CAPTION:  Final Model Characteristics
+    |------------------------------+-----------------|
+    | Hyper-Parameter              | Setting         |
+    |------------------------------+-----------------|
+    | Data                         | Udacity data    |
+    | Epochs                       | 3               |
+    | Samples per epoch            | 7036            |
+    | Validation samples per epoch | 1000            |
+    | Batch size                   | 100             |
+    | Random sample flipping       | no              |
+    | Top crop                     | 80 pixels       |
+    | Bottom crop                  | 20 pixels       |
+    | RGB or YUV image encoding    | RGB             |
+    | Training time                | under 2 minutes |
+    | Camera                       | center-only     |
+    | Augmentation                 | none            |
+    |------------------------------+-----------------|
 
 #  LocalWords:  CarND Keras Udacity Nano num pri timestamp todo url
 #  LocalWords:  DOCTYPE xhtml src ATTR linux wget py MACOSX nc rf CSV
@@ -1244,4 +1391,5 @@
 #  LocalWords:  validgen unpiloted Lenovo IdeaPad GPUs aws Jupyter eb
 #  LocalWords:  pprint Xflip yflip rmap sflip centerline colorspace
 #  LocalWords:  asdict OrderedDict unflipped ai NVIDIA Yann LeCun's
-#  LocalWords:  MNIST YUV strided sigmoid softmax ELU tanh
+#  LocalWords:  MNIST YUV strided sigmoid softmax ELU tanh Nanodegree
+#  LocalWords:  resizer Keras's

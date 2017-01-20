@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>Robot Car</title>
-<!-- 2017-01-20 Fri 13:55 -->
+<!-- 2017-01-20 Fri 15:56 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="David A. Ventimiglia" />
@@ -147,31 +147,31 @@ for the JavaScript code in this tag.
 </div>
 
 <div id="outline-container-sec-1" class="outline-2">
-<h2 id="sec-1">What</h2>
-</div>
+<h2 id="sec-1">Introduction</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+In this document we report the results of a project for the <a href="https://www.udacity.com/">Udacity</a>
+<a href="https://www.udacity.com/drive?utm_source=google&utm_medium=cpc&utm_campaign=brand&gclid=COuc4pLi0dECFUtNfgodvSAPcg">Self-Driving Car Engineer</a> Nanodegree program's first semester.  The
+objective of the project is to build and train a model capable of
+driving a simulated car.
+</p>
 
-<div id="outline-container-sec-2" class="outline-2">
-<h2 id="sec-2">Why</h2>
-</div>
-
-<div id="outline-container-sec-3" class="outline-2">
-<h2 id="sec-3">How</h2>
-<div class="outline-text-2" id="text-3">
 <p>
 The method is quite simple.  We somehow acquire training
 data&#x2014;perhaps by recording it ourselves&#x2014;in a computerized driving
 simulator.  The training data comprise images of the road as seen
-through the simulated car, along with corresponding control inputs
-(in this case, just the steering angle).  The training data are used
-to train a <a href="https://en.wikipedia.org/wiki/Deep_learning">Deep Learning</a> <a href="https://en.wikipedia.org/wiki/Artificial_neural_network">neural network</a> model so that it recognizes
-road/car configurations and generates the appropriate steering
-angle.  The model is then used to generate inputs (steering angles)
-in real-time for the simulation, unpiloted by a human driver.
+from cameras mounted on the simulated car, along with corresponding
+control inputs (in this case, just the steering angle).  The
+training data are used to train a <a href="https://en.wikipedia.org/wiki/Deep_learning">Deep Learning</a> <a href="https://en.wikipedia.org/wiki/Artificial_neural_network">neural network</a> model
+so that it recognizes road/car configurations and generates the
+appropriate steering angle.  The model is then used to generate
+inputs (steering angles) in real-time for the simulation, unpiloted
+by a human driver.
 </p>
 
 <p>
-Here is an incomplete list of the tools that I used in my laboratory
-for this experiment.
+Here is a brief enumeration of the elements of my project
+laboratory.
 </p>
 
 <ul class="org-ul">
@@ -213,24 +213,26 @@ it wasn't really necessary.
 </p>
 
 <p>
-Also, note that <i>everything was done in this one Org-mode file</i>.
-This file does not merely document the code.  This document <i>is</i> the
-code.  Like <a href="http://jupyter.org/">Jupyter</a> notebooks, it is an example of <a href="https://en.wikipedia.org/wiki/Literate_programming">literate
+Also, note that everything in this project was done in this
+document's corresponding <a href="README.html">README.org</a> Org-Mode file in Emacs.  This
+file does not merely document the code.  This document <i>is</i> the
+code.  Like <a href="http://jupyter.org/">Jupyter</a> notebooks, it is an example of
+<a href="https://en.wikipedia.org/wiki/Literate_programming">literate
 programming</a>, and the <a href="model.py">model.py</a> file is <i>generated</i> from this
 document.
 </p>
 </div>
-
-<div id="outline-container-sec-3-1" class="outline-3">
-<h3 id="sec-3-1">Approach</h3>
 </div>
 
-<div id="outline-container-sec-3-2" class="outline-3">
-<h3 id="sec-3-2">Data</h3>
-<div class="outline-text-3" id="text-3-2">
-</div><div id="outline-container-sec-3-2-1" class="outline-4">
-<h4 id="sec-3-2-1">Collection and Preparation</h4>
-<div class="outline-text-4" id="text-3-2-1">
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">Methods</h2>
+<div class="outline-text-2" id="text-2">
+</div><div id="outline-container-sec-2-1" class="outline-3">
+<h3 id="sec-2-1">Data</h3>
+<div class="outline-text-3" id="text-2-1">
+</div><div id="outline-container-sec-2-1-1" class="outline-4">
+<h4 id="sec-2-1-1">Collection and Preparation</h4>
+<div class="outline-text-4" id="text-2-1-1">
 <p>
 Behavioral cloning relies on training neural networks with data
 exhibiting the very behavior you wish to clone.  One way to
@@ -247,14 +249,13 @@ stereoscopic depth information.
 </p>
 
 <p>
-Moreover, the driving simulator also has an "autonomous mode" in
-which the car interacts with a network server to exchange
-telemetry that guides the car.  The simulator sends the network
-server camera images and the network server is expected to
-reply with steering angles.  So, not only is the driving
-simulator critical for understanding the problem and helpful for
-obtaining training data, it is absolutely essential for
-evaluating the solution.
+The driving simulator also has an "autonomous mode" in which the
+car interacts with a network server to exchange telemetry that
+guides the car.  The simulator sends the network server camera
+images and the network server is expected to reply with steering
+angles.  So, not only is the driving simulator critical for
+understanding the problem and helpful for obtaining training
+data, it is absolutely essential for evaluating the solution.
 </p>
 
 <p>
@@ -262,7 +263,7 @@ Actually, Udacity provides not <a href="https://d17h27t6h515a5.cloudfront.net/to
 first is the stock simulator and the second is an enhanced
 simulator, whose ability to use a computer mouse as input is
 very important for acquiring good training data with smoothly
-varying steering angles.  So, why not get both?  Here, I
+varying steering angles.  So, why not get both?  Here, we
 download and unzip the Linux versions into sub-directories
 <code>simulator-linux</code> and <code>simulator-beta</code>.
 </p>
@@ -291,10 +292,11 @@ well, which is implemented in the <a href="https://d17h27t6h515a5.cloudfront.net
 Now, while we are encouraged to collect our own training data,
 it turns out that Udacity supplies their own training data for
 the first of the two tracks, which is the track on which the
-solution will be validated.  we might as well get that, and see
-how much progress we can make just with the provided samples.
-The data are in a zip file, <a href="https://d17h27t6h515a5.cloudfront.net/topher/2016/December/584f6edd_data/data.zip">data.zip</a>, which we of course unzip.
-we also remove the annoying <code>__MACOSX</code> directory.
+solution will be validated.  We might as well get that as well,
+and see how much progress we can make just with the provided
+samples.  The data are in a zip file, <a href="https://d17h27t6h515a5.cloudfront.net/topher/2016/December/584f6edd_data/data.zip">data.zip</a>, which we of
+course unzip, taking care to remove the annoying <code>__MACOSX</code>
+directory.
 </p>
 
 <div class="org-src-container">
@@ -306,14 +308,14 @@ rm -rf __MACOSX
 </div>
 
 <p>
-The data&#x2014;whether recorded or downloaded&#x2014;are presented as <a href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV</a>
-"index file", <code>driving_log.csv</code>.  Each line in this file
+The data&#x2014;whether recorded or downloaded&#x2014;are presented as a
+<a href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV</a> "index file", <code>driving_log.csv</code>.  Each line in this file
 correlates images with the steering angle, throttle, brake, and
 speed of the car.  The images are related via filenames in the
 first three fields, which refer to the center, left, and right
-camera images stored in files in the <code>IMG</code> subdirectory.  Let's
+camera images stored in files in the <code>IMG</code> subdirectory.  We can
 take a look at the beginning of that file and then determine how
-many samples are proved
+many samples are provided.
 </p>
 
 <div class="org-src-container">
@@ -338,13 +340,13 @@ IMG/center_2016_12_01_13_31_13_584.jpg, IMG/left_2016_12_01_13_31_13_584.jpg, IM
 </pre>
 
 <p>
-we have 8037 lines, but evidently, descriptive labels are
-provided in the first line of this file.  Let's strip that out.
-Also, Deep Learning lore says that it is often prudent to
-randomize the data when possible and always prudent to split the
-data into training and validation sets.  Here we do all three in
-just a few lines of shell code, taking 1000 samples (about 12%)
-as validation data.
+We have 8037 lines, but descriptive labels are provided in the
+first line of this file.  We strip that line out.  Also, Deep
+Learning lore says that it is often prudent to randomize the
+data when possible and always prudent to split the data into
+training and validation sets.  Here we do all three in just a
+few lines of shell code, taking 1000 samples (about 12%) as
+validation data.
 </p>
 
 <div class="org-src-container">
@@ -364,7 +366,7 @@ developing that solution.  A project like this has many free
 parameters and the combinatorial explosion among them can
 quickly overwhelm the researcher, and so eliminating some of
 those free parameters by avoiding recording one's own data&#x2014;if
-only in the interim&#x2014;is a real boon.  we do not use the
+only in the interim&#x2014;is a real boon.  We do not use the
 <a href="data/driving_log_all.csv"><code>driving_log_all.csv</code></a> file after this point; it served as a
 handy placeholder of the original data, shuffled and with the
 header removed.  However, the <a href="data/driving_log_train.csv"><code>driving_log_train.csv</code></a> and
@@ -389,10 +391,10 @@ wc -l data/driving_log_validation.csv
 <p>
 Before leaving the land of shell commands for the land of Python
 scripts and neural nets, we create one other useful data file.
-Paul Heraty argues that it can be useful in the early stages of
+Paul Heraty <a href="https://carnd-forums.udacity.com/questions/26214464/behavioral-cloning-cheatsheet">argues</a> that it can be useful in the early stages of
 developing a solution to "overtrain" it on a small sample
-comprising disparate canonical examples.  As we shall see, we can
-confirm that this was <i>extremely</i> good advice.  
+comprising disparate canonical examples.  As we shall see, we
+can confirm that this was <i>extremely</i> good advice.
 </p>
 
 <p>
@@ -436,28 +438,29 @@ IMG/center_2016_12_01_13_30_48_287.jpg, IMG/left_2016_12_01_13_30_48_287.jpg, IM
 </pre>
 
 <p>
-we will be able to see exactly what the images for these samples
+We will be able to see exactly what the images for these samples
 once we set up a suitable Python environment, which we do in the
 next section.
 </p>
 </div>
 </div>
 
-<div id="outline-container-sec-3-2-2" class="outline-4">
-<h4 id="sec-3-2-2">Setup</h4>
-<div class="outline-text-4" id="text-3-2-2">
+<div id="outline-container-sec-2-1-2" class="outline-4">
+<h4 id="sec-2-1-2">Setup</h4>
+<div class="outline-text-4" id="text-2-1-2">
 <p>
-Udacity helpfully provides a <a href="https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/83ec35ee-1e02-48a5-bdb7-d244bd47c2dc/lessons/8c82408b-a217-4d09-b81d-1bda4c6380ef/concepts/4f1870e0-3849-43e4-b670-12e6f2d4b7a7">CarND Starter Kit</a>, which involves
-acquiring the contents of a particular <a href="https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md">GitHub repository</a>.  The
-consequence of this is a <a href="http://conda.pydata.org/docs/">Conda</a> environment for Python, whose
-definition we extracted into the <a href="environment.yml">environment.yml</a> file.  That way,
-if the environment does not already exist it can be created with
-this command.
+Udacity helpfully provides a <a href="https://classroom.udacity.com/nanodegrees/nd013/parts/fbf77062-5703-404e-b60c-95b78b2f3f9e/modules/83ec35ee-1e02-48a5-bdb7-d244bd47c2dc/lessons/8c82408b-a217-4d09-b81d-1bda4c6380ef/concepts/4f1870e0-3849-43e4-b670-12e6f2d4b7a7">CarND Starter Kit</a> in the contents
+of a particular <a href="https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md">GitHub repository</a>.  The instructions there lead
+one to create a <a href="http://conda.pydata.org/docs/">Conda</a> environment for Python.  We did that and
+extracted its definition into the <a href="environment.yml">environment.yml</a> file.  That
+way, if the environment does not already exist it can be created
+and activated with these commands.
 </p>
 
 <div class="org-src-container">
 
 <pre class="src src-sh">conda env create --file environment.yml --name CarND-Behavioral-Cloning
+<span style="color: #e090d7;">source</span> activate CarND-Behavioral-Cloning
 </pre>
 </div>
 
@@ -485,9 +488,9 @@ sections.
 </div>
 </div>
 
-<div id="outline-container-sec-3-2-3" class="outline-4">
-<h4 id="sec-3-2-3">Utilities</h4>
-<div class="outline-text-4" id="text-3-2-3">
+<div id="outline-container-sec-2-1-3" class="outline-4">
+<h4 id="sec-2-1-3">Utilities</h4>
+<div class="outline-text-4" id="text-2-1-3">
 <p>
 Another piece of advice impressed upon students in the class, to
 the point of it practically being a requirement, was to learn to
@@ -678,9 +681,9 @@ of NumPy array "batches"
 </div>
 </div>
 
-<div id="outline-container-sec-3-2-4" class="outline-4">
-<h4 id="sec-3-2-4">Exploratory Analysis</h4>
-<div class="outline-text-4" id="text-3-2-4">
+<div id="outline-container-sec-2-1-4" class="outline-4">
+<h4 id="sec-2-1-4">Exploratory Analysis</h4>
+<div class="outline-text-4" id="text-2-1-4">
 <p>
 It often pays to explore your data with relatively few
 constraints before diving in to build and train the actual
@@ -842,8 +845,7 @@ We begin by conducting a very simple analysis of the target
 labels, which again are steering angles in the interval [-1,
 1].  In fact, as real-valued outputs it may be a stretch to call
 them "labels" and this is not really a classification problem.
-Nevertheless in the interest of time we will adopt the term.  In
-any case,
+Nevertheless in the interest of time we will adopt the term.
 </p>
 
 <div class="org-src-container">
@@ -875,7 +877,7 @@ OrderedDict([('nobs', 8036),
 </div>
 
 <p>
-The data have non-zero <i>mean</i> and <i>skewness</i>.  perhaps arising
+The data have non-zero <i>mean</i> and <i>skewness</i>, perhaps arising
 from a bias toward left-hand turns when driving on a closed
 track.
 </p>
@@ -890,9 +892,9 @@ the neighborhood [-0.01, 0.01].
 </p>
 
 <p>
-I might consider masking out small angled samples from the
-actual training data as well, a subject we shall return to in a
-later section.
+We might consider masking out small angled samples from the
+actual training data as well, a subject we shall return to in
+the summary.
 </p>
 
 <div class="org-src-container">
@@ -925,10 +927,10 @@ OrderedDict([('nobs', 3584),
 </div>
 
 <p>
-A simple trick that I can play to remove this asymmetry&#x2014;if I
+A simple trick we can play to remove this asymmetry&#x2014;if we
 wish&#x2014;is to join the data with its reflection, effectively
 doubling our sample size in the process.  For illustration
-purposes only, I shall again mask out small angle samples.
+purposes only, we shall again mask out small angle samples.
 </p>
 
 <div class="org-src-container">
@@ -970,8 +972,8 @@ Of course, in this analysis I have only reflected the target
 labels.  If I apply this strategy to the training data,
 naturally I need to reflect along their horizontal axes the
 corresponding input images as well.  In fact, that is the
-purpose of the <code>Xflip</code>, <code>yflip</code>, <code>rmap</code>, and <code>rflip</code> utility
-functions described above.  
+purpose of the <code>Xflip</code>, <code>yflip</code>, <code>rmap</code>, <code>rflip</code>, and <code>sflip</code>
+utility functions described above.
 </p>
 
 <p>
@@ -1035,11 +1037,11 @@ OrderedDict([('nobs', 64288),
 </pre>
 
 <p>
-Here, we see that as increase the number of samples we draw from
-the underlying data set, while randomly flipping them, the mean
-tends to diminish.  The skewness does not behave quite so well,
-though a coarser smoothing kernel (larger bin sizes for the
-histograms) may help.  In any case, the following figures do
+Here, we see that as we increase the number of samples we draw
+from the underlying data set, while randomly flipping them, the
+mean tends to diminish.  The skewness does not behave quite so
+well, though a coarser smoothing kernel (larger bin sizes for
+the histograms) may help.  In any case, the following figures do
 suggest that randomly flipping the data and drawing larger
 sample sizes does help balance out the data.
 </p>
@@ -1155,9 +1157,9 @@ superfluous information.
 </div>
 </div>
 
-<div id="outline-container-sec-3-3" class="outline-3">
-<h3 id="sec-3-3">Implementation</h3>
-<div class="outline-text-3" id="text-3-3">
+<div id="outline-container-sec-2-2" class="outline-3">
+<h3 id="sec-2-2">Implementation</h3>
+<div class="outline-text-3" id="text-2-2">
 <p>
 There are many approaches to selecting or developing a model.  The
 one I took was to assume that there is wisdom and experience
@@ -1310,6 +1312,9 @@ truth" like the NVIDIA researchers did
 <li>the images are encoded in RGB planes rather than YUV planes
 unless it becomes necessary to do so
 </li>
+<li>we add a non-trainable <a href="https://keras.io/layers/pooling/">AveragePooling2D</a> layer to act as an image
+resizer. 
+</li>
 </ul>
 
 <p>
@@ -1342,9 +1347,9 @@ end decided that it was not necessary.
 </p>
 </div>
 
-<div id="outline-container-sec-3-3-1" class="outline-4">
-<h4 id="sec-3-3-1">Model</h4>
-<div class="outline-text-4" id="text-3-3-1">
+<div id="outline-container-sec-2-2-1" class="outline-4">
+<h4 id="sec-2-2-1">Model</h4>
+<div class="outline-text-4" id="text-2-2-1">
 <p>
 The actual model is laid out in Keras code below.  It is coded
 as a function that returns a Keras <code>model</code>.  Note that the
@@ -1361,9 +1366,10 @@ them inside the model.  This has several advantages.
 network service.  Performing these operations with the model
 means that this is handled automatically, for free.
 </li>
-<li>In principle, we might realize better training performance as
+<li>In general, we might realize better training performance as
 the cropping/resizing occur in the GPUs rather than in the
-CPU.  
+CPU.  In my particular case this did not occur because I
+trained only on a laptop without a GPU.
 </li>
 </ol>
 
@@ -1484,44 +1490,104 @@ And, here is a visualization of the model, as provided by the
 </div>
 </div>
 
-<div id="outline-container-sec-3-4" class="outline-3">
-<h3 id="sec-3-4">Training</h3>
-<div class="outline-text-3" id="text-3-4">
-</div><div id="outline-container-sec-3-4-1" class="outline-4">
-<h4 id="sec-3-4-1">Data Pipeline</h4>
-<div class="outline-text-4" id="text-3-4-1">
+<div id="outline-container-sec-2-3" class="outline-3">
+<h3 id="sec-2-3">Training</h3>
+<div class="outline-text-3" id="text-2-3">
+</div><div id="outline-container-sec-2-3-1" class="outline-4">
+<h4 id="sec-2-3-1">Data Pipeline</h4>
+<div class="outline-text-4" id="text-2-3-1">
 <p>
-Create a data-processing pipeline.  The 'trainingfile'
-parameter is the name of a CSV index file specifying samples,
-with fields for image filenames and for steering angles.  The
-'base<sub>path'</sub> parameter is the directory path for the image
-filenames.  The pipeline itself is a generator (which is an
-iterable), where each item from the generator is a batch of
-samples (X,y).  X and y are each NumPy arrays, with X as a batch
-of images and y as a batch of outputs.  Finally, augmentation
-may be performed if a training pipeline is desired, determined
-by the 'training' parameter.  Training pipelines have their
-images randomly flipped along the horizontal axis.
+The data-processing pipeline is rather simple, given the
+composeable generator and non-generator utility functions
+defined above.  The only real wrinkle is that we may want to do
+random sample flipping (of both the image and its corresponding
+steering angle) during training but we probably do not need to
+do so for the validation data.  Since assembling the pipeline is
+otherwise very similar for both the training and validation
+data, and both should result in a generator that yields batches
+consumable by the <a href="https://keras.io/models/sequential/"><code>model.fit_generator</code></a> function of Keras's
+Sequential model, both pipelines are assembled in a function.
 </p>
 
 <div class="org-src-container">
 
 <pre class="src src-python"><span style="color: #b4fa70;">def</span> <span style="color: #fce94f;">pipeline</span>(theta, training=<span style="color: #e9b2e3;">False</span>):
+    <span style="color: #73d216;"># </span><span style="color: #73d216;">randomly cycle through cached, loaded samples (images + angles)</span>
     <span style="color: #fcaf3e;">samples</span> = select(rcycle(fetch(select(split(feed(theta.trainingfile)), [0,3]), theta.base_path)), [0,1])
+    <span style="color: #73d216;"># </span><span style="color: #73d216;">for training we might do sample flipping but no need for validation</span>
     <span style="color: #b4fa70;">if</span> training:
         <span style="color: #b4fa70;">if</span> theta.flip:
             <span style="color: #fcaf3e;">samples</span> = (sflip(x) <span style="color: #b4fa70;">for</span> x <span style="color: #b4fa70;">in</span> samples)
+    <span style="color: #73d216;"># </span><span style="color: #73d216;">group the samples</span>
     <span style="color: #fcaf3e;">groups</span> = group(samples, theta.batch_size)
+    <span style="color: #73d216;"># </span><span style="color: #73d216;">turn the groups into batches (NumPy arrays)</span>
     <span style="color: #fcaf3e;">batches</span> = batch(transpose(groups))
+    <span style="color: #73d216;"># </span><span style="color: #73d216;">return the batch generator</span>
     <span style="color: #b4fa70;">return</span> batches
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-sec-3-4-2" class="outline-4">
-<h4 id="sec-3-4-2">Training</h4>
-<div class="outline-text-4" id="text-3-4-2">
+<div id="outline-container-sec-2-3-2" class="outline-4">
+<h4 id="sec-2-3-2">Training</h4>
+<div class="outline-text-4" id="text-2-3-2">
+<p>
+With functions for constructing the model architecture and the
+data pipelines in hand, training is very simple.  One additional
+item to point out is this.  There can be a proliferation of
+<i>literal</i> hyper-parameters (crop sizes, epochs, batch sizes,
+whether or not to do random flipping, etc.) and passing these
+parameters among all the related and nested functions can be a
+nuisance.  I find it convenient to collect such parameters into
+a handy data structure that can be instantiated as a global
+variable, and then all of the functions can access the
+parameters that they need.  In Python, two obvious candidates
+that leap to mind are <a href="https://docs.python.org/3/tutorial/datastructures.html">dictionaries</a> and <a href="https://docs.python.org/3/tutorial/classes.html">classes</a>.  Python
+dictionaries are slightly easier to create, but slightly more of
+a nuisance to use, whereas the reverse is true for Python
+classes/objects.  I elected to use an global instance <code>theta</code> of
+a class <code>HyperParameters</code>, but this is not considered to be a
+very important point.
+</p>
+
+<p>
+Another point worth discussing relates to "cropping."  As
+discussed above in the data analysis and architecture sections
+and below in the summary, cropping of the data is an option that
+I took.  The <a href="#coderef-crop_shape"class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-crop_shape');" onmouseout="CodeHighlightOff(this, 'coderef-crop_shape');"><code>theta.crop_shape</code></a> hyper-parameter that appears
+below sets the cropping window, and it works as follows.
+</p>
+
+<p>
+The <code>theta.crop_shape</code> parameter is dictated by the <a href="https://keras.io/layers/convolutional/#cropping2d">Cropping2D</a>
+layer to be a tuple of tuples.  The first tuple sets the number
+of pixels to be cropped from the top and bottom edges along the
+image height direction, and the second tuple sets the number of
+pixels to be cropped from the left and right edges of the width
+direction.  As you can see, the top and bottom are cropped with
+<code>(80, 20)</code> which as in the figure above, removes much of the
+image above the horizon and some of the image where the car hood
+is superimposed.  Those values were chosen by experimentation,
+and the choices are discussed below.  However, the <code>(1,1)</code> value
+for the width cropping merits some explanation.  In principle, I
+saw no reason to crop anything in the width direction.  However,
+Keras has a bug (fixed but not yet in a stable release) such
+that Cropping2D fails when any of the four elements in the tuple
+of tuples is 0.  This is the reason for the 1 pixel crops on the
+left and right edges.
+</p>
+
+<p>
+Now, as a sanity check, we conduct a small training (3 epochs,
+30 samples per epoch, batch size 10) of the data in
+<code>driving_log_overtrain.csv</code>.  This is just to "get our feet wet"
+and quickly to verify that the code written above even works.
+Note that we use the same file for the validation set.  This is
+just a test, so it does not really matter what we use for the
+validation set.
+</p>
+
 <div class="org-src-container">
 
 <pre class="src src-python"><span style="color: #b4fa70;">class</span> <span style="color: #8cc4ff;">HyperParameters</span>:
@@ -1530,7 +1596,7 @@ images randomly flipped along the horizontal axis.
 
 <span style="color: #fcaf3e;">theta</span> = HyperParameters()
 <span style="color: #fcaf3e;">theta.input_shape</span> = [160, 320, 3]
-<span style="color: #fcaf3e;">theta.crop_shape</span> = ((80,20),(1,1))
+<span id="coderef-crop_shape" class="coderef-off"><span style="color: #fcaf3e;">theta.crop_shape</span> = ((80,20),(1,1))   <span style="color: #73d216;"># </span><span style="color: #73d216;">crop size</span></span>
 <span style="color: #fcaf3e;">theta.samples_per_epoch</span> = 30
 <span style="color: #fcaf3e;">theta.valid_samples_per_epoch</span> = 30
 <span style="color: #fcaf3e;">theta.epochs</span> = 3
@@ -1539,7 +1605,6 @@ images randomly flipped along the horizontal axis.
 <span style="color: #fcaf3e;">theta.validationfile</span> = <span style="color: #e9b96e;">"data/driving_log_overtrain.csv"</span>
 <span style="color: #fcaf3e;">theta.base_path</span> = <span style="color: #e9b96e;">"data/"</span>
 <span style="color: #fcaf3e;">theta.flip</span> = <span style="color: #e9b2e3;">False</span>
-<span style="color: #fcaf3e;">theta.shift</span> = <span style="color: #e9b2e3;">False</span>
 
 <span style="color: #fcaf3e;">model</span> = CarND(theta.input_shape, theta.crop_shape)
 model.<span style="color: #e090d7;">compile</span>(loss=<span style="color: #e9b96e;">"mse"</span>, optimizer=<span style="color: #e9b96e;">"adam"</span>)
@@ -1558,6 +1623,15 @@ model.<span style="color: #e090d7;">compile</span>(loss=<span style="color: #e9b
 </pre>
 </div>
 
+<p>
+Next, we perform the actual training on the
+<code>driving_log_train.csv</code> file, validating against the
+<code>driving_log_validation.csv</code> file.  After <i>this</i> training we
+actually save the model to <code>model.json</code> and the model weights to
+<code>model.h5</code>, files suitable for input into the network service in
+<code>drive.py</code>.  
+</p>
+
 <div class="org-src-container">
 
 <pre class="src src-python"><span style="color: #fcaf3e;">theta</span> = HyperParameters()
@@ -1566,12 +1640,11 @@ model.<span style="color: #e090d7;">compile</span>(loss=<span style="color: #e9b
 <span style="color: #fcaf3e;">theta.trainingfile</span> = <span style="color: #e9b96e;">"data/driving_log_train.csv"</span>
 <span style="color: #fcaf3e;">theta.validationfile</span> = <span style="color: #e9b96e;">"data/driving_log_validation.csv"</span>
 <span style="color: #fcaf3e;">theta.base_path</span> = <span style="color: #e9b96e;">"data/"</span>
-<span style="color: #fcaf3e;">theta.samples_per_epoch</span> = 7000
-<span style="color: #fcaf3e;">theta.valid_samples_per_epoch</span> = 1037
+<span style="color: #fcaf3e;">theta.samples_per_epoch</span> = 7036
+<span style="color: #fcaf3e;">theta.valid_samples_per_epoch</span> = 1000
 <span style="color: #fcaf3e;">theta.epochs</span> = 3
 <span style="color: #fcaf3e;">theta.batch_size</span> = 100
 <span style="color: #fcaf3e;">theta.flip</span> = <span style="color: #e9b2e3;">False</span>
-<span style="color: #fcaf3e;">theta.shift</span> = <span style="color: #e9b2e3;">False</span>
 
 <span style="color: #fcaf3e;">model</span> = CarND(theta.input_shape, theta.crop_shape)
 model.<span style="color: #e090d7;">compile</span>(loss=<span style="color: #e9b96e;">"mse"</span>, optimizer=<span style="color: #e9b96e;">"adam"</span>)
@@ -1592,8 +1665,275 @@ model.save_weights(<span style="color: #e9b96e;">"model.h5"</span>)
     f.write(model.to_json())
 </pre>
 </div>
+
+<pre class="example">
+&gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt;
+... ... ... ... ... ... Epoch 1/3
+139s - loss: 0.0132 - val_loss: 0.0126
+Epoch 2/3
+31s - loss: 0.0106 - val_loss: 0.0083
+Epoch 3/3
+27s - loss: 0.0099 - val_loss: 0.0092
+... ... 4042
+</pre>
+
+<p>
+Ta-da!  We now have a trained model in <code>model.json</code> and
+<code>model.h5</code> that we can run in the simulator with this command.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-python">python drive.py model.json
+</pre>
 </div>
 </div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">Summary</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+This was an enjoyable and illuminating, albeit challenging project.
+Ultimately, we believe we achieved the primary objectives of the
+project.
+</p>
+
+<ul class="org-ul">
+<li>The code is functional and successfully operates the simulator (on
+Track 1, at least).
+</li>
+<li>The code is factored, organized, commented, and documented.
+</li>
+<li>The code uses Python generators and the <code>model.fit_generator</code>
+    function in Keras.
+</li>
+<li>The training data are normalized.
+</li>
+<li>The code uses a neural network that has convolutional layers.
+</li>
+<li>There are activation layers (RELU) to introduce non-linearity into
+the model.
+</li>
+<li>The data have been split into training and validation sets.  Note
+that no test data split was applied, since testing ultimately is
+done by successfully operating the car in the simulator.
+</li>
+<li>The model has a dropout layer to help reduce overfitting.
+</li>
+<li>No <code>tanh</code> activation function was needed in the final readout
+layer.
+</li>
+<li>Training is done with the ADAM optimizer so that learning-rate
+parameters need not be fiddled with.
+</li>
+<li>While we were prepared to record training data ourselves if
+necessary, in the end we succeeded using only the Udacity data.
+</li>
+</ul>
+
+<p>
+Finally, we make the following observations.
+</p>
+
+<ul class="org-ul">
+<li>After much experimentation, it turns out that cropping the image
+was the single most important factor in achieving good results.
+</li>
+<li>From this observation we make the following inferences.
+</li>
+<li>The "sky" portion of the image is largely irrelevant for
+generating appropriate steering angles.
+</li>
+<li>In principle, the neural network could have learned that on its
+own, but helping it out by manually cropping out the sky was
+enormously helpful.
+</li>
+<li>In fact, we actually cropped out more than just the sky, removing
+some of the road near the horizon.
+</li>
+<li>When the road is curved, the portion of the road nearer to the
+horizon naturally has the greatest apparent curvature when
+projected onto the 2-D image plane.  Conversely, the curvature of
+the road near the car is barely apparent.
+</li>
+<li>The portion of the road nearer to the horizon essentially provides
+information <i>about the future</i>.  That is, it establishes road
+conditions that the car <i>will</i> encounter.
+</li>
+<li>The portion of the road nearer to the bottom essentially provides
+information <i>about the present</i>.  That is, it registers the
+position of the car left to right, with respect to the edges and
+centerline of the road.
+</li>
+<li>This is a very simple neural network model, and we have
+made no effort whatsoever to introduce anything like "memory" or
+"anticipatory" behavior.
+</li>
+<li>Our primary goal is <i>safely</i> to navigate the road by staying away
+from its edges.
+</li>
+<li>Navigation (e.g., route planning) and choosing the best line
+(e.g., cutting the corners for racing purposes) are non-goals.
+</li>
+<li>Consequently, it may very well be that the bottom 1/3 to 1/4 of
+the road really has the most relevance for the task at hand.
+</li>
+<li>Cropping the image, and also resizing the image helped
+dramatically reduce the size of the model in terms of the number
+of parameters, which greatly helped training time.
+</li>
+<li>Cropping and resizing right in the model, rather than as a
+pre-processing step, simplified the code and adapted it perfectly
+for the network service in <code>drive.py</code>.
+</li>
+<li>Cropping the images ironically may have ameliorated the left-turn
+bias in the training data.
+</li>
+<li>In earlier experiments, before cropping, there always was a
+pronounced leftward drift of the car unless image reflection or
+flipping was applied.
+</li>
+<li>In those early experiments, image flipping thoroughly removed the
+leftward drift.
+</li>
+<li>However, the car still had significant problems on sharp turns and
+<i>especially</i> with the "pit stop" after the bridge.
+</li>
+<li>After adding the cropping of <code>(80,120)</code> for the top and bottom,
+the car was able to negotiate the sharp turns and avoid the pit
+stop.
+</li>
+<li>Moreover, after adding the cropping the leftward drift largely
+disappeared <i>even without image flipping</i>.
+</li>
+<li>We speculate that the influence of the left-turn bias is greatest
+within the upper portions of the image, but the model has no way
+of knowing that.
+</li>
+<li>By cropping out much of the upper portions of the image we seem to
+have removed that bias.
+</li>
+<li>Incidentally, the number of epochs was chosen largely by
+trial-and-error.  We ran experiments training with a large number
+of epochs, hoping to see the accuracy on the validation set turn
+around and start to diverge.  Unfortunately, we never saw that and
+the validation error continued to decline.
+</li>
+<li>In principle, that should be good.  However, in practice, we
+noticed that models trained for many epochs, with very low
+validation accuracy, drove somewhat poorly.
+</li>
+<li>We may not actually have needed the droput layer.  In fact, in
+some experiments we seem to have converged to a better-performing
+model more quickly <i>without</i> dropout.
+</li>
+<li>It may be that without dropout, the model overtrains on Track 1,
+but that since we are validating on Track 1 it does not produce a
+problem.  If true then it is likely such an overtrained model
+without dropout would perform <i>more</i> poorly on other tracks.
+</li>
+<li>For that reason, we kept the dropout layer.  We plan to perform
+more experiments and strive to achieve satisfactory performance on
+Track 2 after <i>only</i> training on Udacity's data for Track 1.
+</li>
+<li>As discussed earlier, I had considered masking out small-angle
+samples.  However, I achieved satisfactory results without doing
+this.  It occurs to us that in fact these may be crucial data for
+stabilizing the car within the center of the track.
+
+<p>
+One final thought is this.  In the end, the particular network
+architecture that I chose may be overkill.  It may be that a much
+simpler model would suffice.  As described earlier, I began with
+the NVIDIA model, which while simple still may be more than is
+needed here.  After all, that model drove a real car in real-world
+conditions, trained with real-world data.  Our problem confronts
+only a simulator.  Further work may involve drastically reducing
+the size and complexity of the model to see where it finally
+breaks down.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<caption class="t-above"><span class="table-number">Table 1:</span> Final Model Characteristics</caption>
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">Hyper-Parameter</th>
+<th scope="col" class="left">Setting</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">Data</td>
+<td class="left">Udacity data</td>
+</tr>
+
+<tr>
+<td class="left">Epochs</td>
+<td class="left">3</td>
+</tr>
+
+<tr>
+<td class="left">Samples per epoch</td>
+<td class="left">7036</td>
+</tr>
+
+<tr>
+<td class="left">Validation samples per epoch</td>
+<td class="left">1000</td>
+</tr>
+
+<tr>
+<td class="left">Batch size</td>
+<td class="left">100</td>
+</tr>
+
+<tr>
+<td class="left">Random sample flipping</td>
+<td class="left">no</td>
+</tr>
+
+<tr>
+<td class="left">Top crop</td>
+<td class="left">80 pixels</td>
+</tr>
+
+<tr>
+<td class="left">Bottom crop</td>
+<td class="left">20 pixels</td>
+</tr>
+
+<tr>
+<td class="left">RGB or YUV image encoding</td>
+<td class="left">RGB</td>
+</tr>
+
+<tr>
+<td class="left">Training time</td>
+<td class="left">under 2 minutes</td>
+</tr>
+
+<tr>
+<td class="left">Camera</td>
+<td class="left">center-only</td>
+</tr>
+
+<tr>
+<td class="left">Augmentation</td>
+<td class="left">none</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
 </div>
 </div>
 </div>
