@@ -729,7 +729,7 @@ model.
     [sigmoid](https://en.wikipedia.org/wiki/Sigmoid_function) activation function and/or [softmax](https://en.wikipedia.org/wiki/Softmax_function) function and does not
     employ [one-hot encoding](https://en.wikipedia.org/wiki/One-hot).
 -   While presumably they use activation functions within their
-    network, the NVIDIA researches do not seem to specify which
+    network, the NVIDIA researchers do not seem to specify which
     activation function(s) they use.
 -   Likewise, they seem not to use [pooling](https://en.wikipedia.org/wiki/Convolutional_neural_network#Pooling_layer) layers or [dropout](https://en.wikipedia.org/wiki/Convolutional_neural_network#Dropout)
           layers.
