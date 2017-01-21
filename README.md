@@ -1250,7 +1250,7 @@ Finally, we make the following observations.
     
     <tr>
     <td class="left">Random sample flipping</td>
-    <td class="left">no</td>
+    <td class="left">yes</td>
     </tr>
     
     
@@ -1274,7 +1274,7 @@ Finally, we make the following observations.
     
     <tr>
     <td class="left">Training time</td>
-    <td class="left">under 2 minutes</td>
+    <td class="left">under 5 minutes</td>
     </tr>
     
     

@@ -1371,11 +1371,11 @@
     | Samples per epoch            | 7000            |
     | Validation samples per epoch | 1036            |
     | Batch size                   | 100             |
-    | Random sample flipping       | no              |
+    | Random sample flipping       | yes             |
     | Top crop                     | 80 pixels       |
     | Bottom crop                  | 20 pixels       |
     | RGB or YUV image encoding    | RGB             |
-    | Training time                | under 2 minutes |
+    | Training time                | under 5 minutes |
     | Camera                       | center-only     |
     | Augmentation                 | none            |
     |------------------------------+-----------------|
