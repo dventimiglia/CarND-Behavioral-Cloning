@@ -12,6 +12,7 @@ from keras.layers.convolutional import Cropping2D, Convolution2D
 from keras.models import Sequential, model_from_json
 from keras.utils.visualize_util import plot
 from scipy.stats import kurtosis, skew, describe
+import gc
 import matplotlib.pyplot as plt
 import numpy as np
 import pprint as pp
@@ -101,9 +102,9 @@ import random
 #       upon every recycle.  That is easily done, as shown below.  Note
 #       that the elements of the iterable are essentially returned in
 #       batches, and that the first batch is not shuffled.  If you want
-#       only to return random elements then you must know batch size,
-#       which will be the number of elements in the underlying finite
-#       iterable, and you must discard the first batch.  The
+#       only to return random elements then you must know the batch
+#       size, which will be the number of elements in the underlying
+#       finite iterable, and you must discard the first batch.  The
 #       itertools.islice function can be helpful here.  In our case it
 #       is not a problem since all of the data were already shuffled
 #       once using Unix command-line utilities above.
@@ -149,6 +150,8 @@ def rcycle(iterable):
 #                      list of generators
 #       - batch :: generator that takes a list of generators into a list
 #                  of NumPy array "batches"
+
+#       The actual code for these utility functions is presented below.
 
 feed = lambda filename: (l for l in open(filename))
 split = lambda lines, delimiter=",": (line.split(delimiter) for line in lines)
@@ -716,8 +719,8 @@ theta.crop_shape = ((80,20),(1,1))
 theta.trainingfile = "data/driving_log_train.csv"
 theta.validationfile = "data/driving_log_validation.csv"
 theta.base_path = "data/"
-theta.samples_per_epoch = 7036
-theta.valid_samples_per_epoch = 1000
+theta.samples_per_epoch = 7000
+theta.valid_samples_per_epoch = 1036
 theta.epochs = 3
 theta.batch_size = 100
 theta.flip = False
@@ -739,19 +742,4 @@ history = model.fit_generator(
 model.save_weights("model.h5")
 with open("model.json", "w") as f:
     f.write(model.to_json())
-
-# #+RESULTS:
-#       : 
-#       : >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
-#       : ... ... ... ... ... ... Epoch 1/3
-#       : 139s - loss: 0.0132 - val_loss: 0.0126
-#       : Epoch 2/3
-#       : 31s - loss: 0.0106 - val_loss: 0.0083
-#       : Epoch 3/3
-#       : 27s - loss: 0.0099 - val_loss: 0.0092
-#       : ... ... 4042
-
-#       Ta-da!  We now have a trained model in =model.json= and
-#       =model.h5= that we can run in the simulator with this command.
-
-python drive.py model.json
+gc.collect()

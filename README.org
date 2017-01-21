@@ -181,13 +181,13 @@
       Learning lore says that it is often prudent to randomize the
       data when possible and always prudent to split the data into
       training and validation sets.  Here we do all three in just a
-      few lines of shell code, taking 1000 samples (about 12%) as
+      few lines of shell code, taking 1036 samples (about 13%) as
       validation data.
 
       #+BEGIN_SRC sh :results output :tangle no :exports both
       cat data/driving_log.csv | tail -n+2 | shuf > data/driving_log_all.csv
-      cat data/driving_log_all.csv | head -n1000 > data/driving_log_validation.csv
-      cat data/driving_log_all.csv | tail -n+1001 > data/driving_log_train.csv
+      cat data/driving_log_all.csv | head -n7000 > data/driving_log_train.csv
+      cat data/driving_log_all.csv | tail -n+7001 > data/driving_log_validation.csv
       #+END_SRC
 
       #+RESULTS:
@@ -215,8 +215,8 @@
 
       #+RESULTS:
       : 8036 data/driving_log_all.csv
-      : 7036 data/driving_log_train.csv
-      : 1000 data/driving_log_validation.csv
+      : 7000 data/driving_log_train.csv
+      : 1036 data/driving_log_validation.csv
 
       Before leaving the land of shell commands for the land of Python
       scripts and neural nets, we create one other useful data file.
@@ -288,6 +288,7 @@
       from keras.models import Sequential, model_from_json
       from keras.utils.visualize_util import plot
       from scipy.stats import kurtosis, skew, describe
+      import gc
       import matplotlib.pyplot as plt
       import numpy as np
       import pprint as pp
@@ -1201,8 +1202,8 @@
       theta.trainingfile = "data/driving_log_train.csv"
       theta.validationfile = "data/driving_log_validation.csv"
       theta.base_path = "data/"
-      theta.samples_per_epoch = 7036
-      theta.valid_samples_per_epoch = 1000
+      theta.samples_per_epoch = 7000
+      theta.valid_samples_per_epoch = 1036
       theta.epochs = 3
       theta.batch_size = 100
       theta.flip = False
@@ -1224,6 +1225,7 @@
       model.save_weights("model.h5")
       with open("model.json", "w") as f:
 	  f.write(model.to_json())
+      gc.collect()
       #+END_SRC
 
       #+RESULTS:
@@ -1240,7 +1242,7 @@
       Ta-da!  We now have a trained model in =model.json= and
       =model.h5= that we can run in the simulator with this command.
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
+      #+BEGIN_SRC sh :results output :tangle no :exports code
       python drive.py model.json
       #+END_SRC
 
@@ -1366,8 +1368,8 @@
     |------------------------------+-----------------|
     | Data                         | Udacity data    |
     | Epochs                       | 3               |
-    | Samples per epoch            | 7036            |
-    | Validation samples per epoch | 1000            |
+    | Samples per epoch            | 7000            |
+    | Validation samples per epoch | 1036            |
     | Batch size                   | 100             |
     | Random sample flipping       | no              |
     | Top crop                     | 80 pixels       |

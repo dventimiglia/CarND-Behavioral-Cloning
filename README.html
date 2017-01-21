@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>Robot Car</title>
-<!-- 2017-01-20 Fri 19:54 -->
+<!-- 2017-01-21 Sat 04:07 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="David A. Ventimiglia" />
@@ -345,15 +345,15 @@ first line of this file.  We strip that line out.  Also, Deep
 Learning lore says that it is often prudent to randomize the
 data when possible and always prudent to split the data into
 training and validation sets.  Here we do all three in just a
-few lines of shell code, taking 1000 samples (about 12%) as
+few lines of shell code, taking 1036 samples (about 13%) as
 validation data.
 </p>
 
 <div class="org-src-container">
 
 <pre class="src src-sh">cat data/driving_log.csv | tail -n+2 | shuf &gt; data/driving_log_all.csv
-cat data/driving_log_all.csv | head -n1000 &gt; data/driving_log_validation.csv
-cat data/driving_log_all.csv | tail -n+1001 &gt; data/driving_log_train.csv
+cat data/driving_log_all.csv | head -n7000 &gt; data/driving_log_train.csv
+cat data/driving_log_all.csv | tail -n+7001 &gt; data/driving_log_validation.csv
 </pre>
 </div>
 
@@ -384,8 +384,8 @@ wc -l data/driving_log_validation.csv
 
 <pre class="example">
 8036 data/driving_log_all.csv
-7036 data/driving_log_train.csv
-1000 data/driving_log_validation.csv
+7000 data/driving_log_train.csv
+1036 data/driving_log_validation.csv
 </pre>
 
 <p>
@@ -479,6 +479,7 @@ sections.
 <span style="color: #b4fa70;">from</span> keras.models <span style="color: #b4fa70;">import</span> Sequential, model_from_json
 <span style="color: #b4fa70;">from</span> keras.utils.visualize_util <span style="color: #b4fa70;">import</span> plot
 <span style="color: #b4fa70;">from</span> scipy.stats <span style="color: #b4fa70;">import</span> kurtosis, skew, describe
+<span style="color: #b4fa70;">import</span> gc
 <span style="color: #b4fa70;">import</span> matplotlib.pyplot <span style="color: #b4fa70;">as</span> plt
 <span style="color: #b4fa70;">import</span> numpy <span style="color: #b4fa70;">as</span> np
 <span style="color: #b4fa70;">import</span> pprint <span style="color: #b4fa70;">as</span> pp
@@ -1667,6 +1668,7 @@ model.<span style="color: #e090d7;">compile</span>(loss=<span style="color: #e9b
 model.save_weights(<span style="color: #e9b96e;">"model.h5"</span>)
 <span style="color: #b4fa70;">with</span> <span style="color: #e090d7;">open</span>(<span style="color: #e9b96e;">"model.json"</span>, <span style="color: #e9b96e;">"w"</span>) <span style="color: #b4fa70;">as</span> f:
     f.write(model.to_json())
+gc.collect()
 </pre>
 </div>
 
@@ -1688,7 +1690,7 @@ Ta-da!  We now have a trained model in <code>model.json</code> and
 
 <div class="org-src-container">
 
-<pre class="src src-python">python drive.py model.json
+<pre class="src src-sh">python drive.py model.json
 </pre>
 </div>
 </div>
@@ -1887,12 +1889,12 @@ breaks down.
 
 <tr>
 <td class="left">Samples per epoch</td>
-<td class="left">7036</td>
+<td class="left">7000</td>
 </tr>
 
 <tr>
 <td class="left">Validation samples per epoch</td>
-<td class="left">1000</td>
+<td class="left">1036</td>
 </tr>
 
 <tr>

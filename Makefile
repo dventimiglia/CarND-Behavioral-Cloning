@@ -28,7 +28,7 @@ simulator: simulator-linux simulator-beta
 	"simulator-beta/Dominique Development Linux desktop 64-bit.x86_64"
 
 telemetry: model.h5
-	source activate carnd-term1
+	source activate CarND-Behavioral-Cloning
 	python drive.py model.json
 
 clean: cleandocs cleandata cleanmodel cleansimulators
@@ -56,7 +56,7 @@ cleansimulators:
 model.h5: model.json
 
 model.json: data/driving_log_train.csv data/driving_log_validation.csv
-	source activate carnd-term1
+	source activate CarND-Behavioral-Cloning
 	python model.py
 
 data/driving_log.csv: data.zip

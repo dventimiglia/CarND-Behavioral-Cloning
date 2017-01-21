@@ -1,4 +1,4 @@
-name: carnd-term1
+name: CarND-Behavioral-Cloning
 channels: !!python/tuple
 - defaults
 dependencies:
@@ -121,5 +121,5 @@ dependencies:
   - tensorflow==0.12.1
   - theano==0.8.2
   - tqdm==4.10.0
-prefix: /home/dventimi/anaconda3/envs/carnd-term1
+prefix: /home/dventimi/anaconda3/envs/CarND-Behavioral-Cloning
 

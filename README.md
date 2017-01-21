@@ -138,12 +138,12 @@ first line of this file.  We strip that line out.  Also, Deep
 Learning lore says that it is often prudent to randomize the
 data when possible and always prudent to split the data into
 training and validation sets.  Here we do all three in just a
-few lines of shell code, taking 1000 samples (about 12%) as
+few lines of shell code, taking 1036 samples (about 13%) as
 validation data.
 
     cat data/driving_log.csv | tail -n+2 | shuf > data/driving_log_all.csv
-    cat data/driving_log_all.csv | head -n1000 > data/driving_log_validation.csv
-    cat data/driving_log_all.csv | tail -n+1001 > data/driving_log_train.csv
+    cat data/driving_log_all.csv | head -n7000 > data/driving_log_train.csv
+    cat data/driving_log_all.csv | tail -n+7001 > data/driving_log_validation.csv
 
 As a sanity check, we report the number of total samples,
 training samples, and validation samples.  Even if the provided
@@ -165,8 +165,8 @@ iteratively develop and refine the model.
     wc -l data/driving_log_validation.csv
 
     8036 data/driving_log_all.csv
-    7036 data/driving_log_train.csv
-    1000 data/driving_log_validation.csv
+    7000 data/driving_log_train.csv
+    1036 data/driving_log_validation.csv
 
 Before leaving the land of shell commands for the land of Python
 scripts and neural nets, we create one other useful data file.
@@ -230,6 +230,7 @@ sections.
     from keras.models import Sequential, model_from_json
     from keras.utils.visualize_util import plot
     from scipy.stats import kurtosis, skew, describe
+    import gc
     import matplotlib.pyplot as plt
     import numpy as np
     import pprint as pp
@@ -1046,8 +1047,8 @@ actually save the model to `model.json` and the model weights to
     theta.trainingfile = "data/driving_log_train.csv"
     theta.validationfile = "data/driving_log_validation.csv"
     theta.base_path = "data/"
-    theta.samples_per_epoch = 7036
-    theta.valid_samples_per_epoch = 1000
+    theta.samples_per_epoch = 7000
+    theta.valid_samples_per_epoch = 1036
     theta.epochs = 3
     theta.batch_size = 100
     theta.flip = False
@@ -1069,6 +1070,7 @@ actually save the model to `model.json` and the model weights to
     model.save_weights("model.h5")
     with open("model.json", "w") as f:
         f.write(model.to_json())
+    gc.collect()
 
     >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
     ... ... ... ... ... ... Epoch 1/3
@@ -1230,13 +1232,13 @@ Finally, we make the following observations.
     
     <tr>
     <td class="left">Samples per epoch</td>
-    <td class="left">7036</td>
+    <td class="left">7000</td>
     </tr>
     
     
     <tr>
     <td class="left">Validation samples per epoch</td>
-    <td class="left">1000</td>
+    <td class="left">1036</td>
     </tr>
     
     
