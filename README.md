@@ -365,6 +365,8 @@ straightforward and for brevity are written as "one-liners."
 -   **batch:** generator that takes a list of generators into a list
     of NumPy array "batches"
 
+The actual code for these utility functions is presented below.
+
     feed = lambda filename: (l for l in open(filename))
     split = lambda lines, delimiter=",": (line.split(delimiter) for line in lines)
     select = lambda fields, indices: ([r[i] for i in indices] for r in fields)
