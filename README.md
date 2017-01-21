@@ -319,9 +319,9 @@ need to rewrite `itertools.cycle` so that it shuffles the data
 upon every recycle.  That is easily done, as shown below.  Note
 that the elements of the iterable are essentially returned in
 batches, and that the first batch is not shuffled.  If you want
-only to return random elements then you must know batch size,
-which will be the number of elements in the underlying finite
-iterable, and you must discard the first batch.  The
+only to return random elements then you must know the batch
+size, which will be the number of elements in the underlying
+finite iterable, and you must discard the first batch.  The
 itertools.islice function can be helpful here.  In our case it
 is not a problem since all of the data were already shuffled
 once using Unix command-line utilities above.

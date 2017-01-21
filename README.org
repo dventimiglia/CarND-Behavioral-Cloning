@@ -382,9 +382,9 @@
       upon every recycle.  That is easily done, as shown below.  Note
       that the elements of the iterable are essentially returned in
       batches, and that the first batch is not shuffled.  If you want
-      only to return random elements then you must know batch size,
-      which will be the number of elements in the underlying finite
-      iterable, and you must discard the first batch.  The
+      only to return random elements then you must know the batch
+      size, which will be the number of elements in the underlying
+      finite iterable, and you must discard the first batch.  The
       itertools.islice function can be helpful here.  In our case it
       is not a problem since all of the data were already shuffled
       once using Unix command-line utilities above.
@@ -435,7 +435,7 @@
       - batch :: generator that takes a list of generators into a list
                  of NumPy array "batches"
 
-      #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
+      #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code
       feed = lambda filename: (l for l in open(filename))
       split = lambda lines, delimiter=",": (line.split(delimiter) for line in lines)
       select = lambda fields, indices: ([r[i] for i in indices] for r in fields)
