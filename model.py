@@ -118,7 +118,9 @@ def rcycle(iterable):
         for element in saved:
               yield element
 
-# If we invoke =rcycle= on a sequence drawn from the interval
+# #+RESULTS:
+
+#       If we invoke =rcycle= on a sequence drawn from the interval
 #       [0,5), taken in 3 batches for a total of 15 values we can see
 #       this behavior.  The first 5 values are drawn in order, but then
 #       the next 10 are drawn in two batches, each batch shuffled
@@ -284,8 +286,7 @@ s = plt.savefig("road6.png", format="png", bbox_inches='tight')
 #       labels, which again are steering angles in the interval [-1,
 #       1].  In fact, as real-valued outputs it may be a stretch to call
 #       them "labels" and this is not really a classification problem.
-#       Nevertheless in the interest of time we will adopt the term.  In
-#       any case,
+#       Nevertheless in the interest of time we will adopt the term.
 
 f = plt.figure()                   
 y1 = np.array([float(s[0]) for s in select(split(feed("data/driving_log_all.csv")),[3])])
@@ -307,7 +308,7 @@ pp.pprint(describe(y1)._asdict())  # print descriptive statistics
 #       #+CAPTION: All Samples - No Reflection
 #       [[file:hist1.png]]
 
-#       The data have non-zero /mean/ and /skewness/.  perhaps arising
+#       The data have non-zero /mean/ and /skewness/, perhaps arising
 #       from a bias toward left-hand turns when driving on a closed
 #       track.
 
@@ -318,9 +319,9 @@ pp.pprint(describe(y1)._asdict())  # print descriptive statistics
 #       interval [-1, 1], but the "straight" samples appear to be within
 #       the neighborhood [-0.01, 0.01].
 
-#       I might consider masking out small angled samples from the
-#       actual training data as well, a subject we shall return to in a
-#       later section.
+#       We might consider masking out small angled samples from the
+#       actual training data as well, a subject we shall return to in
+#       the summary.
 
 f = plt.figure()
 p = lambda x: abs(x)<0.01
@@ -343,10 +344,10 @@ pp.pprint(describe(y2)._asdict())
 #       #+CAPTION: abs(angle)>0.01 - No Reflection
 #       [[file:hist2.png]]
 
-#       A simple trick that I can play to remove this asymmetry---if I
+#       A simple trick we can play to remove this asymmetry---if we
 #       wish---is to join the data with its reflection, effectively
 #       doubling our sample size in the process.  For illustration
-#       purposes only, I shall again mask out small angle samples.
+#       purposes only, we shall again mask out small angle samples.
 
 f = plt.figure()
 y3 = np.append(y2, -y2)
@@ -376,8 +377,8 @@ pp.pprint(describe(y3)._asdict())
 #       labels.  If I apply this strategy to the training data,
 #       naturally I need to reflect along their horizontal axes the
 #       corresponding input images as well.  In fact, that is the
-#       purpose of the =Xflip=, =yflip=, =rmap=, and =rflip= utility
-#       functions described above.  
+#       purpose of the =Xflip=, =yflip=, =rmap=, =rflip=, and =sflip=
+#       utility functions described above.
 
 #       It turns out there is another approach to dealing with the bias
 #       and asymmetry in the training data.  In lieu of reflecting the
@@ -435,11 +436,11 @@ pp.pprint(describe(y6)._asdict())
 # 		   ('kurtosis', 1.1406077506908527)])
 #       #+end_example
 
-#       Here, we see that as increase the number of samples we draw from
-#       the underlying data set, while randomly flipping them, the mean
-#       tends to diminish.  The skewness does not behave quite so well,
-#       though a coarser smoothing kernel (larger bin sizes for the
-#       histograms) may help.  In any case, the following figures do
+#       Here, we see that as we increase the number of samples we draw
+#       from the underlying data set, while randomly flipping them, the
+#       mean tends to diminish.  The skewness does not behave quite so
+#       well, though a coarser smoothing kernel (larger bin sizes for
+#       the histograms) may help.  In any case, the following figures do
 #       suggest that randomly flipping the data and drawing larger
 #       sample sizes does help balance out the data.
 
@@ -474,17 +475,26 @@ s = plt.savefig("road9.png", format="png", bbox_inches='tight')
 
 # Model
 
-#       - Crop :: crop to region (/non-trainable/)
-#       - Resize :: reduce scale (/non-trainable/)
-#       - Normalize :: scale values to [-1, 1] (/non-trainable/)
-#       - Convolution :: learn spatial features and compress
-#       - MaxPool :: reduce model size
-#       - Dropout :: add regularization (/non-trainable/)
-#       - Flatten :: stage to fully-connected layers (/non-trainable/)
-#       - FC :: fully-connected layers
-#       - Readout :: single node steering angle (/non-trainable/)
+#       The actual model is laid out in Keras code below.  It is coded
+#       as a function that returns a Keras =model=.  Note that the
+#       function does take the =input_shape= and the =crop_shape=.
+#       Though I could perform image resizing (such as with
+#       =cv2.resize=) and cropping outside of the model, I actually do
+#       them inside the model.  This has several advantages.
 
-#       Return a Keras neural network model.
+#       1. It simplifies the code.
+#       2. Whatever cropping/resizing occurs /must/ also be done in the
+#          network service.  Performing these operations with the model
+#          means that this is handled automatically, for free.
+#       3. In general, we might realize better training performance as
+#          the cropping/resizing occur in the GPUs rather than in the
+#          CPU.  In my particular case this did not occur because I
+#          trained only on a laptop without a GPU.
+
+#       This means that the =input_shape= is not really a
+#       hyper-parameter, since it is just the original image size, which
+#       as we already have seen is (160, 320, 3).  The =crop_shape=
+#       still is a hyper-parameter, of course.
 
 def CarND(input_shape, crop_shape):
     model = Sequential()
@@ -526,11 +536,10 @@ def CarND(input_shape, crop_shape):
     model.add(Dense(1, name="Readout", trainable=False))
     return model
 
-# #+RESULTS:
+# Here is a summary of the actual model, as generated directly by
+#       =model.summary= in Keras.
 
-CarND([160, 320, 3], ((80,20),(1,1))).summary()
-
-# #+RESULTS:
+#       #+RESULTS:
 #       #+begin_example
 #       ____________________________________________________________________________________________________
 #       Layer (type)                     Output Shape          Param #     Connected to                     
@@ -571,35 +580,87 @@ CarND([160, 320, 3], ((80,20),(1,1))).summary()
 #       ____________________________________________________________________________________________________
 #       #+end_example
 
+#       And, here is a visualization of the model, as provided by the
+#       =plot= function in Keras.
+
 plot(CarND([160, 320, 3], ((80,20),(1,1))), to_file="model.png", show_shapes=True)
 
 # Data Pipeline
 
-#       Create a data-processing pipeline.  The 'trainingfile'
-#       parameter is the name of a CSV index file specifying samples,
-#       with fields for image filenames and for steering angles.  The
-#       'base_path' parameter is the directory path for the image
-#       filenames.  The pipeline itself is a generator (which is an
-#       iterable), where each item from the generator is a batch of
-#       samples (X,y).  X and y are each NumPy arrays, with X as a batch
-#       of images and y as a batch of outputs.  Finally, augmentation
-#       may be performed if a training pipeline is desired, determined
-#       by the 'training' parameter.  Training pipelines have their
-#       images randomly flipped along the horizontal axis, and are
-#       randomly shifted along their horizontal axis.
+#       The data-processing pipeline is rather simple, given the
+#       composeable generator and non-generator utility functions
+#       defined above.  The only real wrinkle is that we may want to do
+#       random sample flipping (of both the image and its corresponding
+#       steering angle) during training but we probably do not need to
+#       do so for the validation data.  Since assembling the pipeline is
+#       otherwise very similar for both the training and validation
+#       data, and both should result in a generator that yields batches
+#       consumable by the [[https://keras.io/models/sequential/][=model.fit_generator=]] function of Keras's
+#       Sequential model, both pipelines are assembled in a function.
 
 def pipeline(theta, training=False):
+    # randomly cycle through cached, loaded samples (images + angles)
     samples = select(rcycle(fetch(select(split(feed(theta.trainingfile)), [0,3]), theta.base_path)), [0,1])
+    # for training we might do sample flipping but no need for validation
     if training:
         if theta.flip:
-            samples = (rflip(x) for x in samples)
-        if theta.shift:
-            samples = (rflip(x) for x in samples)
+            samples = (sflip(x) for x in samples)
+    # group the samples
     groups = group(samples, theta.batch_size)
+    # turn the groups into batches (NumPy arrays)
     batches = batch(transpose(groups))
+    # return the batch generator
     return batches
 
 # Training
+
+#       With functions for constructing the model architecture and the
+#       data pipelines in hand, training is very simple.  One additional
+#       item to point out is this.  There can be a proliferation of
+#       /literal/ hyper-parameters (crop sizes, epochs, batch sizes,
+#       whether or not to do random flipping, etc.) and passing these
+#       parameters among all the related and nested functions can be a
+#       nuisance.  I find it convenient to collect such parameters into
+#       a handy data structure that can be instantiated as a global
+#       variable, and then all of the functions can access the
+#       parameters that they need.  In Python, two obvious candidates
+#       that leap to mind are [[https://docs.python.org/3/tutorial/datastructures.html][dictionaries]] and [[https://docs.python.org/3/tutorial/classes.html][classes]].  Python
+#       dictionaries are slightly easier to create, but slightly more of
+#       a nuisance to use, whereas the reverse is true for Python
+#       classes/objects.  I elected to use an global instance =theta= of
+#       a class =HyperParameters=, but this is not considered to be a
+#       very important point.
+
+#       Another point worth discussing relates to "cropping."  As
+#       discussed above in the data analysis and architecture sections
+#       and below in the summary, cropping of the data is an option that
+#       I took.  The [[(crop_shape)][=theta.crop_shape=]] hyper-parameter that appears
+#       below sets the cropping window, and it works as follows.
+
+#       The =theta.crop_shape= parameter is dictated by the [[https://keras.io/layers/convolutional/#cropping2d][Cropping2D]]
+#       layer to be a tuple of tuples.  The first tuple sets the number
+#       of pixels to be cropped from the top and bottom edges along the
+#       image height direction, and the second tuple sets the number of
+#       pixels to be cropped from the left and right edges of the width
+#       direction.  As you can see, the top and bottom are cropped with
+#       =(80, 20)= which as in the figure above, removes much of the
+#       image above the horizon and some of the image where the car hood
+#       is superimposed.  Those values were chosen by experimentation,
+#       and the choices are discussed below.  However, the =(1,1)= value
+#       for the width cropping merits some explanation.  In principle, I
+#       saw no reason to crop anything in the width direction.  However,
+#       Keras has a bug (fixed but not yet in a stable release) such
+#       that Cropping2D fails when any of the four elements in the tuple
+#       of tuples is 0.  This is the reason for the 1 pixel crops on the
+#       left and right edges.
+
+#       Now, as a sanity check, we conduct a small training (3 epochs,
+#       30 samples per epoch, batch size 10) of the data in
+#       =driving_log_overtrain.csv=.  This is just to "get our feet wet"
+#       and quickly to verify that the code written above even works.
+#       Note that we use the same file for the validation set.  This is
+#       just a test, so it does not really matter what we use for the
+#       validation set.
 
 class HyperParameters:
     def __init__(self):
@@ -607,7 +668,7 @@ class HyperParameters:
 
 theta = HyperParameters()
 theta.input_shape = [160, 320, 3]
-theta.crop_shape = ((80,20),(1,1))
+theta.crop_shape = ((80,20),(1,1))   # crop size 
 theta.samples_per_epoch = 30
 theta.valid_samples_per_epoch = 30
 theta.epochs = 3
@@ -616,7 +677,6 @@ theta.trainingfile = "data/driving_log_overtrain.csv"
 theta.validationfile = "data/driving_log_overtrain.csv"
 theta.base_path = "data/"
 theta.flip = False
-theta.shift = False
 
 model = CarND(theta.input_shape, theta.crop_shape)
 model.compile(loss="mse", optimizer="adam")
@@ -643,18 +703,24 @@ history = model.fit_generator(
 #       : Epoch 3/3
 #       : 0s - loss: 0.4659 - val_loss: 0.3416
 
+#       Next, we perform the actual training on the
+#       =driving_log_train.csv= file, validating against the
+#       =driving_log_validation.csv= file.  After /this/ training we
+#       actually save the model to =model.json= and the model weights to
+#       =model.h5=, files suitable for input into the network service in
+#       =drive.py=.
+
 theta = HyperParameters()
 theta.input_shape = [160, 320, 3]
 theta.crop_shape = ((80,20),(1,1))
 theta.trainingfile = "data/driving_log_train.csv"
 theta.validationfile = "data/driving_log_validation.csv"
 theta.base_path = "data/"
-theta.samples_per_epoch = 7000
-theta.valid_samples_per_epoch = 1037
+theta.samples_per_epoch = 7036
+theta.valid_samples_per_epoch = 1000
 theta.epochs = 3
 theta.batch_size = 100
 theta.flip = False
-theta.shift = False
 
 model = CarND(theta.input_shape, theta.crop_shape)
 model.compile(loss="mse", optimizer="adam")
@@ -673,3 +739,19 @@ history = model.fit_generator(
 model.save_weights("model.h5")
 with open("model.json", "w") as f:
     f.write(model.to_json())
+
+# #+RESULTS:
+#       : 
+#       : >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
+#       : ... ... ... ... ... ... Epoch 1/3
+#       : 139s - loss: 0.0132 - val_loss: 0.0126
+#       : Epoch 2/3
+#       : 31s - loss: 0.0106 - val_loss: 0.0083
+#       : Epoch 3/3
+#       : 27s - loss: 0.0099 - val_loss: 0.0092
+#       : ... ... 4042
+
+#       Ta-da!  We now have a trained model in =model.json= and
+#       =model.h5= that we can run in the simulator with this command.
+
+python drive.py model.json
