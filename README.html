@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>Robot Car</title>
-<!-- 2017-01-21 Sat 05:28 -->
+<!-- 2017-01-21 Sat 19:04 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="David A. Ventimiglia" />
@@ -624,7 +624,7 @@ independently.  In practice, this is not a problem.
 </div>
 
 <pre class="example">
-[0, 1, 2, 3, 4, 1, 3, 4, 2, 0, 3, 1, 4, 0, 2]
+[0, 1, 2, 3, 4, 0, 1, 2, 4, 3, 3, 0, 2, 1, 4]
 </pre>
 
 <p>
@@ -870,7 +870,7 @@ OrderedDict([('nobs', 8036),
              ('minmax', (-0.94269539999999996, 1.0)),
              ('mean', 0.0040696440648332506),
              ('variance', 0.016599764281272529),
-             ('skewness', -0.1302892457752191),
+             ('skewness', -0.13028924577521916),
              ('kurtosis', 6.311554102057668)])
 </pre>
 
@@ -918,9 +918,9 @@ pp.pprint(describe(y2)._asdict())
 &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt;
 OrderedDict([('nobs', 3584),
              ('minmax', (-0.94269539999999996, 1.0)),
-             ('mean', 0.0091718659514508933),
+             ('mean', 0.0091718659514508916),
              ('variance', 0.037178302717086116),
-             ('skewness', -0.16657825969015194),
+             ('skewness', -0.1665782596901517),
              ('kurtosis', 1.1768785967587378)])
 </pre>
 
@@ -956,7 +956,7 @@ OrderedDict([('nobs', 7168),
              ('mean', 0.0),
              ('variance', 0.03725725015081123),
              ('skewness', 0.0),
-             ('kurtosis', 1.1400026599654964)])
+             ('kurtosis', 1.1400026599654973)])
 </pre>
 
 
@@ -1021,24 +1021,24 @@ pp.pprint(describe(y6)._asdict())
 &gt;&gt;&gt;
 OrderedDict([('nobs', 16072),
 	     ('minmax', (-1.0, 1.0)),
-	     ('mean', -0.00052772518417122953),
-	     ('variance', 0.037283229390251714),
-	     ('skewness', 0.008520498589019836),
-	     ('kurtosis', 1.1769644267914074)])
+	     ('mean', -0.0012464327762568444),
+	     ('variance', 0.037297357483824768),
+	     ('skewness', 0.03935649430167018),
+	     ('kurtosis', 1.10078365162724)])
 
 OrderedDict([('nobs', 32144),
 	     ('minmax', (-1.0, 1.0)),
-	     ('mean', -0.0022488201157292191),
-	     ('variance', 0.037218482869856698),
-	     ('skewness', -0.050201681486988635),
-	     ('kurtosis', 1.1379036271452696)])
+	     ('mean', 0.0013097329084743655),
+	     ('variance', 0.037230073594916549),
+	     ('skewness', -0.011391695445489564),
+	     ('kurtosis', 1.1405030969598942)])
 
 OrderedDict([('nobs', 64288),
 	     ('minmax', (-1.0, 1.0)),
-	     ('mean', -0.00011066913374191124),
-	     ('variance', 0.037250831344353398),
-	     ('skewness', -0.01390556638239454),
-	     ('kurtosis', 1.1406077506908527)])
+	     ('mean', -9.7916912643106218e-05),
+	     ('variance', 0.03724814334901478),
+	     ('skewness', -0.004653875002642311),
+	     ('kurtosis', 1.1415231296661128)])
 </pre>
 
 <p>
@@ -1434,11 +1434,17 @@ Here is a summary of the actual model, as generated directly by
 <code>model.summary</code> in Keras.
 </p>
 
+<div class="org-src-container">
+
+<pre class="src src-python">CarND([160, 320, 3], ((80,20),(1,1))).summary()
+</pre>
+</div>
+
 <pre class="example">
 ____________________________________________________________________________________________________
 Layer (type)                     Output Shape          Param #     Connected to                     
 ====================================================================================================
-Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_14[0][0]        
+Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_1[0][0]         
 ____________________________________________________________________________________________________
 Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
 ____________________________________________________________________________________________________
@@ -1466,11 +1472,11 @@ FC3 (Dense)                      (None, 50)            5050        FC2[0][0]
 ____________________________________________________________________________________________________
 FC4 (Dense)                      (None, 10)            510         FC3[0][0]                        
 ____________________________________________________________________________________________________
-Readout (Dense)                  (None, 1)             0           FC4[0][0]                        
+Readout (Dense)                  (None, 1)             11          FC4[0][0]                        
 ====================================================================================================
-Total params: 58,544
+Total params: 58,555
 Trainable params: 58,544
-Non-trainable params: 0
+Non-trainable params: 11
 ____________________________________________________________________________________________________
 </pre>
 
@@ -1623,7 +1629,7 @@ model.<span style="color: #e090d7;">compile</span>(loss=<span style="color: #e9b
     theta.samples_per_epoch,
     theta.epochs,
     validation_data=validgen,
-    verbose=2,
+    verbose=1,
     nb_val_samples=theta.valid_samples_per_epoch)
 </pre>
 </div>
@@ -1645,11 +1651,11 @@ actually save the model to <code>model.json</code> and the model weights to
 <span style="color: #fcaf3e;">theta.trainingfile</span> = <span style="color: #e9b96e;">"data/driving_log_train.csv"</span>
 <span style="color: #fcaf3e;">theta.validationfile</span> = <span style="color: #e9b96e;">"data/driving_log_validation.csv"</span>
 <span style="color: #fcaf3e;">theta.base_path</span> = <span style="color: #e9b96e;">"data/"</span>
-<span style="color: #fcaf3e;">theta.samples_per_epoch</span> = 7000
+<span style="color: #fcaf3e;">theta.samples_per_epoch</span> = 14000
 <span style="color: #fcaf3e;">theta.valid_samples_per_epoch</span> = 1036
 <span style="color: #fcaf3e;">theta.epochs</span> = 3
 <span style="color: #fcaf3e;">theta.batch_size</span> = 100
-<span style="color: #fcaf3e;">theta.flip</span> = <span style="color: #e9b2e3;">False</span>
+<span style="color: #fcaf3e;">theta.flip</span> = <span style="color: #e9b2e3;">True</span>
 
 <span style="color: #fcaf3e;">model</span> = CarND(theta.input_shape, theta.crop_shape)
 model.<span style="color: #e090d7;">compile</span>(loss=<span style="color: #e9b96e;">"mse"</span>, optimizer=<span style="color: #e9b96e;">"adam"</span>)
@@ -1663,25 +1669,14 @@ model.<span style="color: #e090d7;">compile</span>(loss=<span style="color: #e9b
     theta.samples_per_epoch,
     theta.epochs,
     validation_data=validgen,
-    verbose=2,
+    verbose=1,
     nb_val_samples=theta.valid_samples_per_epoch)
 model.save_weights(<span style="color: #e9b96e;">"model.h5"</span>)
 <span style="color: #b4fa70;">with</span> <span style="color: #e090d7;">open</span>(<span style="color: #e9b96e;">"model.json"</span>, <span style="color: #e9b96e;">"w"</span>) <span style="color: #b4fa70;">as</span> f:
     f.write(model.to_json())
-gc.collect()
+<span style="color: #73d216;"># </span><span style="color: #73d216;">gc.collect()</span>
 </pre>
 </div>
-
-<pre class="example">
-&gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt; &gt;&gt;&gt;
-... ... ... ... ... ... Epoch 1/3
-139s - loss: 0.0132 - val_loss: 0.0126
-Epoch 2/3
-31s - loss: 0.0106 - val_loss: 0.0083
-Epoch 3/3
-27s - loss: 0.0099 - val_loss: 0.0092
-... ... 4042
-</pre>
 
 <p>
 Ta-da!  We now have a trained model in <code>model.json</code> and

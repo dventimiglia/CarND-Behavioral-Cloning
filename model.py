@@ -130,7 +130,7 @@ def rcycle(iterable):
 [x for x in islice(rcycle(range(5)), 15)]
 
 # #+RESULTS:
-#       : [0, 1, 2, 3, 4, 1, 3, 4, 2, 0, 3, 1, 4, 0, 2]
+#       : [0, 1, 2, 3, 4, 0, 1, 2, 4, 3, 3, 0, 2, 1, 4]
 
 #       The remaining utility functions that I wrote are quite
 #       straightforward and for brevity are written as "one-liners."
@@ -253,9 +253,9 @@ s = plt.savefig("road6.png", format="png", bbox_inches='tight')
 
 # #+RESULTS:
 #       : 
-#       : <matplotlib.image.AxesImage object at 0x7f0dc1385588>
-#       : <matplotlib.image.AxesImage object at 0x7f0dc15a7470>
-#       : <matplotlib.image.AxesImage object at 0x7f0dc1385eb8>
+#       : <matplotlib.image.AxesImage object at 0x7f691b70dcf8>
+#       : <matplotlib.image.AxesImage object at 0x7f691b70de80>
+#       : <matplotlib.image.AxesImage object at 0x7f691b757ac8>
 
 #       #+CAPTION: Hood Crop: 20, Sky Crop:  60
 #       [[file:road4.png]]
@@ -305,7 +305,7 @@ pp.pprint(describe(y1)._asdict())  # print descriptive statistics
 #       :              ('minmax', (-0.94269539999999996, 1.0)),
 #       :              ('mean', 0.0040696440648332506),
 #       :              ('variance', 0.016599764281272529),
-#       :              ('skewness', -0.1302892457752191),
+#       :              ('skewness', -0.13028924577521916),
 #       :              ('kurtosis', 6.311554102057668)])
 
 #       #+CAPTION: All Samples - No Reflection
@@ -339,9 +339,9 @@ pp.pprint(describe(y2)._asdict())
 #       : >>> >>> >>>
 #       : OrderedDict([('nobs', 3584),
 #       :              ('minmax', (-0.94269539999999996, 1.0)),
-#       :              ('mean', 0.0091718659514508933),
+#       :              ('mean', 0.0091718659514508916),
 #       :              ('variance', 0.037178302717086116),
-#       :              ('skewness', -0.16657825969015194),
+#       :              ('skewness', -0.1665782596901517),
 #       :              ('kurtosis', 1.1768785967587378)])
 
 #       #+CAPTION: abs(angle)>0.01 - No Reflection
@@ -367,7 +367,7 @@ pp.pprint(describe(y3)._asdict())
 #       :              ('mean', 0.0),
 #       :              ('variance', 0.03725725015081123),
 #       :              ('skewness', 0.0),
-#       :              ('kurtosis', 1.1400026599654964)])
+#       :              ('kurtosis', 1.1400026599654973)])
 
 #       #+CAPTION: abs(angle)>0.01 - Full Reflection
 #       [[file:hist3.png]]
@@ -419,25 +419,25 @@ pp.pprint(describe(y6)._asdict())
 #       >>>
 #       OrderedDict([('nobs', 16072),
 # 		   ('minmax', (-1.0, 1.0)),
-# 		   ('mean', -0.00052772518417122953),
-# 		   ('variance', 0.037283229390251714),
-# 		   ('skewness', 0.008520498589019836),
-# 		   ('kurtosis', 1.1769644267914074)])
+# 		   ('mean', -0.0012464327762568444),
+# 		   ('variance', 0.037297357483824768),
+# 		   ('skewness', 0.03935649430167018),
+# 		   ('kurtosis', 1.10078365162724)])
 
 #       OrderedDict([('nobs', 32144),
 # 		   ('minmax', (-1.0, 1.0)),
-# 		   ('mean', -0.0022488201157292191),
-# 		   ('variance', 0.037218482869856698),
-# 		   ('skewness', -0.050201681486988635),
-# 		   ('kurtosis', 1.1379036271452696)])
+# 		   ('mean', 0.0013097329084743655),
+# 		   ('variance', 0.037230073594916549),
+# 		   ('skewness', -0.011391695445489564),
+# 		   ('kurtosis', 1.1405030969598942)])
 
 #       OrderedDict([('nobs', 64288),
 # 		   ('minmax', (-1.0, 1.0)),
-# 		   ('mean', -0.00011066913374191124),
-# 		   ('variance', 0.037250831344353398),
-# 		   ('skewness', -0.01390556638239454),
-# 		   ('kurtosis', 1.1406077506908527)])
-#       #+end_example
+# 		   ('mean', -9.7916912643106218e-05),
+# 		   ('variance', 0.03724814334901478),
+# 		   ('skewness', -0.004653875002642311),
+# 		   ('kurtosis', 1.1415231296661128)])
+# #+end_example
 
 #       Here, we see that as we increase the number of samples we draw
 #       from the underlying data set, while randomly flipping them, the
@@ -539,15 +539,19 @@ def CarND(input_shape, crop_shape):
     model.add(Dense(1, name="Readout", trainable=False))
     return model
 
-# Here is a summary of the actual model, as generated directly by
+# #+RESULTS:
+
+#       Here is a summary of the actual model, as generated directly by
 #       =model.summary= in Keras.
 
-#       #+RESULTS:
+CarND([160, 320, 3], ((80,20),(1,1))).summary()
+
+# #+RESULTS:
 #       #+begin_example
 #       ____________________________________________________________________________________________________
 #       Layer (type)                     Output Shape          Param #     Connected to                     
 #       ====================================================================================================
-#       Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_14[0][0]        
+#       Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_1[0][0]         
 #       ____________________________________________________________________________________________________
 #       Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
 #       ____________________________________________________________________________________________________
@@ -575,13 +579,13 @@ def CarND(input_shape, crop_shape):
 #       ____________________________________________________________________________________________________
 #       FC4 (Dense)                      (None, 10)            510         FC3[0][0]                        
 #       ____________________________________________________________________________________________________
-#       Readout (Dense)                  (None, 1)             0           FC4[0][0]                        
+#       Readout (Dense)                  (None, 1)             11          FC4[0][0]                        
 #       ====================================================================================================
-#       Total params: 58,544
+#       Total params: 58,555
 #       Trainable params: 58,544
-#       Non-trainable params: 0
+#       Non-trainable params: 11
 #       ____________________________________________________________________________________________________
-#       #+end_example
+# #+end_example
 
 #       And, here is a visualization of the model, as provided by the
 #       =plot= function in Keras.
@@ -693,18 +697,18 @@ history = model.fit_generator(
     theta.samples_per_epoch,
     theta.epochs,
     validation_data=validgen,
-    verbose=2,
+    verbose=1,
     nb_val_samples=theta.valid_samples_per_epoch)
 
 # #+RESULTS:
 #       : 
 #       : ... ... >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
 #       : ... ... ... ... ... ... Epoch 1/3
-#       : 1s - loss: 0.6227 - val_loss: 0.5945
+#       : 10/30 [=========>....................] - ETA: 3s - loss: 0.626220/30 [===================>..........] - ETA: 0s - loss: 0.562630/30 [==============================] - 1s - loss: 0.5480 - val_loss: 0.4095
 #       : Epoch 2/3
-#       : 0s - loss: 0.5743 - val_loss: 0.5038
+#       : 10/30 [=========>....................] - ETA: 0s - loss: 0.424120/30 [===================>..........] - ETA: 0s - loss: 0.380430/30 [==============================] - 0s - loss: 0.3636 - val_loss: 0.2617
 #       : Epoch 3/3
-#       : 0s - loss: 0.4659 - val_loss: 0.3416
+#       : 10/30 [=========>....................] - ETA: 0s - loss: 0.288220/30 [===================>..........] - ETA: 0s - loss: 0.247530/30 [==============================] - 0s - loss: 0.2292 - val_loss: 0.1897
 
 #       Next, we perform the actual training on the
 #       =driving_log_train.csv= file, validating against the
@@ -719,11 +723,11 @@ theta.crop_shape = ((80,20),(1,1))
 theta.trainingfile = "data/driving_log_train.csv"
 theta.validationfile = "data/driving_log_validation.csv"
 theta.base_path = "data/"
-theta.samples_per_epoch = 7000
+theta.samples_per_epoch = 14000
 theta.valid_samples_per_epoch = 1036
 theta.epochs = 3
 theta.batch_size = 100
-theta.flip = False
+theta.flip = True
 
 model = CarND(theta.input_shape, theta.crop_shape)
 model.compile(loss="mse", optimizer="adam")
@@ -737,9 +741,9 @@ history = model.fit_generator(
     theta.samples_per_epoch,
     theta.epochs,
     validation_data=validgen,
-    verbose=2,
+    verbose=1,
     nb_val_samples=theta.valid_samples_per_epoch)
 model.save_weights("model.h5")
 with open("model.json", "w") as f:
     f.write(model.to_json())
-gc.collect()
+# gc.collect()
