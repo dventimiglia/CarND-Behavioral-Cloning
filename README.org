@@ -1343,7 +1343,7 @@
   - In principle, that should be good.  However, in practice, we
     noticed that models trained for many epochs, with very low
     validation accuracy, drove somewhat poorly.
-  - We may not actually have needed the droput layer.  In fact, in
+  - We may not actually have needed the dropout layer.  In fact, in
     some experiments we seem to have converged to a better-performing
     model more quickly /without/ dropout.
   - It may be that without dropout, the model overtrains on Track 1,
@@ -1402,4 +1402,5 @@
 #  LocalWords:  pprint Xflip yflip rmap sflip centerline colorspace
 #  LocalWords:  asdict OrderedDict unflipped ai NVIDIA Yann LeCun's
 #  LocalWords:  MNIST YUV strided sigmoid softmax ELU tanh Nanodegree
-#  LocalWords:  resizer Keras's
+#  LocalWords:  resizer Keras's README gc dcf de GPU da overtrains
+#  LocalWords:  overtrained Udacity's
