@@ -225,6 +225,7 @@ sections.
 
     from PIL import Image
     from itertools import groupby, islice, zip_longest, cycle, filterfalse
+    from keras.callbacks import EarlyStopping
     from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
     from keras.layers.convolutional import Cropping2D, Convolution2D
     from keras.layers.normalization import BatchNormalization
@@ -1015,7 +1016,7 @@ validation set.
     theta.crop_shape = ((80,20),(1,1))   # crop size
     theta.samples_per_epoch = 30
     theta.valid_samples_per_epoch = 30
-    theta.epochs = 3
+    theta.epochs = 20
     theta.batch_size = 10
     theta.trainingfile = "data/driving_log_overtrain.csv"
     theta.validationfile = "data/driving_log_overtrain.csv"
@@ -1035,6 +1036,7 @@ validation set.
         theta.epochs,
         validation_data=validgen,
         verbose=2,
+        callbacks=[EarlyStopping()],
         nb_val_samples=theta.valid_samples_per_epoch)
 
 Next, we perform the actual training on the
@@ -1052,7 +1054,7 @@ actually save the model to `model.json` and the model weights to
     theta.base_path = "data/"
     theta.samples_per_epoch = 14000
     theta.valid_samples_per_epoch = 1036
-    theta.epochs = 3
+    theta.epochs = 20
     theta.batch_size = 100
     theta.flip = True
     
@@ -1069,6 +1071,7 @@ actually save the model to `model.json` and the model weights to
         theta.epochs,
         validation_data=validgen,
         verbose=2,
+        callbacks=[EarlyStopping()],
         nb_val_samples=theta.valid_samples_per_epoch)
     model.save_weights("model.h5")
     with open("model.json", "w") as f:

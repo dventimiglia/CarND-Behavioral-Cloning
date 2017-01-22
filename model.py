@@ -7,6 +7,7 @@
 
 from PIL import Image
 from itertools import groupby, islice, zip_longest, cycle, filterfalse
+from keras.callbacks import EarlyStopping
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
 from keras.layers.convolutional import Cropping2D, Convolution2D
 from keras.layers.normalization import BatchNormalization
@@ -511,7 +512,6 @@ def CarND(input_shape, crop_shape):
     model.add(AveragePooling2D(pool_size=(1,4), name="Resize", trainable=False))
  
     # Normalize input.
-    # model.add(Lambda(lambda x: x/127.5 - 1., name="Normalize"))
     model.add(BatchNormalization(axis=1, name="Normalize"))
  
     # Reduce dimensions through trainable convolution, activation, and
@@ -680,7 +680,7 @@ theta.input_shape = [160, 320, 3]
 theta.crop_shape = ((80,20),(1,1))   # crop size 
 theta.samples_per_epoch = 30
 theta.valid_samples_per_epoch = 30
-theta.epochs = 3
+theta.epochs = 20
 theta.batch_size = 10
 theta.trainingfile = "data/driving_log_overtrain.csv"
 theta.validationfile = "data/driving_log_overtrain.csv"
@@ -700,17 +700,16 @@ history = model.fit_generator(
     theta.epochs,
     validation_data=validgen,
     verbose=2,
+    callbacks=[EarlyStopping()],
     nb_val_samples=theta.valid_samples_per_epoch)
 
 # #+RESULTS:
 #       : 
 #       : ... ... >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
-#       : ... ... ... ... ... ... Epoch 1/3
-#       : 1s - loss: 0.6112 - val_loss: 0.5605
-#       : Epoch 2/3
-#       : 0s - loss: 0.5358 - val_loss: 0.4581
-#       : Epoch 3/3
-#       : 0s - loss: 0.4461 - val_loss: 0.3725
+#       : ... ... ... ... ... ... ... Epoch 1/20
+#       : 4s - loss: 0.4934 - val_loss: 0.5157
+#       : Epoch 2/20
+#       : 0s - loss: 0.1459 - val_loss: 4.0054
 
 #       Next, we perform the actual training on the
 #       =driving_log_train.csv= file, validating against the
@@ -727,7 +726,7 @@ theta.validationfile = "data/driving_log_validation.csv"
 theta.base_path = "data/"
 theta.samples_per_epoch = 14000
 theta.valid_samples_per_epoch = 1036
-theta.epochs = 3
+theta.epochs = 20
 theta.batch_size = 100
 theta.flip = True
 
@@ -744,6 +743,7 @@ history = model.fit_generator(
     theta.epochs,
     validation_data=validgen,
     verbose=2,
+    callbacks=[EarlyStopping()],
     nb_val_samples=theta.valid_samples_per_epoch)
 model.save_weights("model.h5")
 with open("model.json", "w") as f:

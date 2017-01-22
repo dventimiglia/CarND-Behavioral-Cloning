@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>Robot Car</title>
-<!-- 2017-01-22 Sun 06:19 -->
+<!-- 2017-01-22 Sun 08:31 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="David A. Ventimiglia" />
@@ -474,6 +474,7 @@ sections.
 
 <pre class="src src-python"><span style="color: #b4fa70;">from</span> PIL <span style="color: #b4fa70;">import</span> Image
 <span style="color: #b4fa70;">from</span> itertools <span style="color: #b4fa70;">import</span> groupby, islice, zip_longest, cycle, filterfalse
+<span style="color: #b4fa70;">from</span> keras.callbacks <span style="color: #b4fa70;">import</span> EarlyStopping
 <span style="color: #b4fa70;">from</span> keras.layers <span style="color: #b4fa70;">import</span> Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
 <span style="color: #b4fa70;">from</span> keras.layers.convolutional <span style="color: #b4fa70;">import</span> Cropping2D, Convolution2D
 <span style="color: #b4fa70;">from</span> keras.layers.normalization <span style="color: #b4fa70;">import</span> BatchNormalization
@@ -1611,7 +1612,7 @@ validation set.
 <span id="coderef-crop_shape" class="coderef-off"><span style="color: #fcaf3e;">theta.crop_shape</span> = ((80,20),(1,1))   <span style="color: #73d216;"># </span><span style="color: #73d216;">crop size</span></span>
 <span style="color: #fcaf3e;">theta.samples_per_epoch</span> = 30
 <span style="color: #fcaf3e;">theta.valid_samples_per_epoch</span> = 30
-<span style="color: #fcaf3e;">theta.epochs</span> = 3
+<span style="color: #fcaf3e;">theta.epochs</span> = 20
 <span style="color: #fcaf3e;">theta.batch_size</span> = 10
 <span style="color: #fcaf3e;">theta.trainingfile</span> = <span style="color: #e9b96e;">"data/driving_log_overtrain.csv"</span>
 <span style="color: #fcaf3e;">theta.validationfile</span> = <span style="color: #e9b96e;">"data/driving_log_overtrain.csv"</span>
@@ -1631,6 +1632,7 @@ model.<span style="color: #e090d7;">compile</span>(loss=<span style="color: #e9b
     theta.epochs,
     validation_data=validgen,
     verbose=2,
+    callbacks=[EarlyStopping()],
     nb_val_samples=theta.valid_samples_per_epoch)
 </pre>
 </div>
@@ -1654,7 +1656,7 @@ actually save the model to <code>model.json</code> and the model weights to
 <span style="color: #fcaf3e;">theta.base_path</span> = <span style="color: #e9b96e;">"data/"</span>
 <span style="color: #fcaf3e;">theta.samples_per_epoch</span> = 14000
 <span style="color: #fcaf3e;">theta.valid_samples_per_epoch</span> = 1036
-<span style="color: #fcaf3e;">theta.epochs</span> = 3
+<span style="color: #fcaf3e;">theta.epochs</span> = 20
 <span style="color: #fcaf3e;">theta.batch_size</span> = 100
 <span style="color: #fcaf3e;">theta.flip</span> = <span style="color: #e9b2e3;">True</span>
 
@@ -1671,6 +1673,7 @@ model.<span style="color: #e090d7;">compile</span>(loss=<span style="color: #e9b
     theta.epochs,
     validation_data=validgen,
     verbose=2,
+    callbacks=[EarlyStopping()],
     nb_val_samples=theta.valid_samples_per_epoch)
 model.save_weights(<span style="color: #e9b96e;">"model.h5"</span>)
 <span style="color: #b4fa70;">with</span> <span style="color: #e090d7;">open</span>(<span style="color: #e9b96e;">"model.json"</span>, <span style="color: #e9b96e;">"w"</span>) <span style="color: #b4fa70;">as</span> f:
