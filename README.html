@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>Robot Car</title>
-<!-- 2017-01-21 Sat 19:12 -->
+<!-- 2017-01-22 Sun 06:19 -->
 <meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta  name="generator" content="Org-mode" />
 <meta  name="author" content="David A. Ventimiglia" />
@@ -476,6 +476,7 @@ sections.
 <span style="color: #b4fa70;">from</span> itertools <span style="color: #b4fa70;">import</span> groupby, islice, zip_longest, cycle, filterfalse
 <span style="color: #b4fa70;">from</span> keras.layers <span style="color: #b4fa70;">import</span> Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
 <span style="color: #b4fa70;">from</span> keras.layers.convolutional <span style="color: #b4fa70;">import</span> Cropping2D, Convolution2D
+<span style="color: #b4fa70;">from</span> keras.layers.normalization <span style="color: #b4fa70;">import</span> BatchNormalization
 <span style="color: #b4fa70;">from</span> keras.models <span style="color: #b4fa70;">import</span> Sequential, model_from_json
 <span style="color: #b4fa70;">from</span> keras.utils.visualize_util <span style="color: #b4fa70;">import</span> plot
 <span style="color: #b4fa70;">from</span> scipy.stats <span style="color: #b4fa70;">import</span> kurtosis, skew, describe
@@ -1398,7 +1399,7 @@ still is a hyper-parameter, of course.
     model.add(AveragePooling2D(pool_size=(1,4), name=<span style="color: #e9b96e;">"Resize"</span>, trainable=<span style="color: #e9b2e3;">False</span>))
 
     <span style="color: #73d216;"># </span><span style="color: #73d216;">Normalize input.</span>
-    model.add(Lambda(<span style="color: #b4fa70;">lambda</span> x: x/127.5 - 1., name=<span style="color: #e9b96e;">"Normalize"</span>))
+    model.add(BatchNormalization(axis=1, name=<span style="color: #e9b96e;">"Normalize"</span>))
 
     <span style="color: #73d216;"># </span><span style="color: #73d216;">Reduce dimensions through trainable convolution, activation, and</span>
     <span style="color: #73d216;"># </span><span style="color: #73d216;">pooling layers.</span>
@@ -1444,11 +1445,11 @@ Here is a summary of the actual model, as generated directly by
 ____________________________________________________________________________________________________
 Layer (type)                     Output Shape          Param #     Connected to                     
 ====================================================================================================
-Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_1[0][0]         
+Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_19[0][0]        
 ____________________________________________________________________________________________________
 Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
 ____________________________________________________________________________________________________
-Normalize (Lambda)               (None, 60, 79, 3)     0           Resize[0][0]                     
+Normalize (BatchNormalization)   (None, 60, 79, 3)     240         Resize[0][0]                     
 ____________________________________________________________________________________________________
 Convolution2D1 (Convolution2D)   (None, 29, 39, 24)    672         Normalize[0][0]                  
 ____________________________________________________________________________________________________
@@ -1474,9 +1475,9 @@ FC4 (Dense)                      (None, 10)            510         FC3[0][0]
 ____________________________________________________________________________________________________
 Readout (Dense)                  (None, 1)             11          FC4[0][0]                        
 ====================================================================================================
-Total params: 58,555
-Trainable params: 58,544
-Non-trainable params: 11
+Total params: 58,795
+Trainable params: 58,664
+Non-trainable params: 131
 ____________________________________________________________________________________________________
 </pre>
 
@@ -1629,7 +1630,7 @@ model.<span style="color: #e090d7;">compile</span>(loss=<span style="color: #e9b
     theta.samples_per_epoch,
     theta.epochs,
     validation_data=validgen,
-    verbose=1,
+    verbose=2,
     nb_val_samples=theta.valid_samples_per_epoch)
 </pre>
 </div>
@@ -1669,7 +1670,7 @@ model.<span style="color: #e090d7;">compile</span>(loss=<span style="color: #e9b
     theta.samples_per_epoch,
     theta.epochs,
     validation_data=validgen,
-    verbose=1,
+    verbose=2,
     nb_val_samples=theta.valid_samples_per_epoch)
 model.save_weights(<span style="color: #e9b96e;">"model.h5"</span>)
 <span style="color: #b4fa70;">with</span> <span style="color: #e090d7;">open</span>(<span style="color: #e9b96e;">"model.json"</span>, <span style="color: #e9b96e;">"w"</span>) <span style="color: #b4fa70;">as</span> f:

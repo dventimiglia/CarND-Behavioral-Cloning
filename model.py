@@ -9,6 +9,7 @@ from PIL import Image
 from itertools import groupby, islice, zip_longest, cycle, filterfalse
 from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
 from keras.layers.convolutional import Cropping2D, Convolution2D
+from keras.layers.normalization import BatchNormalization
 from keras.models import Sequential, model_from_json
 from keras.utils.visualize_util import plot
 from scipy.stats import kurtosis, skew, describe
@@ -510,7 +511,8 @@ def CarND(input_shape, crop_shape):
     model.add(AveragePooling2D(pool_size=(1,4), name="Resize", trainable=False))
  
     # Normalize input.
-    model.add(Lambda(lambda x: x/127.5 - 1., name="Normalize"))
+    # model.add(Lambda(lambda x: x/127.5 - 1., name="Normalize"))
+    model.add(BatchNormalization(axis=1, name="Normalize"))
  
     # Reduce dimensions through trainable convolution, activation, and
     # pooling layers.
@@ -551,11 +553,11 @@ CarND([160, 320, 3], ((80,20),(1,1))).summary()
 #       ____________________________________________________________________________________________________
 #       Layer (type)                     Output Shape          Param #     Connected to                     
 #       ====================================================================================================
-#       Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_1[0][0]         
+#       Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_19[0][0]        
 #       ____________________________________________________________________________________________________
 #       Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
 #       ____________________________________________________________________________________________________
-#       Normalize (Lambda)               (None, 60, 79, 3)     0           Resize[0][0]                     
+#       Normalize (BatchNormalization)   (None, 60, 79, 3)     240         Resize[0][0]                     
 #       ____________________________________________________________________________________________________
 #       Convolution2D1 (Convolution2D)   (None, 29, 39, 24)    672         Normalize[0][0]                  
 #       ____________________________________________________________________________________________________
@@ -581,9 +583,9 @@ CarND([160, 320, 3], ((80,20),(1,1))).summary()
 #       ____________________________________________________________________________________________________
 #       Readout (Dense)                  (None, 1)             11          FC4[0][0]                        
 #       ====================================================================================================
-#       Total params: 58,555
-#       Trainable params: 58,544
-#       Non-trainable params: 11
+#       Total params: 58,795
+#       Trainable params: 58,664
+#       Non-trainable params: 131
 #       ____________________________________________________________________________________________________
 # #+end_example
 
@@ -697,18 +699,18 @@ history = model.fit_generator(
     theta.samples_per_epoch,
     theta.epochs,
     validation_data=validgen,
-    verbose=1,
+    verbose=2,
     nb_val_samples=theta.valid_samples_per_epoch)
 
 # #+RESULTS:
 #       : 
 #       : ... ... >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
 #       : ... ... ... ... ... ... Epoch 1/3
-#       : 10/30 [=========>....................] - ETA: 3s - loss: 0.626220/30 [===================>..........] - ETA: 0s - loss: 0.562630/30 [==============================] - 1s - loss: 0.5480 - val_loss: 0.4095
+#       : 1s - loss: 0.6112 - val_loss: 0.5605
 #       : Epoch 2/3
-#       : 10/30 [=========>....................] - ETA: 0s - loss: 0.424120/30 [===================>..........] - ETA: 0s - loss: 0.380430/30 [==============================] - 0s - loss: 0.3636 - val_loss: 0.2617
+#       : 0s - loss: 0.5358 - val_loss: 0.4581
 #       : Epoch 3/3
-#       : 10/30 [=========>....................] - ETA: 0s - loss: 0.288220/30 [===================>..........] - ETA: 0s - loss: 0.247530/30 [==============================] - 0s - loss: 0.2292 - val_loss: 0.1897
+#       : 0s - loss: 0.4461 - val_loss: 0.3725
 
 #       Next, we perform the actual training on the
 #       =driving_log_train.csv= file, validating against the
@@ -741,7 +743,7 @@ history = model.fit_generator(
     theta.samples_per_epoch,
     theta.epochs,
     validation_data=validgen,
-    verbose=1,
+    verbose=2,
     nb_val_samples=theta.valid_samples_per_epoch)
 model.save_weights("model.h5")
 with open("model.json", "w") as f:

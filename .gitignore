@@ -12,3 +12,5 @@ simulator-linux
 wget-log*
 __pycache__
 *.bak
+MACOSX
+drive.py.1

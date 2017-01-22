@@ -227,6 +227,7 @@ sections.
     from itertools import groupby, islice, zip_longest, cycle, filterfalse
     from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
     from keras.layers.convolutional import Cropping2D, Convolution2D
+    from keras.layers.normalization import BatchNormalization
     from keras.models import Sequential, model_from_json
     from keras.utils.visualize_util import plot
     from scipy.stats import kurtosis, skew, describe
@@ -345,7 +346,7 @@ independently.  In practice, this is not a problem.
 
     [x for x in islice(rcycle(range(5)), 15)]
 
-    [0, 1, 2, 3, 4, 1, 3, 4, 2, 0, 3, 1, 4, 0, 2]
+    [0, 1, 2, 3, 4, 0, 1, 2, 4, 3, 3, 0, 2, 1, 4]
 
 The remaining utility functions that I wrote are quite
 straightforward and for brevity are written as "one-liners."
@@ -502,7 +503,7 @@ Nevertheless in the interest of time we will adopt the term.
                  ('minmax', (-0.94269539999999996, 1.0)),
                  ('mean', 0.0040696440648332506),
                  ('variance', 0.016599764281272529),
-                 ('skewness', -0.1302892457752191),
+                 ('skewness', -0.13028924577521916),
                  ('kurtosis', 6.311554102057668)])
 
 ![img](hist1.png "All Samples - No Reflection")
@@ -533,9 +534,9 @@ the summary.
     >>> >>> >>>
     OrderedDict([('nobs', 3584),
                  ('minmax', (-0.94269539999999996, 1.0)),
-                 ('mean', 0.0091718659514508933),
+                 ('mean', 0.0091718659514508916),
                  ('variance', 0.037178302717086116),
-                 ('skewness', -0.16657825969015194),
+                 ('skewness', -0.1665782596901517),
                  ('kurtosis', 1.1768785967587378)])
 
 ![img](hist2.png "abs(angle)>0.01 - No Reflection")
@@ -558,7 +559,7 @@ purposes only, we shall again mask out small angle samples.
                  ('mean', 0.0),
                  ('variance', 0.03725725015081123),
                  ('skewness', 0.0),
-                 ('kurtosis', 1.1400026599654964)])
+                 ('kurtosis', 1.1400026599654973)])
 
 ![img](hist3.png "abs(angle)>0.01 - Full Reflection")
 
@@ -606,24 +607,24 @@ between memory consumption and CPU usage.
     >>>
     OrderedDict([('nobs', 16072),
                  ('minmax', (-1.0, 1.0)),
-                 ('mean', -0.00052772518417122953),
-                 ('variance', 0.037283229390251714),
-                 ('skewness', 0.008520498589019836),
-                 ('kurtosis', 1.1769644267914074)])
+                 ('mean', -0.0012464327762568444),
+                 ('variance', 0.037297357483824768),
+                 ('skewness', 0.03935649430167018),
+                 ('kurtosis', 1.10078365162724)])
     
     OrderedDict([('nobs', 32144),
                  ('minmax', (-1.0, 1.0)),
-                 ('mean', -0.0022488201157292191),
-                 ('variance', 0.037218482869856698),
-                 ('skewness', -0.050201681486988635),
-                 ('kurtosis', 1.1379036271452696)])
+                 ('mean', 0.0013097329084743655),
+                 ('variance', 0.037230073594916549),
+                 ('skewness', -0.011391695445489564),
+                 ('kurtosis', 1.1405030969598942)])
     
     OrderedDict([('nobs', 64288),
                  ('minmax', (-1.0, 1.0)),
-                 ('mean', -0.00011066913374191124),
-                 ('variance', 0.037250831344353398),
-                 ('skewness', -0.01390556638239454),
-                 ('kurtosis', 1.1406077506908527)])
+                 ('mean', -9.7916912643106218e-05),
+                 ('variance', 0.03724814334901478),
+                 ('skewness', -0.004653875002642311),
+                 ('kurtosis', 1.1415231296661128)])
 
 Here, we see that as we increase the number of samples we draw
 from the underlying data set, while randomly flipping them, the
@@ -847,7 +848,7 @@ still is a hyper-parameter, of course.
         model.add(AveragePooling2D(pool_size=(1,4), name="Resize", trainable=False))
     
         # Normalize input.
-        model.add(Lambda(lambda x: x/127.5 - 1., name="Normalize"))
+        model.add(BatchNormalization(axis=1, name="Normalize"))
     
         # Reduce dimensions through trainable convolution, activation, and
         # pooling layers.
@@ -879,14 +880,16 @@ still is a hyper-parameter, of course.
 Here is a summary of the actual model, as generated directly by
 `model.summary` in Keras.
 
+    CarND([160, 320, 3], ((80,20),(1,1))).summary()
+
     ____________________________________________________________________________________________________
     Layer (type)                     Output Shape          Param #     Connected to                     
     ====================================================================================================
-    Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_14[0][0]        
+    Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_19[0][0]        
     ____________________________________________________________________________________________________
     Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
     ____________________________________________________________________________________________________
-    Normalize (Lambda)               (None, 60, 79, 3)     0           Resize[0][0]                     
+    Normalize (BatchNormalization)   (None, 60, 79, 3)     240         Resize[0][0]                     
     ____________________________________________________________________________________________________
     Convolution2D1 (Convolution2D)   (None, 29, 39, 24)    672         Normalize[0][0]                  
     ____________________________________________________________________________________________________
@@ -910,11 +913,11 @@ Here is a summary of the actual model, as generated directly by
     ____________________________________________________________________________________________________
     FC4 (Dense)                      (None, 10)            510         FC3[0][0]                        
     ____________________________________________________________________________________________________
-    Readout (Dense)                  (None, 1)             0           FC4[0][0]                        
+    Readout (Dense)                  (None, 1)             11          FC4[0][0]                        
     ====================================================================================================
-    Total params: 58,544
-    Trainable params: 58,544
-    Non-trainable params: 0
+    Total params: 58,795
+    Trainable params: 58,664
+    Non-trainable params: 131
     ____________________________________________________________________________________________________
 
 And, here is a visualization of the model, as provided by the
@@ -1047,11 +1050,11 @@ actually save the model to `model.json` and the model weights to
     theta.trainingfile = "data/driving_log_train.csv"
     theta.validationfile = "data/driving_log_validation.csv"
     theta.base_path = "data/"
-    theta.samples_per_epoch = 7000
+    theta.samples_per_epoch = 14000
     theta.valid_samples_per_epoch = 1036
     theta.epochs = 3
     theta.batch_size = 100
-    theta.flip = False
+    theta.flip = True
     
     model = CarND(theta.input_shape, theta.crop_shape)
     model.compile(loss="mse", optimizer="adam")
@@ -1070,16 +1073,7 @@ actually save the model to `model.json` and the model weights to
     model.save_weights("model.h5")
     with open("model.json", "w") as f:
         f.write(model.to_json())
-    gc.collect()
-
-    >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
-    ... ... ... ... ... ... Epoch 1/3
-    139s - loss: 0.0132 - val_loss: 0.0126
-    Epoch 2/3
-    31s - loss: 0.0106 - val_loss: 0.0083
-    Epoch 3/3
-    27s - loss: 0.0099 - val_loss: 0.0092
-    ... ... 4042
+    # gc.collect()
 
 Ta-da!  We now have a trained model in `model.json` and
 `model.h5` that we can run in the simulator with this command.
@@ -1177,7 +1171,7 @@ Finally, we make the following observations.
 -   In principle, that should be good.  However, in practice, we
     noticed that models trained for many epochs, with very low
     validation accuracy, drove somewhat poorly.
--   We may not actually have needed the droput layer.  In fact, in
+-   We may not actually have needed the dropout layer.  In fact, in
     some experiments we seem to have converged to a better-performing
     model more quickly *without* dropout.
 -   It may be that without dropout, the model overtrains on Track 1,
