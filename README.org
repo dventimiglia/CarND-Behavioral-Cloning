@@ -295,6 +295,7 @@
       import numpy as np
       import pprint as pp
       import random
+      import tensorflow as tf
       #+END_SRC
 
       #+RESULTS:
@@ -415,7 +416,7 @@
       #+END_SRC
 
       #+RESULTS:
-      : [0, 1, 2, 3, 4, 0, 1, 2, 4, 3, 3, 0, 2, 1, 4]
+      : [0, 1, 2, 3, 4, 4, 1, 2, 0, 3, 2, 0, 4, 1, 3]
 
       The remaining utility functions that I wrote are quite
       straightforward and for brevity are written as "one-liners."
@@ -1020,7 +1021,7 @@
       ____________________________________________________________________________________________________
       Layer (type)                     Output Shape          Param #     Connected to                     
       ====================================================================================================
-      Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_19[0][0]        
+      Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_1[0][0]         
       ____________________________________________________________________________________________________
       Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
       ____________________________________________________________________________________________________
@@ -1186,12 +1187,20 @@
       #+END_SRC
 
       #+RESULTS:
-      : 
-      : ... ... >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
-      : ... ... ... ... ... ... ... Epoch 1/20
-      : 4s - loss: 0.4934 - val_loss: 0.5157
-      : Epoch 2/20
-      : 0s - loss: 0.1459 - val_loss: 4.0054
+      #+begin_example
+
+      ... ... >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
+      ... ... ... ... ... ... ... Epoch 1/20
+      2s - loss: 0.3678 - val_loss: 19.8138
+      Epoch 2/20
+      0s - loss: 0.0532 - val_loss: 16.3926
+      Epoch 3/20
+      0s - loss: 0.0382 - val_loss: 14.4724
+      Epoch 4/20
+      0s - loss: 0.0409 - val_loss: 3.6000
+      Epoch 5/20
+      0s - loss: 0.0242 - val_loss: 5.6933
+#+end_example
 
       Next, we perform the actual training on the
       =driving_log_train.csv= file, validating against the
@@ -1235,15 +1244,19 @@
       #+END_SRC
 
       #+RESULTS:
-      : 
-      : >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
-      : ... ... ... ... ... ... ... Epoch 1/20
-      : 145s - loss: 0.0155 - val_loss: 0.0161
-      : Epoch 2/20
-      : 72s - loss: 0.0139 - val_loss: 0.0138
-      : Epoch 3/20
-      : 70s - loss: 0.0132 - val_loss: 0.0158
-      : ... ... ... 3594
+      #+begin_example
+
+      >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
+      ... ... ... ... ... ... ... Epoch 1/20
+      166s - loss: 0.0138 - val_loss: 0.0152
+      Epoch 2/20
+      77s - loss: 0.0105 - val_loss: 0.0147
+      Epoch 3/20
+      84s - loss: 0.0096 - val_loss: 0.0121
+      Epoch 4/20
+      88s - loss: 0.0091 - val_loss: 0.0155
+      ... ... ... 3594
+#+end_example
 
       Ta-da!  We now have a trained model in =model.json= and
       =model.h5= that we can run in the simulator with this command.

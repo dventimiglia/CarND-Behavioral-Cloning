@@ -35,7 +35,6 @@ prev_image_array = None
 
 @sio.on('telemetry')
 def telemetry(sid, data):
-    pdb.set_trace()
     # The current steering angle of the car
     steering_angle = data["steering_angle"]
     # The current throttle of the car
