@@ -25,7 +25,7 @@ docs: Makefile.svg
 validate: telemetry simulator
 
 simulator: simulator-linux simulator-beta
-	"simulator-beta/Dominique Development Linux desktop 64-bit.x86_64"
+	"simulator-linux/Default Linux desktop Universal.x86_64"
 
 telemetry: model.h5
 	source activate CarND-Behavioral-Cloning

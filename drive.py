@@ -11,6 +11,7 @@ from PIL import Image
 from PIL import ImageOps
 from flask import Flask, render_template
 from io import BytesIO
+import pdb
 
 from keras.models import model_from_json
 
@@ -34,6 +35,7 @@ prev_image_array = None
 
 @sio.on('telemetry')
 def telemetry(sid, data):
+    pdb.set_trace()
     # The current steering angle of the car
     steering_angle = data["steering_angle"]
     # The current throttle of the car
