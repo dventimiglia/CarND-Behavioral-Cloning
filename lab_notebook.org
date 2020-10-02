@@ -1,5 +1,8 @@
 #  LocalWords:  ImageDataGenerator
 
+#+STARTUP: odd
+#+STARTUP: hidestars
+
 * <2017-01-05 Thu>
 *** Splitting data into validation sets
     - No need for train_test_split, I think.  I think I can just use

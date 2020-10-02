@@ -1,4 +1,5 @@
-# -*- org-babel-sh-command: "/bin/bash" -*-
+#+STARTUP: odd
+#+STARTUP: hidestars
 
 #+TITLE: Robot Car
 #+DATE: <2017-01-19>
@@ -116,7 +117,7 @@
       download and unzip the Linux versions into sub-directories
       =simulator-linux= and =simulator-beta=.
 
-      #+BEGIN_SRC sh :results output :tangle no :exports code
+      #+BEGIN_SRC bash :results output :tangle no :exports code
       wget -O simulator-linux.zip "https://d17h27t6h515a5.cloudfront.net/topher/2016/November/5831f0f7_simulator-linux/simulator-linux.zip"
       wget -O simulator-beta.zip "https://d17h27t6h515a5.cloudfront.net/topher/2017/January/587527cb_udacity-sdc-udacity-self-driving-car-simulator-dominique-development-linux-desktop-64-bit-5/udacity-sdc-udacity-self-driving-car-simulator-dominique-development-linux-desktop-64-bit-5.zip"
       unzip -d simulator-linux -u simulator-linux.zip > /dev/null 2>&1
@@ -128,9 +129,11 @@
       While we are at it, we might as well get the network server as
       well, which is implemented in the [[https://d17h27t6h515a5.cloudfront.net/topher/2017/January/586c4a66_drive/drive.py][drive.py]] Python file.
 
-      #+BEGIN_SRC sh :results output :tangle no :exports code
+      #+BEGIN_SRC bash :results output :tangle no :exports code
       wget https://d17h27t6h515a5.cloudfront.net/topher/2017/January/586c4a66_drive/drive.py
       #+END_SRC
+
+      #+RESULTS:
 
       Now, while we are encouraged to collect our own training data,
       it turns out that Udacity supplies their own training data for
@@ -141,11 +144,13 @@
       course unzip, taking care to remove the annoying =__MACOSX=
       directory.
 
-      #+BEGIN_SRC sh :results output :tangle no :exports code
+      #+BEGIN_SRC bash :results output :tangle no :exports code
       wget -nc "https://d17h27t6h515a5.cloudfront.net/topher/2016/December/584f6edd_data/data.zip"
       unzip data.zip > /dev/null 2>&1
       rm -rf __MACOSX
       #+END_SRC
+
+      #+RESULTS:
 
       The data---whether recorded or downloaded---are presented as a
       [[https://en.wikipedia.org/wiki/Comma-separated_values][CSV]] "index file", =driving_log.csv=.  Each line in this file
@@ -156,7 +161,7 @@
       take a look at the beginning of that file and then determine how
       many samples are provided.
 
-      #+BEGIN_SRC sh :results output :tangle no :exports both
+      #+BEGIN_SRC bash :results output :tangle no :exports both
       head data/driving_log.csv
       wc -l data/driving_log.csv
       #+END_SRC
@@ -184,7 +189,7 @@
       few lines of shell code, taking 1036 samples (about 13%) as
       validation data.
 
-      #+BEGIN_SRC sh :results output :tangle no :exports both
+      #+BEGIN_SRC bash :results output :tangle no :exports both
       cat data/driving_log.csv | tail -n+2 | shuf > data/driving_log_all.csv
       cat data/driving_log_all.csv | head -n7000 > data/driving_log_train.csv
       cat data/driving_log_all.csv | tail -n+7001 > data/driving_log_validation.csv
@@ -207,7 +212,7 @@
       [[file:data/driving_log_validation.csv][=driving_log_validation.csv=]] files play a central role as we
       iteratively develop and refine the model.
 
-      #+BEGIN_SRC sh :results output :tangle no :exports both
+      #+BEGIN_SRC bash :results output :tangle no :exports both
       wc -l data/driving_log_all.csv
       wc -l data/driving_log_train.csv
       wc -l data/driving_log_validation.csv
@@ -246,7 +251,7 @@
       disparate samples, with neutral steering, extreme left steering,
       and extreme right steering.
 
-      #+BEGIN_SRC sh :results output :tangle no :exports both
+      #+BEGIN_SRC bash :results output :tangle no :exports both
       cat <(cat data/driving_log_all.csv | sort -k4 -n -t, | head -n1) <(cat data/driving_log_all.csv | sort -k4 -nr -t, | head -n1) <(cat data/driving_log_all.csv | awk -F, -vOFS=, '{print $1, $2, $3, sqrt($4*$4), $5, $6, $7}' | sort -k4 -n -t, | head -n1) > data/driving_log_overtrain.csv
       cat data/driving_log_overtrain.csv
       #+END_SRC
@@ -269,8 +274,7 @@
       way, if the environment does not already exist it can be created
       and activated with these commands.
 
-      #+BEGIN_SRC sh :results output :tangle no :exports code
-      conda env create --file environment.yml --name CarND-Behavioral-Cloning
+      #+BEGIN_SRC bash :results output :tangle no :exports code
       source activate CarND-Behavioral-Cloning
       #+END_SRC
 
@@ -281,24 +285,26 @@
       sections.
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
-      from PIL import Image
-      from itertools import groupby, islice, zip_longest, cycle, filterfalse
-      from keras.callbacks import EarlyStopping
-      from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
-      from keras.layers.convolutional import Cropping2D, Convolution2D
-      from keras.layers.normalization import BatchNormalization
-      from keras.models import Sequential, model_from_json
-      from keras.utils.visualize_util import plot
-      from scipy.stats import kurtosis, skew, describe
-      import gc
-      import matplotlib.pyplot as plt
-      import numpy as np
-      import pprint as pp
-      import random
-      import tensorflow as tf
+	from PIL import Image
+	from itertools import groupby, islice, zip_longest, cycle, filterfalse
+	from keras.callbacks import EarlyStopping
+	from keras.layers import Conv2D, Flatten, MaxPooling2D, Dense, Dropout, Lambda, AveragePooling2D
+	from keras.layers.convolutional import Cropping2D, Conv2D
+	from keras.layers.normalization import BatchNormalization
+	from keras.models import Sequential, model_from_json
+	from keras.utils.vis_utils import plot_model
+	from scipy.stats import kurtosis, skew, describe
+	import gc
+	import matplotlib.pyplot as plt
+	import numpy as np
+	import pprint as pp
+	import random
+	import tensorflow as tf
       #+END_SRC
 
       #+RESULTS:
+      : 2020-10-02 14:36:04.374598: W tensorflow/stream_executor/platform/default/dso_loader.cc:59] Could not load dynamic library 'libcudart.so.10.1'; dlerror: libcudart.so.10.1: cannot open shared object file: No such file or directory
+      : 2020-10-02 14:36:04.374638: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
 
 ***** Utilities
 
@@ -392,14 +398,14 @@
       once using Unix command-line utilities above.
 
       #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code
-      def rcycle(iterable):
-          saved = []                 # In-memory cache
-          for element in iterable:
-              yield element
-              saved.append(element)
-          while saved:
-              random.shuffle(saved)  # Shuffle every batch
-              for element in saved:
+        def rcycle(iterable):
+            saved = []                 # In-memory cache
+            for element in iterable:
+                yield element
+                saved.append(element)
+            while saved:
+                random.shuffle(saved)  # Shuffle every batch
+                for element in saved:
                     yield element
       #+END_SRC
 
@@ -412,11 +418,11 @@
       independently.  In practice, this is not a problem.
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
-      [x for x in islice(rcycle(range(5)), 15)]
+	print([x for x in islice(rcycle(range(5)), 15)])
       #+END_SRC
 
       #+RESULTS:
-      : [0, 1, 2, 3, 4, 4, 1, 2, 0, 3, 2, 0, 4, 1, 3]
+      : [0, 1, 2, 3, 4, 2, 1, 3, 0, 4, 1, 3, 4, 2, 0]
 
       The remaining utility functions that I wrote are quite
       straightforward and for brevity are written as "one-liners."
@@ -440,19 +446,19 @@
       The actual code for these utility functions is presented below.
 
       #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code
-      feed = lambda filename: (l for l in open(filename))
-      split = lambda lines, delimiter=",": (line.split(delimiter) for line in lines)
-      select = lambda fields, indices: ([r[i] for i in indices] for r in fields)
-      load = lambda f: np.asarray(Image.open(f))
-      Xflip = lambda x: x[:,::-1,:]
-      yflip = lambda x: -x
-      sflip = lambda s: (Xflip(s[0]), yflip(s[1]))
-      rmap = lambda f,g: (x if random.choice([True, False]) else f(x) for x in g)
-      rflip = lambda s: rmap(sflip, s)
-      fetch = lambda records, base: ([load(base+f.strip()) for f in record[:1]]+[float(v) for v in record[1:]] for record in records)
-      group = lambda items, n, fillvalue=None: zip_longest(*([iter(items)]*n), fillvalue=fillvalue)
-      transpose = lambda tuples: (list(map(list, zip(*g))) for g in tuples)
-      batch = lambda groups, indices=[0, 1]: ([np.asarray(t[i]) for i in indices] for t in groups)
+	feed = lambda filename: (l for l in open(filename))
+	split = lambda lines, delimiter=",": (line.split(delimiter) for line in lines)
+	select = lambda fields, indices: ([r[i] for i in indices] for r in fields)
+	load = lambda f: np.asarray(Image.open(f))
+	Xflip = lambda x: x[:,::-1,:]
+	yflip = lambda x: -x
+	sflip = lambda s: (Xflip(s[0]), yflip(s[1]))
+	rmap = lambda f,g: (x if random.choice([True, False]) else f(x) for x in g)
+	rflip = lambda s: rmap(sflip, s)
+	fetch = lambda records, base: ([load(base+f.strip()) for f in record[:1]]+[float(v) for v in record[1:]] for record in records)
+	group = lambda items, n, fillvalue=None: zip_longest(*([iter(items)]*n), fillvalue=fillvalue)
+	transpose = lambda tuples: (list(map(list, zip(*g))) for g in tuples)
+	batch = lambda groups, indices=[0, 1]: ([np.asarray(t[i]) for i in indices] for t in groups)
       #+END_SRC
 
       #+RESULTS:
@@ -484,23 +490,22 @@
       steering.
 
       #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code
-      X = [x for x in fetch(select(split(feed("data/driving_log_overtrain.csv")), [0,3]), "data/")]
-      f = plt.figure()                        # start a figure
-      plt.imshow(X[0][0])                     # show the image
-      f.suptitle("Angle: " + str(X[0][1]))    # add figure title
-      s = plt.savefig("road1.png", format="png", bbox_inches='tight')
-      f = plt.figure()
-      plt.imshow(X[1][0])
-      f.suptitle("Angle: " + str(X[1][1]))
-      s = plt.savefig("road2.png", format="png", bbox_inches='tight')
-      f = plt.figure()
-      plt.imshow(X[2][0])
-      f.suptitle("Angle: " + str(X[2][1]))
-      s = plt.savefig("road3.png", format="png", bbox_inches='tight')
+	X = [x for x in fetch(select(split(feed("data/driving_log_overtrain.csv")), [0,3]), "data/")]
+	f = plt.figure()                        # start a figure
+	plt.imshow(X[0][0])                     # show the image
+	f.suptitle("Angle: " + str(X[0][1]))    # add figure title
+	s = plt.savefig("road1.png", format="png", bbox_inches='tight')
+	f = plt.figure()
+	plt.imshow(X[1][0])
+	f.suptitle("Angle: " + str(X[1][1]))
+	s = plt.savefig("road2.png", format="png", bbox_inches='tight')
+	f = plt.figure()
+	plt.imshow(X[2][0])
+	f.suptitle("Angle: " + str(X[2][1]))
+	s = plt.savefig("road3.png", format="png", bbox_inches='tight')
       #+END_SRC
 
       #+RESULTS:
-      : Text(0.5,0.98,'Angle: 0.0')
 
       #+CAPTION: Large Negative Steering Angle
       [[file:road1.png]]
@@ -517,7 +522,7 @@
       channels (the RGB colorspace).
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
-      print(X[0][0].shape)  # X[0] is an (image,angle) sample. X[0][0] is just the image
+	print(X[0][0].shape)  # X[0] is an (image,angle) sample. X[0][0] is just the image
       #+END_SRC
 
       #+RESULTS:
@@ -538,20 +543,16 @@
       out on the top by [[(sky60)][60 pixels]], [[(sky80)][80 pixels]], and [[(sky100)][100 pixels]].  
 
       #+BEGIN_SRC python -r :results output :session :tangle model.py :comments org :exports code
-      f = plt.figure()
-      plt.imshow(X[0][0][60:140])    # sky:60 (ref:sky60)
-      s = plt.savefig("road4.png", format="png", bbox_inches='tight')
-      plt.imshow(X[0][0][80:140])    # sky:80 (ref:sky80)
-      s = plt.savefig("road5.png", format="png", bbox_inches='tight')
-      plt.imshow(X[0][0][100:140])   # sky:100 (ref:sky100)
-      s = plt.savefig("road6.png", format="png", bbox_inches='tight')
+	f = plt.figure()
+	plt.imshow(X[0][0][60:140])    # sky:60 (ref:sky60)
+	s = plt.savefig("road4.png", format="png", bbox_inches='tight')
+	plt.imshow(X[0][0][80:140])    # sky:80 (ref:sky80)
+	s = plt.savefig("road5.png", format="png", bbox_inches='tight')
+	plt.imshow(X[0][0][100:140])   # sky:100 (ref:sky100)
+	s = plt.savefig("road6.png", format="png", bbox_inches='tight')
       #+END_SRC
 
       #+RESULTS:
-      : 
-      : <matplotlib.image.AxesImage object at 0x7f691b70dcf8>
-      : <matplotlib.image.AxesImage object at 0x7f691b70de80>
-      : <matplotlib.image.AxesImage object at 0x7f691b757ac8>
 
       #+CAPTION: Hood Crop: 20, Sky Crop:  60
       [[file:road4.png]]
@@ -588,22 +589,21 @@
       Nevertheless in the interest of time we will adopt the term.
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
-      f = plt.figure()                   
-      y1 = np.array([float(s[0]) for s in select(split(feed("data/driving_log_all.csv")),[3])])
-      h = plt.hist(y1,bins=100)          # plot histogram
-      s = plt.savefig("hist1.png", format='png', bbox_inches='tight')
-      print("")
-      pp.pprint(describe(y1)._asdict())  # print descriptive statistics
+	f = plt.figure()                   
+	y1 = np.array([float(s[0]) for s in select(split(feed("data/driving_log_all.csv")),[3])])
+	h = plt.hist(y1,bins=100)          # plot histogram
+	s = plt.savefig("hist1.png", format='png', bbox_inches='tight')
+	print("")
+	pp.pprint(describe(y1)._asdict())  # print descriptive statistics
       #+END_SRC
 
       #+RESULTS:
       : 
-      : >>>
       : OrderedDict([('nobs', 8036),
-      :              ('minmax', (-0.94269539999999996, 1.0)),
-      :              ('mean', 0.0040696440648332506),
-      :              ('variance', 0.016599764281272529),
-      :              ('skewness', -0.13028924577521916),
+      :              ('minmax', (-0.9426954, 1.0)),
+      :              ('mean', 0.004069644064833251),
+      :              ('variance', 0.01659976428127253),
+      :              ('skewness', -0.13028924577521914),
       :              ('kurtosis', 6.311554102057668)])
 
       #+CAPTION: All Samples - No Reflection
@@ -625,21 +625,20 @@
       the summary.
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
-      f = plt.figure()
-      p = lambda x: abs(x)<0.01
-      y2 = np.array([s for s in filterfalse(p,y1)])
-      h = plt.hist(y2,bins=100)
-      s = plt.savefig("hist2.png", format='png', bbox_inches='tight')
-      print("")
-      pp.pprint(describe(y2)._asdict())
+	f = plt.figure()
+	p = lambda x: abs(x)<0.01
+	y2 = np.array([s for s in filterfalse(p,y1)])
+	h = plt.hist(y2,bins=100)
+	s = plt.savefig("hist2.png", format='png', bbox_inches='tight')
+	print("")
+	pp.pprint(describe(y2)._asdict())
       #+END_SRC
 
       #+RESULTS:
       : 
-      : >>> >>> >>>
       : OrderedDict([('nobs', 3584),
-      :              ('minmax', (-0.94269539999999996, 1.0)),
-      :              ('mean', 0.0091718659514508916),
+      :              ('minmax', (-0.9426954, 1.0)),
+      :              ('mean', 0.009171865951450892),
       :              ('variance', 0.037178302717086116),
       :              ('skewness', -0.1665782596901517),
       :              ('kurtosis', 1.1768785967587378)])
@@ -653,21 +652,20 @@
       purposes only, we shall again mask out small angle samples.
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
-      f = plt.figure()
-      y3 = np.append(y2, -y2)
-      h = plt.hist(y3,bins=100)
-      s = plt.savefig("hist3.png", format='png', bbox_inches='tight')
-      print("")
-      pp.pprint(describe(y3)._asdict())
+	f = plt.figure()
+	y3 = np.append(y2, -y2)
+	h = plt.hist(y3,bins=100)
+	s = plt.savefig("hist3.png", format='png', bbox_inches='tight')
+	print("")
+	pp.pprint(describe(y3)._asdict())
       #+END_SRC
 
       #+RESULTS:
       : 
-      : >>> >>>
       : OrderedDict([('nobs', 7168),
       :              ('minmax', (-1.0, 1.0)),
       :              ('mean', 0.0),
-      :              ('variance', 0.03725725015081123),
+      :              ('variance', 0.037257250150811216),
       :              ('skewness', 0.0),
       :              ('kurtosis', 1.1400026599654973)])
 
@@ -697,51 +695,50 @@
       between memory consumption and CPU usage.  
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
-      y4 = [y for y in rmap(yflip, islice(cycle(y2), 2*y1.shape[0]))]  # 2 batches
-      y5 = [y for y in rmap(yflip, islice(cycle(y2), 4*y1.shape[0]))]  # 4 batches
-      y6 = [y for y in rmap(yflip, islice(cycle(y2), 8*y1.shape[0]))]  # 8 batches
-      f = plt.figure()
-      h = plt.hist(y4,bins=100)
-      s = plt.savefig("hist5.png", format='png', bbox_inches='tight')
-      f = plt.figure()
-      h = plt.hist(y5,bins=100)
-      s = plt.savefig("hist6.png", format='png', bbox_inches='tight')
-      f = plt.figure()
-      h = plt.hist(y6,bins=100)
-      s = plt.savefig("hist7.png", format='png', bbox_inches='tight')
-      print("")
-      pp.pprint(describe(y4)._asdict())
-      print("")
-      pp.pprint(describe(y5)._asdict())
-      print("")
-      pp.pprint(describe(y6)._asdict())
+	y4 = [y for y in rmap(yflip, islice(cycle(y2), 2*y1.shape[0]))]  # 2 batches
+	y5 = [y for y in rmap(yflip, islice(cycle(y2), 4*y1.shape[0]))]  # 4 batches
+	y6 = [y for y in rmap(yflip, islice(cycle(y2), 8*y1.shape[0]))]  # 8 batches
+	f = plt.figure()
+	h = plt.hist(y4,bins=100)
+	s = plt.savefig("hist5.png", format='png', bbox_inches='tight')
+	f = plt.figure()
+	h = plt.hist(y5,bins=100)
+	s = plt.savefig("hist6.png", format='png', bbox_inches='tight')
+	f = plt.figure()
+	h = plt.hist(y6,bins=100)
+	s = plt.savefig("hist7.png", format='png', bbox_inches='tight')
+	print("")
+	pp.pprint(describe(y4)._asdict())
+	print("")
+	pp.pprint(describe(y5)._asdict())
+	print("")
+	pp.pprint(describe(y6)._asdict())
       #+END_SRC
 
       #+RESULTS:
       #+begin_example
 
-      >>>
       OrderedDict([('nobs', 16072),
 		   ('minmax', (-1.0, 1.0)),
-		   ('mean', -0.0012464327762568444),
-		   ('variance', 0.037297357483824768),
-		   ('skewness', 0.03935649430167018),
-		   ('kurtosis', 1.10078365162724)])
+		   ('mean', -0.0007466879498506719),
+		   ('variance', 0.03713945901900504),
+		   ('skewness', 0.02434071005504565),
+		   ('kurtosis', 1.0973299149738853)])
 
       OrderedDict([('nobs', 32144),
 		   ('minmax', (-1.0, 1.0)),
-		   ('mean', 0.0013097329084743655),
-		   ('variance', 0.037230073594916549),
-		   ('skewness', -0.011391695445489564),
-		   ('kurtosis', 1.1405030969598942)])
+		   ('mean', -0.00048223098618715754),
+		   ('variance', 0.03719596511863196),
+		   ('skewness', -0.014182834974165903),
+		   ('kurtosis', 1.1323071598797032)])
 
       OrderedDict([('nobs', 64288),
 		   ('minmax', (-1.0, 1.0)),
-		   ('mean', -9.7916912643106218e-05),
-		   ('variance', 0.03724814334901478),
-		   ('skewness', -0.004653875002642311),
-		   ('kurtosis', 1.1415231296661128)])
-#+end_example
+		   ('mean', 3.7095223214285824e-05),
+		   ('variance', 0.03722667000124598),
+		   ('skewness', -0.01150804037873408),
+		   ('kurtosis', 1.1315901366624237)])
+      #+end_example
 
       Here, we see that as we increase the number of samples we draw
       from the underlying data set, while randomly flipping them, the
@@ -767,23 +764,22 @@
       them flipped.
 
       #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code
-      X2 = [sflip(x) for x in X]
-      f = plt.figure()                        
-      plt.imshow(X2[0][0])                     
-      f.suptitle("Angle: " + str(X2[0][1]))    
-      s = plt.savefig("road7.png", format="png", bbox_inches='tight')
-      f = plt.figure()
-      plt.imshow(X2[1][0])
-      f.suptitle("Angle: " + str(X2[1][1]))
-      s = plt.savefig("road8.png", format="png", bbox_inches='tight')
-      f = plt.figure()
-      plt.imshow(X2[2][0])
-      f.suptitle("Angle: " + str(X2[2][1]))
-      s = plt.savefig("road9.png", format="png", bbox_inches='tight')
+	X2 = [sflip(x) for x in X]
+	f = plt.figure()                        
+	plt.imshow(X2[0][0])                     
+	f.suptitle("Angle: " + str(X2[0][1]))    
+	s = plt.savefig("road7.png", format="png", bbox_inches='tight')
+	f = plt.figure()
+	plt.imshow(X2[1][0])
+	f.suptitle("Angle: " + str(X2[1][1]))
+	s = plt.savefig("road8.png", format="png", bbox_inches='tight')
+	f = plt.figure()
+	plt.imshow(X2[2][0])
+	f.suptitle("Angle: " + str(X2[2][1]))
+	s = plt.savefig("road9.png", format="png", bbox_inches='tight')
       #+END_SRC
 
       #+RESULTS:
-      : Text(0.5,0.98,'Angle: -0.0')
 
       #+CAPTION: Large Negative Steering Angle Flipped
       [[file:road7.png]]
@@ -966,45 +962,45 @@
       still is a hyper-parameter, of course.
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
-      def CarND(input_shape, crop_shape):
-	  model = Sequential()
-       
-	  # Crop
-	  # model.add(Cropping2D(((80,20),(1,1)), input_shape=input_shape, name="Crop"))
-	  model.add(Cropping2D(crop_shape, input_shape=input_shape, name="Crop"))
-       
-	  # Resize
-	  model.add(AveragePooling2D(pool_size=(1,4), name="Resize", trainable=False))
-       
-	  # Normalize input.
-          model.add(BatchNormalization(axis=1, name="Normalize"))
-       
-	  # Reduce dimensions through trainable convolution, activation, and
-	  # pooling layers.
-	  model.add(Convolution2D(24, 3, 3, subsample=(2,2), name="Convolution2D1", activation="relu"))
-	  model.add(MaxPooling2D(name="MaxPool1"))
-	  model.add(Convolution2D(36, 3, 3, subsample=(1,1), name="Convolution2D2", activation="relu"))
-	  model.add(MaxPooling2D(name="MaxPool2"))
-	  model.add(Convolution2D(48, 3, 3, subsample=(1,1), name="Convolution2D3", activation="relu"))
-	  model.add(MaxPooling2D(name="MaxPool3"))
-       
-	  # Dropout for regularization
-	  model.add(Dropout(0.1, name="Dropout"))
-       
-	  # Flatten input in a non-trainable layer before feeding into
-	  # fully-connected layers.
-	  model.add(Flatten(name="Flatten"))
-       
-	  # Model steering through trainable layers comprising dense units
-	  # as ell as dropout units for regularization.
-	  model.add(Dense(100, activation="relu", name="FC2"))
-	  model.add(Dense(50, activation="relu", name="FC3"))
-	  model.add(Dense(10, activation="relu", name="FC4"))
-       
-	  # Generate output (steering angles) with a single non-trainable
-	  # node.
-	  model.add(Dense(1, name="Readout", trainable=False))
-	  return model
+	def CarND(input_shape, crop_shape):
+	    model = Sequential()
+
+	    # Crop
+	    # model.add(Cropping2D(((80,20),(1,1)), input_shape=input_shape, name="Crop"))
+	    model.add(Cropping2D(crop_shape, input_shape=input_shape, name="Crop"))
+
+	    # Resize
+	    model.add(AveragePooling2D(pool_size=(1,4), name="Resize", trainable=False))
+
+	    # Normalize input.
+	    model.add(BatchNormalization(axis=1, name="Normalize"))
+
+	    # Reduce dimensions through trainable convolution, activation, and
+	    # pooling layers.
+	    model.add(Conv2D(24, (3, 3), strides=(2,2), name="Conv2D1", activation="relu"))
+	    model.add(MaxPooling2D(name="MaxPool1"))
+	    model.add(Conv2D(36, (3, 3), strides=(1,1), name="Conv2D2", activation="relu"))
+	    model.add(MaxPooling2D(name="MaxPool2"))
+	    model.add(Conv2D(48, (3, 3), strides=(1,1), name="Conv2D3", activation="relu"))
+	    model.add(MaxPooling2D(name="MaxPool3"))
+
+	    # Dropout for regularization
+	    model.add(Dropout(0.1, name="Dropout"))
+
+	    # Flatten input in a non-trainable layer before feeding into
+	    # fully-connected layers.
+	    model.add(Flatten(name="Flatten"))
+
+	    # Model steering through trainable layers comprising dense units
+	    # as ell as dropout units for regularization.
+	    model.add(Dense(100, activation="relu", name="FC2"))
+	    model.add(Dense(50, activation="relu", name="FC3"))
+	    model.add(Dense(10, activation="relu", name="FC4"))
+
+	    # Generate output (steering angles) with a single non-trainable
+	    # node.
+	    model.add(Dense(1, name="Readout", trainable=False))
+	    return model
       #+END_SRC
 
       #+RESULTS:
@@ -1013,55 +1009,56 @@
       =model.summary= in Keras.
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
-      CarND([160, 320, 3], ((80,20),(1,1))).summary()
+	CarND([160, 320, 3], ((80,20),(1,1))).summary()
       #+END_SRC
 
       #+RESULTS:
       #+begin_example
-      ____________________________________________________________________________________________________
-      Layer (type)                     Output Shape          Param #     Connected to                     
-      ====================================================================================================
-      Crop (Cropping2D)                (None, 60, 318, 3)    0           cropping2d_input_1[0][0]         
-      ____________________________________________________________________________________________________
-      Resize (AveragePooling2D)        (None, 60, 79, 3)     0           Crop[0][0]                       
-      ____________________________________________________________________________________________________
-      Normalize (BatchNormalization)   (None, 60, 79, 3)     240         Resize[0][0]                     
-      ____________________________________________________________________________________________________
-      Convolution2D1 (Convolution2D)   (None, 29, 39, 24)    672         Normalize[0][0]                  
-      ____________________________________________________________________________________________________
-      MaxPool1 (MaxPooling2D)          (None, 14, 19, 24)    0           Convolution2D1[0][0]             
-      ____________________________________________________________________________________________________
-      Convolution2D2 (Convolution2D)   (None, 12, 17, 36)    7812        MaxPool1[0][0]                   
-      ____________________________________________________________________________________________________
-      MaxPool2 (MaxPooling2D)          (None, 6, 8, 36)      0           Convolution2D2[0][0]             
-      ____________________________________________________________________________________________________
-      Convolution2D3 (Convolution2D)   (None, 4, 6, 48)      15600       MaxPool2[0][0]                   
-      ____________________________________________________________________________________________________
-      MaxPool3 (MaxPooling2D)          (None, 2, 3, 48)      0           Convolution2D3[0][0]             
-      ____________________________________________________________________________________________________
-      Dropout (Dropout)                (None, 2, 3, 48)      0           MaxPool3[0][0]                   
-      ____________________________________________________________________________________________________
-      Flatten (Flatten)                (None, 288)           0           Dropout[0][0]                    
-      ____________________________________________________________________________________________________
-      FC2 (Dense)                      (None, 100)           28900       Flatten[0][0]                    
-      ____________________________________________________________________________________________________
-      FC3 (Dense)                      (None, 50)            5050        FC2[0][0]                        
-      ____________________________________________________________________________________________________
-      FC4 (Dense)                      (None, 10)            510         FC3[0][0]                        
-      ____________________________________________________________________________________________________
-      Readout (Dense)                  (None, 1)             11          FC4[0][0]                        
-      ====================================================================================================
+      Model: "sequential_2"
+      _________________________________________________________________
+      Layer (type)                 Output Shape              Param #   
+      =================================================================
+      Crop (Cropping2D)            (None, 60, 318, 3)        0         
+      _________________________________________________________________
+      Resize (AveragePooling2D)    (None, 60, 79, 3)         0         
+      _________________________________________________________________
+      Normalize (BatchNormalizatio (None, 60, 79, 3)         240       
+      _________________________________________________________________
+      Conv2D1 (Conv2D)             (None, 29, 39, 24)        672       
+      _________________________________________________________________
+      MaxPool1 (MaxPooling2D)      (None, 14, 19, 24)        0         
+      _________________________________________________________________
+      Conv2D2 (Conv2D)             (None, 12, 17, 36)        7812      
+      _________________________________________________________________
+      MaxPool2 (MaxPooling2D)      (None, 6, 8, 36)          0         
+      _________________________________________________________________
+      Conv2D3 (Conv2D)             (None, 4, 6, 48)          15600     
+      _________________________________________________________________
+      MaxPool3 (MaxPooling2D)      (None, 2, 3, 48)          0         
+      _________________________________________________________________
+      Dropout (Dropout)            (None, 2, 3, 48)          0         
+      _________________________________________________________________
+      Flatten (Flatten)            (None, 288)               0         
+      _________________________________________________________________
+      FC2 (Dense)                  (None, 100)               28900     
+      _________________________________________________________________
+      FC3 (Dense)                  (None, 50)                5050      
+      _________________________________________________________________
+      FC4 (Dense)                  (None, 10)                510       
+      _________________________________________________________________
+      Readout (Dense)              (None, 1)                 11        
+      =================================================================
       Total params: 58,795
       Trainable params: 58,664
       Non-trainable params: 131
-      ____________________________________________________________________________________________________
-#+end_example
+      _________________________________________________________________
+      #+end_example
 
       And, here is a visualization of the model, as provided by the
-      =plot= function in Keras.
+      =plot_model= function in Keras.
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports both
-      plot(CarND([160, 320, 3], ((80,20),(1,1))), to_file="model.png", show_shapes=True)
+	plot_model(CarND([160, 320, 3], ((80,20),(1,1))), to_file="model.png", show_shapes=True)
       #+END_SRC
 
       #+RESULTS:
@@ -1085,19 +1082,19 @@
       Sequential model, both pipelines are assembled in a function.
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
-      def pipeline(theta, training=False):
-          # randomly cycle through cached, loaded samples (images + angles)
-          samples = select(rcycle(fetch(select(split(feed(theta.trainingfile)), [0,3]), theta.base_path)), [0,1])
-          # for training we might do sample flipping but no need for validation
-          if training:
-              if theta.flip:
-                  samples = (sflip(x) for x in samples)
-          # group the samples
-          groups = group(samples, theta.batch_size)
-          # turn the groups into batches (NumPy arrays)
-          batches = batch(transpose(groups))
-          # return the batch generator
-          return batches
+        def pipeline(theta, training=False):
+            # randomly cycle through cached, loaded samples (images + angles)
+            samples = select(rcycle(fetch(select(split(feed(theta.trainingfile if training else theta.validationfile)), [0,3]), theta.base_path)), [0,1])
+            # for training we might do sample flipping but no need for validation
+            if training:
+                if theta.flip:
+                    samples = (sflip(x) for x in samples)
+                    # group the samples
+            groups = group(samples, theta.batch_size)
+            # turn the groups into batches (NumPy arrays)
+            batches = batch(transpose(groups))
+            # return the batch generator
+            return batches
       #+END_SRC
 
       #+RESULTS:
@@ -1153,54 +1150,41 @@
       validation set.
 
       #+BEGIN_SRC python -r :results output :session :tangle model.py :comments org :exports code
-      class HyperParameters:
-          def __init__(self):
-              return
+        class HyperParameters:
+            def __init__(self):
+                return
 
-      theta = HyperParameters()
-      theta.input_shape = [160, 320, 3]
-      theta.crop_shape = ((80,20),(1,1))   # crop size (ref:crop_shape)
-      theta.samples_per_epoch = 30
-      theta.valid_samples_per_epoch = 30
-      theta.epochs = 20
-      theta.batch_size = 10
-      theta.trainingfile = "data/driving_log_overtrain.csv"
-      theta.validationfile = "data/driving_log_overtrain.csv"
-      theta.base_path = "data/"
-      theta.flip = False
+        theta = HyperParameters()
+        theta.batch_size = 10
+        theta.input_shape = [160, 320, 3]
+        theta.crop_shape = ((80,20),(1,1))   # crop size (ref:crop_shape)
+        theta.samples_per_epoch = 30
+        theta.valid_samples_per_epoch = 30
+        theta.epochs = 10
+        theta.trainingfile = "data/driving_log_overtrain.csv"
+        theta.validationfile = "data/driving_log_overtrain.csv"
+        theta.base_path = "data/"
+        theta.flip = False
 
-      model = CarND(theta.input_shape, theta.crop_shape)
-      model.compile(loss="mse", optimizer="adam")
+        model = CarND(theta.input_shape, theta.crop_shape)
+        model.compile(loss="mse", optimizer="adam")
 
-      traingen = pipeline(theta, training=True)
-      validgen = pipeline(theta)
+        traingen = pipeline(theta, training=True)
+        validgen = pipeline(theta)
 
-      print("")
-      history = model.fit_generator(
-	  traingen,
-	  theta.samples_per_epoch,
-	  theta.epochs,
-	  validation_data=validgen,
-          verbose=2,
-          callbacks=[EarlyStopping()],
-	  nb_val_samples=theta.valid_samples_per_epoch)
+        print("")
+        history = model.fit(
+            x=traingen,
+            epochs=theta.epochs,
+            verbose=2,
+            validation_data=validgen,
+            steps_per_epoch=theta.samples_per_epoch/theta.batch_size,
+            validation_steps=theta.valid_samples_per_epoch/theta.batch_size)
       #+END_SRC
 
       #+RESULTS:
-      #+begin_example
-
-      ... ... >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
-      ... ... ... ... ... ... ... Epoch 1/20
-      2s - loss: 0.3678 - val_loss: 19.8138
-      Epoch 2/20
-      0s - loss: 0.0532 - val_loss: 16.3926
-      Epoch 3/20
-      0s - loss: 0.0382 - val_loss: 14.4724
-      Epoch 4/20
-      0s - loss: 0.0409 - val_loss: 3.6000
-      Epoch 5/20
-      0s - loss: 0.0242 - val_loss: 5.6933
-#+end_example
+      : 
+      : Epoch 1/10
 
       Next, we perform the actual training on the
       =driving_log_train.csv= file, validating against the
@@ -1210,60 +1194,51 @@
       =drive.py=.  
 
       #+BEGIN_SRC python :results output :session :tangle model.py :comments org :exports code
-      theta = HyperParameters()
-      theta.input_shape = [160, 320, 3]
-      theta.crop_shape = ((80,20),(1,1))
-      theta.trainingfile = "data/driving_log_train.csv"
-      theta.validationfile = "data/driving_log_validation.csv"
-      theta.base_path = "data/"
-      theta.samples_per_epoch = 14000
-      theta.valid_samples_per_epoch = 1036
-      theta.epochs = 20
-      theta.batch_size = 100
-      theta.flip = True
+        theta = HyperParameters()
+        theta.input_shape = [160, 320, 3]
+        theta.crop_shape = ((80,20),(1,1))
+        theta.trainingfile = "data/driving_log_train.csv"
+        theta.validationfile = "data/driving_log_validation.csv"
+        theta.base_path = "data/"
+        theta.samples_per_epoch = 14000
+        theta.valid_samples_per_epoch = 1036
+        theta.epochs = 20
+        theta.batch_size = 100
+        theta.flip = True
 
-      model = CarND(theta.input_shape, theta.crop_shape)
-      model.compile(loss="mse", optimizer="adam")
+        model = CarND(theta.input_shape, theta.crop_shape)
+        model.compile(loss="mse", optimizer="adam")
 
-      traingen = pipeline(theta, training=True)
-      validgen = pipeline(theta)
+        traingen = pipeline(theta, training=True)
+        validgen = pipeline(theta)
 
-      print("")
-      history = model.fit_generator(
-	  traingen,
-	  theta.samples_per_epoch,
-	  theta.epochs,
-	  validation_data=validgen,
-	  verbose=2,
-          callbacks=[EarlyStopping()],
-	  nb_val_samples=theta.valid_samples_per_epoch)
-      model.save_weights("model.h5")
-      with open("model.json", "w") as f:
-	  f.write(model.to_json())
-      # gc.collect()
+        print("")
+        history = model.fit(
+            x=traingen,
+            epochs=theta.epochs,
+            verbose=2,
+            validation_data=validgen,
+            callbacks=[EarlyStopping()],
+            steps_per_epoch=theta.samples_per_epoch/theta.batch_size,
+            validation_steps=theta.valid_samples_per_epoch/theta.batch_size)
+        model.save_weights("model.h5")
+        with open("model.json", "w") as f:
+            f.write(model.to_json())
+            # gc.collect()
       #+END_SRC
 
       #+RESULTS:
-      #+begin_example
-
-      >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>> >>>
-      ... ... ... ... ... ... ... Epoch 1/20
-      166s - loss: 0.0138 - val_loss: 0.0152
-      Epoch 2/20
-      77s - loss: 0.0105 - val_loss: 0.0147
-      Epoch 3/20
-      84s - loss: 0.0096 - val_loss: 0.0121
-      Epoch 4/20
-      88s - loss: 0.0091 - val_loss: 0.0155
-      ... ... ... 3594
-#+end_example
+      : 
+      : Epoch 1/20
 
       Ta-da!  We now have a trained model in =model.json= and
       =model.h5= that we can run in the simulator with this command.
 
-      #+BEGIN_SRC sh :results output :tangle no :exports code
-      python drive.py model.json
+      #+BEGIN_SRC bash :results output :tangle no :exports code
+	python drive.py model.json
       #+END_SRC
+
+      #+RESULTS:
 
 * Summary
 
