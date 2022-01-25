@@ -303,8 +303,6 @@
       #+END_SRC
 
       #+RESULTS:
-      : 2020-10-02 14:36:04.374598: W tensorflow/stream_executor/platform/default/dso_loader.cc:59] Could not load dynamic library 'libcudart.so.10.1'; dlerror: libcudart.so.10.1: cannot open shared object file: No such file or directory
-      : 2020-10-02 14:36:04.374638: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
 
 ***** Utilities
 
@@ -448,7 +446,7 @@
       #+BEGIN_SRC python :results value :session :tangle model.py :comments org :exports code
 	feed = lambda filename: (l for l in open(filename))
 	split = lambda lines, delimiter=",": (line.split(delimiter) for line in lines)
-	select = lambda fields, indices: ([r[i] for i in indices] for r in fields)
+	select = lambda fields, indices: (tuple([r[i] for i in indices]) for r in fields)
 	load = lambda f: np.asarray(Image.open(f))
 	Xflip = lambda x: x[:,::-1,:]
 	yflip = lambda x: -x
@@ -1014,7 +1012,7 @@
 
       #+RESULTS:
       #+begin_example
-      Model: "sequential_2"
+      Model: "sequential_5"
       _________________________________________________________________
       Layer (type)                 Output Shape              Param #   
       =================================================================
@@ -1158,9 +1156,9 @@
         theta.batch_size = 10
         theta.input_shape = [160, 320, 3]
         theta.crop_shape = ((80,20),(1,1))   # crop size (ref:crop_shape)
-        theta.samples_per_epoch = 30
-        theta.valid_samples_per_epoch = 30
-        theta.epochs = 10
+        theta.samples_per_epoch = 3
+        theta.valid_samples_per_epoch = 3
+        theta.epochs = 1
         theta.trainingfile = "data/driving_log_overtrain.csv"
         theta.validationfile = "data/driving_log_overtrain.csv"
         theta.base_path = "data/"
@@ -1183,8 +1181,6 @@
       #+END_SRC
 
       #+RESULTS:
-      : 
-      : Epoch 1/10
 
       Next, we perform the actual training on the
       =driving_log_train.csv= file, validating against the
